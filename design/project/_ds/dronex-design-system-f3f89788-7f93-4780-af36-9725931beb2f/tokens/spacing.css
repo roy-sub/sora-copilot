@@ -1,0 +1,29 @@
+/* 4px base. Panel gutters in the source sit at 2px (hairline gaps between
+   sheets) and 24/32px inside cards; page margins are generous. */
+:root {
+  --space-0: 0px;
+  --space-hair: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* semantic */
+  --gap-sheet: var(--space-hair);
+  --gap-grid: var(--space-6);
+  --pad-card: var(--space-6);
+  --pad-card-lg: var(--space-8);
+  --pad-section: var(--space-20);
+  --page-margin: var(--space-12);
+  --page-margin-mobile: var(--space-5);
+  --max-page: 1240px;
+}

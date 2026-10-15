@@ -1,0 +1,104 @@
+@import "tailwindcss";
+/* tokens.css is the single source of truth; the @theme blocks below are the
+   Tailwind surface over it (they replace project/tailwind.theme.ts for v4). */
+@import "../styles/tokens.css";
+
+@theme {
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-rail: 1200px;
+  --spacing-sheet: 2px; /* the ground showing through */
+  --radius-sm: 2px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+}
+
+@theme inline {
+  --font-sans: var(--font-heading);
+  --font-display: var(--font-wordmark);
+
+  --color-black: #000000;
+  --color-paper: #f5f5f5;
+  --color-lime: #caff01;
+  --color-ground: var(--ground);
+  --color-sheet: var(--sheet);
+  --color-sheet-raised: var(--sheet-raised);
+  --color-sheet-well: var(--sheet-well);
+  --color-sheet-alt: var(--sheet-alt);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink-hi: var(--text-hi);
+  --color-ink-mid: var(--text-mid);
+  --color-ink-low: var(--text-low);
+  --color-field: var(--field-bg);
+  --color-field-border: var(--field-border);
+  --color-field-border-hover: var(--field-border-hover);
+  --color-accent: var(--accent);
+  --color-accent-press: var(--accent-press);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-wash: var(--accent-wash);
+  --color-accent-line: var(--accent-line);
+  --color-sail-1: var(--sail-1);
+  --color-sail-2: var(--sail-2);
+  --color-sail-3: var(--sail-3);
+  --color-sail-4: var(--sail-4);
+  --color-sail-5: var(--sail-5);
+  --color-sail-6: var(--sail-6);
+  --color-arc-a: var(--arc-a);
+  --color-arc-b: var(--arc-b);
+  --color-arc-c: var(--arc-c);
+  --color-arc-d: var(--arc-d);
+  --color-scrim: var(--scrim);
+}
+
+/* motion tokens as utilities: transition over --t-ui on --ease-ui */
+@utility tr-ui { transition: background-color var(--t-ui) var(--ease-ui), color var(--t-ui) var(--ease-ui), border-color var(--t-ui) var(--ease-ui), opacity var(--t-ui) var(--ease-ui), transform var(--t-tap) var(--ease-ui); }
+@utility press { &:active:not(:disabled) { transform: scale(0.98); } }
+
+/* ------------------------------------------------------------ type roles */
+@utility t-micro { font: 600 11px/1 var(--font-heading); letter-spacing: 0.1em; text-transform: uppercase; }
+@utility t-micro-10 { font: 600 10px/1 var(--font-heading); letter-spacing: 0.1em; text-transform: uppercase; }
+@utility t-h1 { font: 600 32px/1.12 var(--font-heading); letter-spacing: -0.02em; }
+@utility t-h2 { font: 600 24px/1.2 var(--font-heading); letter-spacing: -0.015em; }
+@utility t-h3 { font: 600 18px/1.3 var(--font-heading); letter-spacing: -0.01em; }
+@utility t-h4 { font: 600 15px/1.35 var(--font-heading); }
+@utility t-body-lg { font: 400 18px/1.6 var(--font-heading); }
+@utility t-body { font: 400 15px/1.55 var(--font-heading); }
+@utility t-body-sm { font: 400 13px/1.5 var(--font-heading); }
+@utility t-cap { font: 400 12px/1.45 var(--font-heading); }
+@utility t-data { font: 500 14px/1.4 var(--font-heading); font-variant-numeric: tabular-nums; }
+@utility t-data-13 { font: 500 13px/1.4 var(--font-heading); font-variant-numeric: tabular-nums; }
+@utility t-data-sm { font: 500 12px/1.4 var(--font-heading); font-variant-numeric: tabular-nums; }
+@utility t-figure { font: 700 72px/1 var(--font-heading); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+@utility t-display { font-family: var(--font-wordmark); font-weight: 300; font-size: 36px; line-height: 1.08; letter-spacing: -0.03em;
+  @media (width >= 768px) { font-size: 60px; line-height: 1.04; letter-spacing: -0.035em; } }
+@utility tnum { font-variant-numeric: tabular-nums; }
+@utility shadow-overlay { box-shadow: var(--shadow-overlay); }
+@utility pretty { text-wrap: pretty; }
+@utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+
+/* ------------------------------------------------------------ base */
+@layer base {
+  html { background: var(--black); }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text-hi);
+    font: 400 15px/1.55 var(--font-heading);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--text-hi); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--accent); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button:not(:disabled) { cursor: pointer; }
+  input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); }
+}
+
+/* ------------------------------------------------------------ orchestrated keyframes (motion.md) */
+@keyframes edge-draw { from { stroke-dashoffset: var(--edge-len, 300); } to { stroke-dashoffset: 0; } }
+@keyframes node-settle { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes volume-extrude { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes chain-link { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@keyframes stage-tick { from { opacity: 0.35; } to { opacity: 1; } }
+@keyframes drawer-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }

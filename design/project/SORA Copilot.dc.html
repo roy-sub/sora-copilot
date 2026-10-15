@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/styles.css">
+<link rel="stylesheet" href="tokens.css">
+<script src="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/_ds_bundle.js"></script>
+<style>
+@keyframes edgeDraw { from { stroke-dashoffset: var(--edge-len, 300); } to { stroke-dashoffset: 0; } }
+@keyframes nodeSettle { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes volExtrude { from { transform: scale(.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes chainLink { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@keyframes stageTick { from { opacity: .3; } to { opacity: 1; } }
+body { margin: 0; background: #000; font-family: "Archivo", sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: var(--text-hi); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { color: var(--accent); }
+button, input, select, textarea { font: inherit; }
+nav { scrollbar-width: none; }
+nav::-webkit-scrollbar { height: 0; width: 0; }
+.om-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.om-scroll::-webkit-scrollbar-thumb { background: var(--hairline-strong); }
+</style>
+</helmet>
+<div style="background:#000;min-height:100vh;font-family:var(--font-heading)">
+<div style="position:sticky;top:0;z-index:90;display:flex;align-items:center;gap:16px;padding:0 16px;height:48px;background:#000;border-bottom:1px solid rgba(245,245,245,.18)">
+<div style="display:flex;align-items:center;gap:8px;flex:none">
+<div style="width:10px;height:10px;background:var(--lime)"></div>
+<span style="font-family:var(--font-wordmark);font-weight:300;font-size:15px;letter-spacing:-.02em;color:var(--paper);white-space:nowrap">SORA Copilot</span>
+<span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:rgba(245,245,245,.45);border:1px solid rgba(245,245,245,.18);padding:4px 6px">REVIEW</span>
+</div>
+<select value="{{ screen }}" onChange="{{ onScreen }}" aria-label="Screen" style="background:#0a0c0d;color:var(--paper);border:1px solid rgba(245,245,245,.25);border-radius:2px;padding:7px 10px;font-size:12px;min-width:230px">
+<optgroup label="Marketing">
+<option value="landing">1 · Landing</option>
+<option value="pricing">2 · Pricing</option>
+<option value="checker">3 · Free category checker</option>
+<option value="legal">4 · Legal</option>
+</optgroup>
+<optgroup label="Product">
+<option value="signin">5 · Sign in</option>
+<option value="dashboard">6 · Operations dashboard</option>
+<option value="fleet">7 · Drone fleet</option>
+<option value="wizard">8 · Intake wizard</option>
+<option value="verdict">9 · Verdict</option>
+<option value="oso">10 · OSO detail drawer</option>
+<option value="dossier">11 · Dossier builder</option>
+<option value="settings">13 · Settings</option>
+</optgroup>
+<optgroup label="System">
+<option value="states">14 · Loading / empty / error / offline</option>
+<option value="overlays">15 · Toasts, modals, dialogs</option>
+<option value="errors">16 · 404 and 500</option>
+</optgroup>
+</select>
+<div style="display:flex;border:1px solid rgba(245,245,245,.25);border-radius:999px;overflow:hidden;flex:none">
+<button onClick="{{ setDesktop }}" style="{{ vpDesktopStyle }}">1440</button>
+<button onClick="{{ setMobile }}" style="{{ vpMobileStyle }}">390</button>
+</div>
+<div style="display:flex;border:1px solid rgba(245,245,245,.25);border-radius:999px;overflow:hidden;flex:none">
+<button onClick="{{ setDark }}" style="{{ darkStyle }}">Dark</button>
+<button onClick="{{ setLight }}" style="{{ lightStyle }}">Light</button>
+</div>
+<div style="flex:1"></div>
+<button onClick="{{ toggleSlots }}" style="{{ slotStyle }}">Slot ids</button>
+<span style="font:500 11px/1 var(--font-heading);letter-spacing:.06em;color:rgba(245,245,245,.45);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Rulebase 2026.2 · 01 Oct 2026</span>
+</div>
+<div class="om-scroll" ref="{{ scrollRef }}" style="padding:24px 16px 64px;display:flex;justify-content:center;background:#000;overflow-x:auto">
+<div data-theme="{{ theme }}" style="width:{{ frameW }}px;flex:none;zoom:{{ zoom }};background:var(--ground);color:var(--text-hi);font-size:15px;line-height:1.55;outline:1px solid rgba(245,245,245,.12)">
+<sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--ground)">
+
+<header style="background:var(--sheet);display:flex;align-items:center;justify-content:space-between;gap:24px;padding:0 24px;min-height:64px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:10px;padding:12px 0">
+<div style="width:14px;height:14px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+<span style="font-family:var(--font-wordmark);font-weight:300;font-size:20px;letter-spacing:-.03em;color:var(--text-hi);white-space:nowrap">SORA Copilot</span>
+</div>
+<nav style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;overflow-x:auto;max-width:100%">
+<a href="#" style="text-decoration:none;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;padding:14px 12px;min-height:44px;display:flex;align-items:center;white-space:nowrap;flex:none">HOW IT WORKS</a>
+<a href="#" style="text-decoration:none;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;padding:14px 12px;min-height:44px;display:flex;align-items:center;white-space:nowrap;flex:none">PRICING</a>
+<a href="#" style="text-decoration:none;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;padding:14px 12px;min-height:44px;display:flex;align-items:center;white-space:nowrap;flex:none">CATEGORY CHECKER</a>
+<a href="#" style="text-decoration:none;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;padding:14px 12px;min-height:44px;display:flex;align-items:center;white-space:nowrap;flex:none">SIGN IN</a>
+<x-import component-from-global-scope="DronexDesignSystem_f3f897.Button" variant="accent" size="md" style="margin-left:8px;min-height:44px" hint-size="150px,44px">START A SORA</x-import>
+</nav>
+</header>
+
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2px">
+<div style="background:var(--sheet);{{ sectionPad }};display:flex;flex-direction:column;justify-content:space-between;gap:40px;min-width:0">
+<div>
+<h1 style="{{ displayStyle }}">From mission to dossier in minutes.</h1>
+<p style="margin:0;max-width:52ch;font:400 18px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Describe the operation. The rules engine computes iGRC, GRC, ARC and SAIL, then emits an authority-ready dossier. Every line cites its rule.</p>
+</div>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<x-import component-from-global-scope="DronexDesignSystem_f3f897.Button" variant="accent" size="lg" hint-size="280px,52px">RUN THE CATEGORY CHECKER</x-import>
+<x-import component-from-global-scope="DronexDesignSystem_f3f897.Button" variant="outline" size="lg" hint-size="230px,52px">SEE A WORKED EXAMPLE</x-import>
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">Rulebase 2026.2 · 01 Oct 2026</span>
+</div>
+</div>
+<div style="background:var(--sheet-raised);padding:48px;display:flex;flex-direction:column;justify-content:space-between;gap:32px;min-width:0">
+<div>
+<div style="font:700 56px/1 var(--font-heading);letter-spacing:-.03em;color:var(--text-hi);font-variant-numeric:tabular-nums">€1,000–5,000</div>
+<div style="margin-top:8px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">CONSULTANT FEE PER ASSESSMENT</div>
+</div>
+<div>
+<div style="font:700 56px/1 var(--font-heading);letter-spacing:-.03em;color:var(--text-hi);font-variant-numeric:tabular-nums">24</div>
+<div style="margin-top:8px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">OSOs CHECKED ON EVERY RUN</div>
+</div>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);max-width:34ch;text-wrap:pretty">Operators decline work they could legally take because the paperwork costs more than the job.</p>
+</div>
+</section>
+
+<section style="background:var(--sheet);padding:2px">
+<dc-import name="MediaSlot" slot="hero-loop" kind="video" ratio="16/9" size="1440×810" note="Screen capture: an operational volume being drawn on the map, then the SAIL badge resolving." dev="{{ slots }}" hint-size="100%,560px"></dc-import>
+</section>
+
+<section style="background:var(--sheet);padding:64px 48px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:40px">
+<h2 style="margin:0;font:600 32px/1.12 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi);max-width:22ch;text-wrap:pretty">The chain the authority will read, computed in front of you</h2>
+<p style="margin:0;max-width:40ch;font:400 15px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Five determinations, each one derived from the one before it, each one traceable to the clause that produced it.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:2px;background:var(--hairline)">
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:10px;min-height:168px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">STEP 01</span>
+<span style="font:600 24px/1.1 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">iGRC</span>
+<span style="font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Characteristic dimension and the population under the flight geography. Class 1–10.</span>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:10px;min-height:168px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">STEP 02 · M1 / M2</span>
+<span style="font:600 24px/1.1 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">GRC</span>
+<span style="font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Ground mitigations applied at their evidenced robustness. Final ground risk class.</span>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:10px;min-height:168px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">STEP 03</span>
+<span style="font:600 24px/1.1 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">ARC</span>
+<span style="font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Airspace class, altitude band, aerodrome proximity and traffic. a, b, c or d.</span>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:10px;min-height:168px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">STEP 04</span>
+<span style="font:600 24px/1.1 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">Residual ARC</span>
+<span style="font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Strategic mitigation by operational restriction or common structure.</span>
+</div>
+<div style="background:var(--accent);padding:24px;display:flex;flex-direction:column;gap:10px;min-height:168px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--accent-ink);opacity:.7">STEP 05 · GRC × ARC</span>
+<span style="font:600 24px/1.1 var(--font-heading);letter-spacing:-.015em;color:var(--accent-ink)">SAIL I–VI</span>
+<span style="font:400 13px/1.5 var(--font-heading);color:var(--accent-ink);text-wrap:pretty">Sets the ~24 OSOs at Low, Medium or High robustness, plus containment.</span>
+</div>
+</div>
+</section>
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:2px">
+<div style="background:var(--sheet);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:16px;min-width:0">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--accent-line);color:var(--text-low)">01 — TRACE</span>
+<h3 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);text-wrap:pretty">Every line cites its rule</h3>
+<p style="margin:0;max-width:44ch;font:400 15px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The derivation tree holds the whole determination. Each node names the rule that fired and the clause it comes from; the raw facts you confirmed sit at the leaves. A case officer can follow it without asking you a question.</p>
+</div>
+<div style="background:var(--sheet);padding:24px;min-width:0">
+<dc-import name="MediaSlot" slot="feature-trace" kind="image" ratio="4/3" size="1280×960" note="The derivation tree at full width, nodes expanded, citations legible." dev="{{ slots }}" hint-size="100%,400px"></dc-import>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:2px">
+<div style="background:var(--sheet);padding:24px;min-width:0;order:0">
+<dc-import name="MediaSlot" slot="feature-map" kind="image" ratio="4/3" size="1280×960" note="Flight geography with derived contingency volume and ground risk buffer, density overlay on." dev="{{ slots }}" hint-size="100%,400px"></dc-import>
+</div>
+<div style="background:var(--sheet);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:16px;min-width:0">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">02 — GEOGRAPHY</span>
+<h3 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);text-wrap:pretty">Draw the flight geography. The volumes follow.</h3>
+<p style="margin:0;max-width:44ch;font:400 15px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Contingency volume and ground risk buffer are derived from your aircraft's speed, altitude and response times, not typed in. Population density and ED-269 geo-zones sit underneath, so the adjacent area is visible before it becomes a finding.</p>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px">
+<div style="background:var(--sheet);padding:24px;min-width:0">
+<dc-import name="MediaSlot" slot="feature-dossier" kind="image" ratio="3/4" size="900×1200" note="A page of the exported DOCX dossier: OSO matrix with evidence references." dev="{{ slots }}" hint-size="100%,420px"></dc-import>
+</div>
+<div style="background:var(--sheet);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:16px;min-width:0">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">03 — DOSSIER</span>
+<h3 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);text-wrap:pretty">The output looks like it came from an aviation professional</h3>
+<p style="margin:0;max-width:40ch;font:400 15px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">ConOps, the SORA assessment tables, the OSO matrix with evidence references, and an ERP skeleton. Versioned, rulebase-stamped, exported as DOCX or PDF.</p>
+<div style="margin-top:8px;display:flex;flex-direction:column;gap:2px;background:var(--hairline);border-top:1px solid var(--hairline)">
+<div style="background:var(--sheet);padding:12px 0;display:flex;justify-content:space-between;font:500 13px/1.4 var(--font-heading);color:var(--text-mid)"><span>ConOps</span><span style="color:var(--text-low)">8 sections</span></div>
+<div style="background:var(--sheet);padding:12px 0;display:flex;justify-content:space-between;font:500 13px/1.4 var(--font-heading);color:var(--text-mid)"><span>SORA assessment tables</span><span style="color:var(--text-low)">6 tables</span></div>
+<div style="background:var(--sheet);padding:12px 0;display:flex;justify-content:space-between;font:500 13px/1.4 var(--font-heading);color:var(--text-mid)"><span>OSO matrix</span><span style="color:var(--text-low)">24 rows</span></div>
+</div>
+</div>
+<div style="background:var(--sheet);padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0">
+<dc-import name="MediaSlot" slot="feature-counterfactual" kind="video" ratio="1/1" size="900×900" note="Altitude lowered to 90 m; SAIL steps III to II, one plate at a time." dev="{{ slots }}" hint-size="100%,320px"></dc-import>
+<div>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">04 — COUNTERFACTUALS</span>
+<p style="margin:8px 0 0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">When the answer is no, the advisor says what would make it yes — and applies it.</p>
+</div>
+</div>
+</section>
+
+<section style="background:var(--sheet);padding:48px">
+<div style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low);margin-bottom:24px">WHO RUNS IT</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<dc-import name="MediaSlot" slot="persona-1" kind="image" ratio="1/1" size="600×600" note="Two-person inspection team, Graz. On site, mid-task." dev="{{ slots }}" hint-size="100%,240px"></dc-import>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">Inspection company, Graz.</strong> Takes the roof survey it used to decline, because the assessment now costs an afternoon.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<dc-import name="MediaSlot" slot="persona-2" kind="image" ratio="1/1" size="600×600" note="Solo BVLOS operator at a controller, field setting." dev="{{ slots }}" hint-size="100%,240px"></dc-import>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">Solo BVLOS operator.</strong> Wants one answer before quoting: can this fly, and if not, what would it take.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<dc-import name="MediaSlot" slot="persona-3" kind="image" ratio="1/1" size="600×600" note="Compliance officer reviewing a printed dossier at a desk." dev="{{ slots }}" hint-size="100%,240px"></dc-import>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">Compliance officer.</strong> Reads the trace before the verdict. Signs nothing that cannot be defended clause by clause.</p>
+</div>
+</div>
+</section>
+<section style="background:var(--sheet);padding:48px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:32px">
+<h2 style="margin:0;font:600 32px/1.12 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi)">Pricing</h2>
+<a href="#" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-mid)">SEE FULL COMPARISON</a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2px;background:var(--hairline)">
+<sc-for list="{{ tiers }}" as="t" hint-placeholder-count="5">
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:16px;min-height:300px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">{{ t.name }}</span>
+<div>
+<div style="font:700 32px/1 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi);font-variant-numeric:tabular-nums">{{ t.price }}</div>
+<div style="margin-top:6px;font:400 12px/1.4 var(--font-heading);color:var(--text-low)">{{ t.unit }}</div>
+</div>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;flex:1">
+<sc-for list="{{ t.feats }}" as="f" hint-placeholder-count="3">
+<li style="display:flex;gap:8px;font:400 13px/1.45 var(--font-heading);color:var(--text-mid)"><span style="color:var(--text-low);flex:none">—</span><span>{{ f }}</span></li>
+</sc-for>
+</ul>
+<button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:999px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--sheet-raised)">{{ t.cta }}</button>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="background:var(--sheet);padding:48px">
+<h2 style="margin:0 0 32px;font:600 32px/1.12 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi)">Questions worth asking</h2>
+<div style="display:flex;flex-direction:column;border-top:1px solid var(--hairline)">
+<sc-for list="{{ faqItems }}" as="f" hint-placeholder-count="5">
+<div style="border-bottom:1px solid var(--hairline)">
+<button onClick="{{ f.onToggle }}" aria-expanded="{{ f.open }}" style="width:100%;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 0;min-height:44px;text-align:left;font:600 18px/1.3 var(--font-heading);letter-spacing:-.01em;color:var(--text-hi)" style-hover="color:var(--accent)">
+<span>{{ f.q }}</span>
+<span style="flex:none;width:28px;height:28px;border:1px solid var(--hairline-strong);border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-mid)">{{ f.mark }}</span>
+</button>
+<p style="{{ f.aStyle }}">{{ f.a }}</p>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="background:var(--sheet);padding:40px 48px;display:flex;flex-wrap:wrap;align-items:center;gap:32px;justify-content:space-between">
+<div style="max-width:34ch">
+<div style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low);margin-bottom:8px">REFERENCED FRAMEWORKS</div>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Marks shown for reference only. No endorsement by EASA, Austro Control or the LBA is implied or claimed.</p>
+</div>
+<div style="flex:1;min-width:280px;max-width:520px">
+<dc-import name="MediaSlot" slot="proof-logos" kind="image" ratio="6/1" size="1200×200" note="Authority and standards marks, single row, monochrome." dev="{{ slots }}" hint-size="100%,120px"></dc-import>
+</div>
+</section>
+
+<footer style="background:var(--ground);padding:48px;display:flex;flex-direction:column;gap:32px;border-top:2px solid var(--ground)">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:8px">
+<div style="width:12px;height:12px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+<span style="font-family:var(--font-wordmark);font-weight:300;font-size:18px;letter-spacing:-.03em;color:var(--paper);white-space:nowrap">SORA Copilot</span>
+</div>
+<span style="font:500 12px/1.4 var(--font-heading);color:rgba(245,245,245,.45);font-variant-numeric:tabular-nums">Rulebase 2026.2 · 01 Oct 2026</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:rgba(245,245,245,.45);margin-bottom:6px">PRODUCT</span>
+<a href="#" style="display:flex;align-items:center;min-height:44px;color:var(--paper);text-decoration:none;font-size:13px">Category checker</a>
+<a href="#" style="display:flex;align-items:center;min-height:44px;color:var(--paper);text-decoration:none;font-size:13px">Pricing</a>
+<a href="#" style="display:flex;align-items:center;min-height:44px;color:var(--paper);text-decoration:none;font-size:13px">Worked example</a>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:rgba(245,245,245,.45);margin-bottom:6px">LEGAL</span>
+<a href="#" style="display:flex;align-items:center;min-height:44px;color:var(--paper);text-decoration:none;font-size:13px">Terms</a>
+<a href="#" style="display:flex;align-items:center;min-height:44px;color:var(--paper);text-decoration:none;font-size:13px">Privacy</a>
+<a href="#" style="display:flex;align-items:center;min-height:44px;color:var(--paper);text-decoration:none;font-size:13px">Rulebase changelog</a>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:rgba(245,245,245,.45);margin-bottom:6px">DATA REGION</span>
+<span style="color:rgba(245,245,245,.7);font-size:13px">EU · Frankfurt</span>
+</div>
+</div>
+<div style="border-top:1px solid rgba(245,245,245,.18);padding-top:24px;display:flex;gap:16px;align-items:flex-start;max-width:72ch">
+<div style="width:4px;align-self:stretch;background:var(--accent);flex:none"></div>
+<p style="margin:0;font:400 13px/1.6 var(--font-heading);color:rgba(245,245,245,.7);text-wrap:pretty">SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.</p>
+</div>
+</footer>
+
+</div>
+</sc-if>
+<sc-if value="{{ isProduct }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;min-height:940px;background:var(--ground);gap:2px">
+
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<aside style="width:240px;flex:none;background:var(--sheet);display:flex;flex-direction:column;justify-content:space-between;padding:20px 12px">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;align-items:center;gap:9px;padding:0 6px">
+<div style="width:12px;height:12px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+<span style="font-family:var(--font-wordmark);font-weight:300;font-size:17px;letter-spacing:-.03em;color:var(--text-hi);white-space:nowrap">SORA Copilot</span>
+</div>
+<button style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)" style-active="transform:scale(.98)">NEW OPERATION</button>
+<nav style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="6">
+<button onClick="{{ n.onGo }}" style="{{ n.style }}">
+<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="{{ n.d }}"></path></svg>
+<span>{{ n.label }}</span>
+</button>
+</sc-for>
+</nav>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:0 6px">
+<div style="display:flex;flex-direction:column;gap:4px;padding:12px;background:var(--sheet-well);border-radius:2px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RULEBASE</span>
+<span style="font:500 13px/1.3 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">2026.2 · 01 Oct 2026</span>
+<span style="font:400 11px/1.3 var(--font-heading);color:var(--text-low)">Pinned by organisation</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px;min-height:44px">
+<div style="width:28px;height:28px;border-radius:999px;background:var(--sheet-alt);display:flex;align-items:center;justify-content:center;font:600 11px/1 var(--font-heading);color:var(--text-hi)">KL</div>
+<div style="display:flex;flex-direction:column;min-width:0">
+<span style="font:500 13px/1.2 var(--font-heading);color:var(--text-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">K. Leitner</span>
+<span style="font:400 11px/1.2 var(--font-heading);color:var(--text-low)">Steiermark Inspect</span>
+</div>
+</div>
+</div>
+</aside>
+</sc-if>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+<header style="background:var(--sheet);padding:0 24px;min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 0;min-width:0">
+<h1 style="margin:0;font:600 24px/1.25 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);text-wrap:pretty">{{ pageTitle }}</h1>
+</div>
+<div style="display:flex;align-items:center;gap:10px">
+<button aria-label="Search" style="width:44px;height:44px;background:transparent;border:1px solid var(--hairline);border-radius:2px;cursor:pointer;color:var(--text-mid);display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--hairline-strong);color:var(--text-hi)"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5.5"></circle><path d="M13 13l4 4"></path></svg></button>
+<button aria-label="Notifications" style="width:44px;height:44px;background:transparent;border:1px solid var(--hairline);border-radius:2px;cursor:pointer;color:var(--text-mid);display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--hairline-strong);color:var(--text-hi)"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8a4 4 0 118 0v4l1.5 2h-11L6 12z"></path></svg></button>
+</div>
+</header>
+
+<main style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet);padding:20px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between">
+<div style="display:flex;gap:2px;background:var(--hairline);border:1px solid var(--hairline);border-radius:2px;overflow:hidden;flex-wrap:wrap">
+<button style="background:var(--sheet-raised);color:var(--text-hi);border:0;min-height:44px;padding:0 14px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer">ALL 6</button>
+<button style="background:var(--sheet);color:var(--text-mid);border:0;min-height:44px;padding:0 14px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer" style-hover="color:var(--text-hi)">DRAFT 1</button>
+<button style="background:var(--sheet);color:var(--text-mid);border:0;min-height:44px;padding:0 14px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer" style-hover="color:var(--text-hi)">DETERMINED 2</button>
+<button style="background:var(--sheet);color:var(--text-mid);border:0;min-height:44px;padding:0 14px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer" style-hover="color:var(--text-hi)">DOSSIER READY 1</button>
+<button style="background:var(--sheet);color:var(--text-mid);border:0;min-height:44px;padding:0 14px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer" style-hover="color:var(--text-hi)">SUBMITTED 1</button>
+<button style="background:var(--sheet);color:var(--text-mid);border:0;min-height:44px;padding:0 14px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer" style-hover="color:var(--text-hi)">AUTHORISED 1</button>
+</div>
+<input type="search" placeholder="Filter by site or aircraft" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px;min-width:220px;font-size:13px">
+</div>
+
+<div style="background:var(--sheet);flex:1">
+<div style="{{ opsHeadStyle }}">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">OPERATION</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">SITE</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">SAIL</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">STATUS</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RULEBASE</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">LAST RUN</span>
+</div>
+<sc-for list="{{ ops }}" as="o" hint-placeholder-count="6">
+<button onClick="{{ o.onGo }}" style="{{ opsRowStyle }}" style-hover="background:var(--sheet-raised)">
+<span style="{{ o.cName }}">{{ o.name }}</span>
+<span style="{{ o.cSite }}">{{ o.site }}</span>
+<dc-import name="SailBadge" level="{{ o.sail }}" size="sm" hint-size="40px,40px"></dc-import>
+<span style="{{ o.statusStyle }}"><span aria-hidden="true">{{ o.glyph }}</span>{{ o.statusLabel }}</span>
+<sc-if value="{{ o.mobileCard }}" hint-placeholder-val="{{ true }}">
+<span style="{{ o.cMeta }}">{{ o.metaLine }}</span>
+</sc-if>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">{{ o.rb }}</span>
+</sc-if>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">{{ o.run }}</span>
+</sc-if>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isFleet }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<p style="margin:0;max-width:62ch;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Kinetic energy is computed from MTOM and maximum speed; it is not editable. Fitted mitigations here become the M1 and M2 candidates offered in intake.</p>
+<button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)">ADD AIRCRAFT</button>
+</div>
+<div style="background:var(--sheet);flex:1;overflow-x:auto">
+<div style="min-width:960px">
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) 110px 110px 100px 100px 100px 110px minmax(0,1.4fr);gap:12px;padding:12px 24px;background:var(--sheet-well);border-bottom:1px solid var(--hairline)">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">AIRCRAFT</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">REG</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">MAX DIM</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">MTOM</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">CRUISE</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">V MAX</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">KINETIC E</span>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FITTED MITIGATIONS</span>
+</div>
+<sc-for list="{{ fleet }}" as="f" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) 110px 110px 100px 100px 100px 110px minmax(0,1.4fr);gap:12px;padding:16px 24px;align-items:center;border-bottom:1px solid var(--hairline);min-height:44px" style-hover="background:var(--sheet-raised)">
+<span style="font:500 14px/1.4 var(--font-heading);color:var(--text-hi)">{{ f.model }}</span>
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">{{ f.reg }}</span>
+<span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">{{ f.dim }}</span>
+<span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">{{ f.mtom }}</span>
+<span style="font:500 13px/1.4 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">{{ f.cruise }}</span>
+<span style="font:500 13px/1.4 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">{{ f.vmax }}</span>
+<span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">{{ f.ke }}</span>
+<span style="font:400 12px/1.4 var(--font-heading);color:var(--text-mid)">{{ f.mit }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isVerdict }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet);padding:24px;display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+<div style="display:flex;gap:20px;align-items:flex-start">
+<dc-import name="SailBadge" level="{{ sailNow }}" size="lg" hint-size="132px,132px"></dc-import>
+<div style="display:flex;flex-direction:column;gap:8px;max-width:30ch">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">DETERMINATION</span>
+<h2 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);text-wrap:pretty">Powerline corridor — Mur valley</h2>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid)">Specific category · BVLOS · ALTA-X-01 · 14.2 km corridor</p>
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">Rulebase 2026.2 · 01 Oct 2026</span>
+</div>
+</div>
+<div style="flex:1;min-width:300px;display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RISK CHAIN</span>
+<div style="display:flex;gap:2px;flex-wrap:wrap;background:var(--hairline)">
+<sc-for list="{{ chain }}" as="c" hint-placeholder-count="5">
+<div style="{{ chainCellStyle }}"><div style="{{ c.delay }}">
+<div style="background:var(--sheet-well);padding:14px 16px;min-width:132px;display:flex;flex-direction:column;gap:5px;height:100%;box-sizing:border-box">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">{{ c.k }}</span>
+<span style="font:700 28px/1 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi);font-variant-numeric:tabular-nums">{{ c.v }}</span>
+<span style="font:400 11px/1.35 var(--font-heading);color:var(--text-low)">{{ c.note }}</span>
+</div>
+</div></div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">SAIL SCALE</span>
+<div style="display:flex;gap:2px">
+<span style="display:flex;align-items:center;justify-content:center;width:30px;height:20px;background:var(--sail-1);color:var(--sail-1-ink);font:600 10px/1 var(--font-heading)">I</span>
+<span style="display:flex;align-items:center;justify-content:center;width:30px;height:20px;background:var(--sail-2);color:var(--sail-2-ink);font:600 10px/1 var(--font-heading)">II</span>
+<span style="display:flex;align-items:center;justify-content:center;width:30px;height:20px;background:var(--sail-3);color:var(--sail-3-ink);font:600 10px/1 var(--font-heading)">III</span>
+<span style="display:flex;align-items:center;justify-content:center;width:30px;height:20px;background:var(--sail-4);color:var(--sail-4-ink);font:600 10px/1 var(--font-heading)">IV</span>
+<span style="display:flex;align-items:center;justify-content:center;width:30px;height:20px;background:var(--sail-5);color:var(--sail-5-ink);font:600 10px/1 var(--font-heading)">V</span>
+<span style="display:flex;align-items:center;justify-content:center;width:30px;height:20px;background:var(--sail-6);color:var(--sail-6-ink);font:600 10px/1 var(--font-heading)">VI</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:2px;align-items:stretch">
+<div style="background:var(--sheet);padding:24px;flex:1 1 560px;min-width:0">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+<div>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);letter-spacing:-.01em;color:var(--text-hi)">Derivation</h3>
+<p style="margin:4px 0 0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid)">Leaves are facts you confirmed. Every node names the rule that fired.</p>
+</div>
+<button onClick="{{ replayTree }}" style="background:transparent;color:var(--text-mid);border:1px solid var(--hairline);border-radius:2px;min-height:44px;padding:0 12px;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="color:var(--text-hi);border-color:var(--hairline-strong)">REPLAY</button>
+</div>
+
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="overflow-x:auto;background:var(--sheet-well);border-radius:2px;padding:16px">
+<sc-if value="{{ treeOn }}" hint-placeholder-val="{{ true }}">
+<div style="position:relative;width:960px;height:520px">
+<svg width="960" height="520" viewBox="0 0 960 520" fill="none" style="position:absolute;inset:0" aria-hidden="true">
+<path d="M200,56 C225,56 225,118 250,118" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:140;stroke-dasharray:140;animation:edgeDraw 520ms var(--ease-instrument) 0ms both"></path>
+<path d="M200,156 C225,156 225,118 250,118" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:140;stroke-dasharray:140;animation:edgeDraw 520ms var(--ease-instrument) 60ms both"></path>
+<path d="M200,256 C230,256 230,398 250,398" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:220;stroke-dasharray:220;animation:edgeDraw 520ms var(--ease-instrument) 120ms both"></path>
+<path d="M200,338 C230,338 230,398 250,398" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:160;stroke-dasharray:160;animation:edgeDraw 520ms var(--ease-instrument) 180ms both"></path>
+<path d="M200,438 C230,438 230,398 250,398" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:160;stroke-dasharray:160;animation:edgeDraw 520ms var(--ease-instrument) 240ms both"></path>
+<path d="M440,118 L510,118" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:80;stroke-dasharray:80;animation:edgeDraw 420ms var(--ease-instrument) 420ms both"></path>
+<path d="M440,398 L510,398" stroke="var(--hairline-strong)" stroke-width="1.5" style="--edge-len:80;stroke-dasharray:80;animation:edgeDraw 420ms var(--ease-instrument) 480ms both"></path>
+<path d="M700,118 C735,118 735,260 770,260" stroke="var(--accent)" stroke-width="2" style="--edge-len:220;stroke-dasharray:220;animation:edgeDraw 520ms var(--ease-instrument) 760ms both"></path>
+<path d="M700,398 C735,398 735,260 770,260" stroke="var(--accent)" stroke-width="2" style="--edge-len:220;stroke-dasharray:220;animation:edgeDraw 520ms var(--ease-instrument) 820ms both"></path>
+</svg>
+<div style="position:absolute;left:0;top:20px;width:200px;padding:12px;background:var(--sheet);border:1px solid var(--hairline);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 60ms both"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FACT</span><div style="margin-top:6px;font:500 13px/1.35 var(--font-heading);color:var(--text-hi)">Characteristic dimension 1.32 m</div></div>
+<div style="position:absolute;left:0;top:120px;width:200px;padding:12px;background:var(--sheet);border:1px solid var(--hairline);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 120ms both"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FACT</span><div style="margin-top:6px;font:500 13px/1.35 var(--font-heading);color:var(--text-hi)">Ground environment: sparsely populated</div></div>
+<div style="position:absolute;left:0;top:220px;width:200px;padding:12px;background:var(--sheet);border:1px solid var(--hairline);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 180ms both"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FACT</span><div style="margin-top:6px;font:500 13px/1.35 var(--font-heading);color:var(--text-hi)">Max altitude 118 m AGL</div></div>
+<div style="position:absolute;left:0;top:312px;width:200px;padding:12px;background:var(--sheet);border:1px solid var(--hairline);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 240ms both"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FACT</span><div style="margin-top:6px;font:500 13px/1.35 var(--font-heading);color:var(--text-hi)">Airspace class G, uncontrolled</div></div>
+<div style="position:absolute;left:0;top:412px;width:200px;padding:12px;background:var(--sheet);border:1px solid var(--hairline);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 300ms both"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FACT</span><div style="margin-top:6px;font:500 13px/1.35 var(--font-heading);color:var(--text-hi)">Aerodrome proximity 7.4 km</div></div>
+<div style="position:absolute;left:250px;top:70px;width:190px;padding:14px;background:var(--sheet-raised);border:1px solid var(--hairline-strong);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 420ms both"><div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">iGRC</span><span style="font:700 22px/1 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">5</span></div><div style="margin-top:8px;font:400 12px/1.4 var(--font-heading);color:var(--text-mid)">Dimension band 1–3 m over sparsely populated area.</div><div style="margin-top:8px;display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:1px solid var(--accent-line);border-radius:999px;font:500 10px/1 var(--font-heading);color:var(--text-hi)">AMC1 Art.11 · Table 2</div></div>
+<div style="position:absolute;left:250px;top:350px;width:190px;padding:14px;background:var(--sheet-raised);border:1px solid var(--hairline-strong);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 480ms both"><div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">ARC</span><span style="font:700 22px/1 var(--font-heading);color:var(--text-hi)">c</span></div><div style="margin-top:8px;font:400 12px/1.4 var(--font-heading);color:var(--text-mid)">Uncontrolled airspace below 120 m, rural, outside aerodrome ring.</div><div style="margin-top:8px;display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:1px solid var(--accent-line);border-radius:999px;font:500 10px/1 var(--font-heading);color:var(--text-hi)">AMC1 Art.11 · Fig.4</div></div>
+<div style="position:absolute;left:510px;top:70px;width:190px;padding:14px;background:var(--sheet-raised);border:1px solid var(--hairline-strong);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 640ms both"><div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">GRC</span><span style="font:700 22px/1 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">4</span></div><div style="margin-top:8px;font:400 12px/1.4 var(--font-heading);color:var(--text-mid)">M1 sheltering low (−1). M2 impact reduction low (0).</div><div style="margin-top:8px;display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:1px solid var(--accent-line);border-radius:999px;font:500 10px/1 var(--font-heading);color:var(--text-hi)">AMC1 Art.11 · Table 3</div></div>
+<div style="position:absolute;left:510px;top:350px;width:190px;padding:14px;background:var(--sheet-raised);border:1px solid var(--hairline-strong);box-sizing:border-box;animation:nodeSettle 240ms var(--ease-ui) 700ms both"><div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RESIDUAL ARC</span><span style="font:700 22px/1 var(--font-heading);color:var(--text-hi)">b</span></div><div style="margin-top:8px;font:400 12px/1.4 var(--font-heading);color:var(--text-mid)">Strategic mitigation by operational restriction: daylight, corridor confined.</div><div style="margin-top:8px;display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:1px solid var(--accent-line);border-radius:999px;font:500 10px/1 var(--font-heading);color:var(--text-hi)">AMC1 Art.11 · §2.4.1</div></div>
+<div style="position:absolute;left:770px;top:180px;width:190px;padding:16px;background:var(--sheet);border:2px solid var(--accent);box-sizing:border-box;display:flex;gap:14px;align-items:center;animation:nodeSettle 240ms var(--ease-ui) 1020ms both">
+<dc-import name="SailBadge" level="{{ sailNow }}" size="md" hint-size="64px,64px"></dc-import>
+<div><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">SAIL</span><div style="margin-top:6px;font:400 12px/1.4 var(--font-heading);color:var(--text-mid)">GRC 4 × residual ARC b</div></div>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ mobile }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet-well);border-radius:2px;padding:12px;display:flex;flex-direction:column;gap:2px">
+<div style="background:var(--sheet);border-left:2px solid var(--accent);padding:12px"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">SAIL</span><div style="margin-top:6px;font:600 15px/1.3 var(--font-heading);color:var(--text-hi)">III — GRC 4 × residual ARC b</div></div>
+<div style="background:var(--sheet);padding:12px;margin-left:16px"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">GRC 4 · AMC1 Art.11 Table 3</span><div style="margin-top:6px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">M1 sheltering low (−1). M2 impact reduction low (0).</div></div>
+<div style="background:var(--sheet);padding:12px;margin-left:32px"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">iGRC 5 · AMC1 Art.11 Table 2</span><div style="margin-top:6px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Dimension 1.32 m · sparsely populated</div></div>
+<div style="background:var(--sheet);padding:12px;margin-left:16px"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RESIDUAL ARC b · §2.4.1</span><div style="margin-top:6px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Operational restriction: daylight, corridor confined.</div></div>
+<div style="background:var(--sheet);padding:12px;margin-left:32px"><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">ARC c · AMC1 Art.11 Fig.4</span><div style="margin-top:6px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Class G, 118 m AGL, 7.4 km from aerodrome</div></div>
+</div>
+</sc-if>
+</div>
+<div style="background:var(--sheet);padding:24px;display:flex;flex-direction:column;gap:24px;flex:0 1 420px;min-width:320px">
+<div>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);letter-spacing:-.01em;color:var(--text-hi)">Counterfactual advisor</h3>
+<p style="margin:4px 0 16px;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">What would change the determination, and what it costs you.</p>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline)">
+<sc-for list="{{ cfs }}" as="c" hint-placeholder-count="3">
+<div style="background:var(--sheet-well);padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+<span style="font:500 14px/1.4 var(--font-heading);color:var(--text-hi);text-wrap:pretty">{{ c.title }}</span>
+<dc-import name="SailBadge" level="{{ c.result }}" size="sm" hint-size="40px,40px"></dc-import>
+</div>
+<span style="font:500 12px/1 var(--font-heading);letter-spacing:.06em;color:var(--accent)">{{ c.effect }}</span>
+<span style="font:400 12px/1.45 var(--font-heading);color:var(--text-low);text-wrap:pretty">{{ c.cost }}</span>
+<button onClick="{{ c.onApply }}" style="{{ c.btnStyle }}">{{ c.btnLabel }}</button>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:20px;border-top:1px solid var(--hairline)">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:7px;height:7px;background:var(--accent)"></div><span style="font:500 12px/1.4 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">Rulebase 2026.2 · 01 Oct 2026</span></div>
+<div style="display:flex;gap:12px;align-items:flex-start"><div style="width:3px;align-self:stretch;background:var(--hairline-strong);flex:none"></div><p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.</p></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button style="flex:1;min-width:140px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)">BUILD DOSSIER</button><button style="flex:1;min-width:120px;background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--sheet-raised)">EXPORT TRACE</button></div>
+</div>
+</div>
+</div>
+
+<div style="background:var(--sheet);padding:24px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+<div>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);letter-spacing:-.01em;color:var(--text-hi)">Gap analysis</h3>
+<p style="margin:4px 0 0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid)">24 OSOs required at SAIL III. 6 evidenced, 3 partial, 3 gaps shown.</p>
+</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<span style="display:inline-flex;align-items:center;gap:7px;font:500 12px/1 var(--font-heading);color:var(--text-hi)"><span aria-hidden="true">▣</span>Evidenced</span>
+<span style="display:inline-flex;align-items:center;gap:7px;font:500 12px/1 var(--font-heading);color:var(--sail-3)"><span aria-hidden="true">◧</span>Partial</span>
+<span style="display:inline-flex;align-items:center;gap:7px;font:500 12px/1 var(--font-heading);color:var(--sail-6)"><span aria-hidden="true">□</span>Gap</span>
+</div>
+</div>
+<div style="{{ osoGridStyle }}">
+<sc-for list="{{ osos }}" as="o" hint-placeholder-count="10">
+<button onClick="{{ o.onOpen }}" style="background:var(--sheet-well);border:0;cursor:pointer;text-align:left;padding:14px 16px;display:flex;align-items:center;gap:14px;min-height:56px;transition:background var(--t-ui) var(--ease-ui)" style-hover="background:var(--sheet-raised)">
+<span style="font:600 12px/1 var(--font-heading);color:var(--text-mid);min-width:58px;font-variant-numeric:tabular-nums">{{ o.id }}</span>
+<span style="flex:1;font:400 13px/1.4 var(--font-heading);color:var(--text-hi);text-wrap:pretty">{{ o.name }}</span>
+<span style="{{ o.robStyle }}">{{ o.rob }}</span>
+<span style="display:inline-flex;align-items:center;gap:6px;min-width:84px;font:500 12px/1 var(--font-heading);color:{{ o.ink }}"><span aria-hidden="true">{{ o.glyph }}</span>{{ o.label }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isWizard }}" hint-placeholder-val="{{ true }}">
+<div style="{{ stepperStyle }}">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="7">
+<button onClick="{{ st.onGo }}" style="{{ st.style }}"><span style="{{ st.tick }}">{{ st.n }}</span><span>{{ st.label }}</span></button>
+</sc-for>
+</div>
+<div style="display:flex;gap:2px;flex:1;flex-wrap:wrap">
+<div style="flex:1;min-width:340px;background:var(--sheet);padding:24px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<h2 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">{{ stepTitle }}</h2>
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low)">Autosaved · resumable</span>
+</div>
+
+<sc-if value="{{ step3 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:2px;flex-wrap:wrap;background:var(--hairline)">
+<div style="flex:1;min-width:280px;position:relative;aspect-ratio:16/10;background:var(--sheet-well);border-radius:10px;overflow:hidden">
+<div style="position:absolute;inset:0;background-image:linear-gradient(var(--hairline) 1px,transparent 1px),linear-gradient(90deg,var(--hairline) 1px,transparent 1px);background-size:40px 40px"></div>
+<div style="{{ mapStyles.pop }}"></div>
+<svg viewBox="0 0 800 500" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><path d="M0,330 C120,300 180,360 280,340 C400,316 460,392 580,370 C680,352 740,392 800,376" stroke="var(--hairline-strong)" stroke-width="2" fill="none"></path><path d="M0,120 C140,150 220,96 340,124 C460,152 560,100 800,132" stroke="var(--hairline-strong)" stroke-width="1" fill="none" stroke-dasharray="6 5"></path></svg>
+<div style="{{ mapStyles.zones }}"></div>
+<div style="{{ mapStyles.grb }}"></div>
+<div style="{{ mapStyles.cv }}"></div>
+<div style="{{ mapStyles.fg }}"></div>
+<div style="position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:8px;background:var(--sheet);padding:8px 10px;border-radius:2px"><div style="width:48px;height:2px;background:var(--text-hi)"></div><span style="font:500 11px/1 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">500 m</span></div>
+<div style="position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:2px"><button aria-label="Zoom in" style="width:44px;height:44px;background:var(--sheet);border:1px solid var(--hairline);color:var(--text-hi);cursor:pointer;font-size:16px">+</button><button aria-label="Zoom out" style="width:44px;height:44px;background:var(--sheet);border:1px solid var(--hairline);color:var(--text-hi);cursor:pointer;font-size:16px">−</button></div>
+</div>
+<div style="width:280px;flex:none;min-width:260px;background:var(--sheet);display:flex;flex-direction:column;gap:16px;padding-left:16px">
+<div>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">LAYERS</span>
+<div style="margin-top:8px;display:flex;flex-direction:column">
+<sc-for list="{{ layerRows }}" as="l" hint-placeholder-count="5">
+<button onClick="{{ l.onToggle }}" aria-pressed="{{ l.on }}" style="{{ l.rowStyle }}"><span style="{{ l.boxStyle }}"></span><span style="flex:1">{{ l.label }}</span><span aria-hidden="true" style="color:var(--text-low)">{{ l.mark }}</span></button>
+</sc-for>
+</div>
+</div>
+<div style="padding-top:16px;border-top:1px solid var(--hairline);display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">AREA READOUT</span>
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums"><span style="color:var(--text-mid);white-space:nowrap">Flight geography</span><span style="white-space:nowrap">2.41 km²</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums"><span style="color:var(--text-mid);white-space:nowrap">Contingency volume</span><span style="white-space:nowrap">3.88 km²</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums"><span style="color:var(--text-mid);white-space:nowrap">Ground risk buffer</span><span style="white-space:nowrap">6.12 km²</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums"><span style="color:var(--text-mid);white-space:nowrap">Peak density</span><span style="white-space:nowrap">84 ppl/km²</span></div>
+</div>
+<div style="padding:12px;background:var(--sheet-well);border-left:3px solid var(--sail-3);border-radius:2px">
+<span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--sail-3)">ADJACENT AREA</span>
+<p style="margin:6px 0 0;font:400 12px/1.45 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The buffer reaches a populated cell 340 m north-east. Containment will be assessed at the next step.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ step1 }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<sc-for list="{{ fleet }}" as="f" hint-placeholder-count="4">
+<label style="background:var(--sheet-well);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;min-height:44px" style-hover="background:var(--sheet-raised)">
+<div style="display:flex;align-items:center;gap:10px"><input type="radio" name="ac" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:600 15px/1.3 var(--font-heading);color:var(--text-hi)">{{ f.model }}</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font:500 12px/1.4 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums"><span>Max dim {{ f.dim }}</span><span>MTOM {{ f.mtom }}</span><span>V max {{ f.vmax }}</span><span>KE {{ f.ke }}</span></div>
+<span style="font:400 12px/1.4 var(--font-heading);color:var(--text-low)">Fitted: {{ f.mit }}</span>
+</label>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ step2 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:20px;max-width:620px">
+<div><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">OPERATION TYPE</span><div style="margin-top:10px;display:flex;gap:2px;background:var(--hairline);border:1px solid var(--hairline);border-radius:2px;overflow:hidden"><button style="flex:1;min-height:44px;background:var(--sheet-well);color:var(--text-mid);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em">VLOS</button><button style="flex:1;min-height:44px;background:var(--sheet-well);color:var(--text-mid);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em">EVLOS</button><button style="flex:1;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em">BVLOS</button></div></div>
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">MAXIMUM ALTITUDE (M AGL)</span><input type="number" value="118" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px;font-variant-numeric:tabular-nums"></label>
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">PLANNED DURATION (MINUTES)</span><input type="number" value="42" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px;font-variant-numeric:tabular-nums"></label>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-low);text-wrap:pretty">Altitude above 120 m AGL moves the operation out of the standard ARC lookup and requires an airspace assessment at step 5.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ step4 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline);max-width:720px">
+<label style="background:var(--sheet-well);padding:16px;display:flex;gap:12px;cursor:pointer;min-height:44px"><input type="radio" name="env" style="margin-top:3px;width:18px;height:18px;accent-color:var(--accent)"><span><span style="display:block;font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">Controlled ground area</span><span style="display:block;margin-top:4px;font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Access restricted to people under the operator's control for the duration.</span></span></label>
+<label style="background:var(--sheet-well);padding:16px;display:flex;gap:12px;cursor:pointer;min-height:44px"><input type="radio" name="env" checked="checked" style="margin-top:3px;width:18px;height:18px;accent-color:var(--accent)"><span><span style="display:block;font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">Sparsely populated</span><span style="display:block;margin-top:4px;font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Peak density 84 ppl/km² across the ground risk buffer. Derived from the map step.</span></span></label>
+<label style="background:var(--sheet-well);padding:16px;display:flex;gap:12px;cursor:pointer;min-height:44px"><input type="radio" name="env" style="margin-top:3px;width:18px;height:18px;accent-color:var(--accent)"><span><span style="display:block;font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">Populated</span><span style="display:block;margin-top:4px;font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Residential, commercial or industrial area in the buffer.</span></span></label>
+<label style="background:var(--sheet-well);padding:16px;display:flex;gap:12px;cursor:pointer;min-height:44px"><input type="radio" name="env" style="margin-top:3px;width:18px;height:18px;accent-color:var(--accent)"><span><span style="display:block;font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">Assembly of people</span><span style="display:block;margin-top:4px;font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Gatherings where people cannot move away. Raises iGRC to the top band.</span></span></label>
+</div>
+</sc-if>
+
+<sc-if value="{{ step5 }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;max-width:760px">
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">AIRSPACE CLASS</span><select style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px"><option>G — uncontrolled</option><option>E</option><option>D</option><option>C</option></select></label>
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">ALTITUDE BAND</span><select style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px"><option>Below 120 m AGL</option><option>120–150 m AGL</option><option>Above 150 m AGL</option></select></label>
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">AERODROME PROXIMITY</span><input type="text" value="7.4 km — LOWG Graz" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px"></label>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">GEO-ZONES INTERSECTED</span><div style="display:flex;flex-wrap:wrap;gap:8px"><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--arc-c);color:var(--text-hi);font:500 12px/1 var(--font-heading)">AT-R-114 restricted</span><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--hairline-strong);color:var(--text-mid);font:500 12px/1 var(--font-heading)">None other</span></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ step6 }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:16px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">M1 — Sheltering</span><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">GRC −1</span></div><div style="display:flex;gap:2px"><button style="flex:1;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">LOW</button><button style="flex:1;min-height:44px;background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">MEDIUM</button><button style="flex:1;min-height:44px;background:transparent;color:var(--text-low);border:1px solid var(--hairline);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:not-allowed;opacity:.35">HIGH</button></div><span style="font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Evidence: ground risk buffer survey — <span style="color:var(--sail-3)">missing</span></span></div>
+<div style="background:var(--sheet-well);padding:16px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">M2 — Impact reduction</span><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">GRC −1</span></div><div style="display:flex;gap:2px"><button style="flex:1;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">LOW</button><button style="flex:1;min-height:44px;background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">MEDIUM</button><button style="flex:1;min-height:44px;background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">HIGH</button></div><span style="font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Parachute fitted on ALTA-X-01 — <span style="color:var(--text-hi)">deployment report attached</span></span></div>
+<div style="background:var(--sheet-well);padding:16px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/1.3 var(--font-heading);color:var(--text-hi)">Strategic — restriction</span><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">ARC c → b</span></div><div style="display:flex;gap:2px"><button style="flex:1;min-height:44px;background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">NOT CLAIMED</button><button style="flex:1;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">CLAIMED</button></div><span style="font:400 12px/1.45 var(--font-heading);color:var(--text-mid)">Daylight only, corridor confined, NOTAM filed.</span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ step7 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:760px">
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Nothing below has reached the engine. Confirm each fact, or correct it, before the determination runs.</p>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px"><span style="font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Aircraft</span><span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">Freefly Alta X · ALTA-X-01</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px"><span style="font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Operation</span><span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">BVLOS · 118 m AGL · 42 min</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px"><span style="font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Ground environment</span><span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">Sparsely populated · 84 ppl/km²</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px"><span style="font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Airspace</span><span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">Class G · AT-R-114 · 7.4 km LOWG</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px"><span style="font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Mitigations</span><span style="font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">M1 low · M2 low · strategic restriction</span></div>
+</div>
+</div>
+</sc-if>
+
+<div style="margin-top:auto;padding-top:20px;border-top:1px solid var(--hairline);display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap">
+<button onClick="{{ prev }}" style="background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="color:var(--text-hi)">BACK</button>
+<button onClick="{{ next }}" style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 24px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)" style-active="transform:scale(.98)">CONTINUE</button>
+</div>
+</div>
+
+<aside style="width:360px;flex:none;min-width:300px;background:var(--sheet);padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<h3 style="margin:0;font:600 15px/1.3 var(--font-heading);color:var(--text-hi)">Describe the mission</h3>
+<button onClick="{{ toggleChat }}" style="background:transparent;border:1px solid var(--hairline);border-radius:2px;color:var(--text-mid);min-height:44px;padding:0 12px;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">HIDE</button>
+</div>
+<div style="padding:12px;background:var(--sheet-well);border-radius:2px">
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">“Alta X along the 110 kV line south of Gratkorn, about 14 km, below 120 metres, farmland and a few scattered houses.”</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">EXTRACTED FACTS — NOT YET IN THE ENGINE</span>
+<p style="margin:0;font:400 12px/1.45 var(--font-heading);color:var(--text-low);text-wrap:pretty">Each one needs your confirmation. Rejecting a fact returns you to the step that owns it.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ factChips }}" as="f" hint-placeholder-count="3">
+<div style="{{ f.style }}">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><p style="{{ f.textStyle }}">{{ f.text }}</p><span style="{{ f.tagStyle }}">{{ f.tag }}</span></div>
+<sc-if value="{{ f.unconfirmed }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:8px"><button onClick="{{ f.onConfirm }}" style="flex:1;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">CONFIRM</button><button onClick="{{ f.onReject }}" style="flex:1;min-height:44px;background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);border-radius:2px;font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">REJECT</button></div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:auto;display:flex;gap:8px">
+<input type="text" placeholder="Add detail" style="flex:1;background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px;font-size:13px">
+<button aria-label="Send" style="width:44px;height:44px;background:var(--sheet-alt);color:var(--text-hi);border:0;border-radius:2px;cursor:pointer">→</button>
+</div>
+</aside>
+</div>
+</sc-if>
+<sc-if value="{{ isOso }}" hint-placeholder-val="{{ true }}">
+<div style="position:relative;flex:1;display:flex;background:var(--sheet)">
+<div style="flex:1;padding:24px;opacity:.4;pointer-events:none" aria-hidden="true">
+<h3 style="margin:0 0 16px;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">Gap analysis</h3>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<sc-for list="{{ osos }}" as="o" hint-placeholder-count="10">
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:14px;min-height:52px"><span style="font:600 12px/1 var(--font-heading);color:var(--text-mid);min-width:58px">{{ o.id }}</span><span style="flex:1;font:400 13px/1.4 var(--font-heading);color:var(--text-hi)">{{ o.name }}</span><span style="{{ o.robStyle }}">{{ o.rob }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="width:480px;flex:none;min-width:320px;background:var(--sheet-raised);box-shadow:var(--shadow-overlay);padding:24px;display:flex;flex-direction:column;gap:20px;border-left:2px solid var(--ground)" role="dialog" aria-label="OSO #05 detail">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+<div>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">OSO #05 · REQUIRED AT SAIL III</span>
+<h2 style="margin:8px 0 0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);text-wrap:pretty">UAS designed considering system safety and reliability</h2>
+</div>
+<button aria-label="Close" style="width:44px;height:44px;flex:none;background:transparent;border:1px solid var(--hairline);border-radius:2px;color:var(--text-mid);cursor:pointer;font-size:16px" style-hover="color:var(--text-hi);border-color:var(--hairline-strong)">✕</button>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+<span style="display:inline-flex;align-items:center;min-height:28px;padding:0 12px;border-radius:999px;border:1px solid var(--hairline-strong);background:var(--sheet-alt);color:var(--text-hi);font:600 10px/1 var(--font-heading);letter-spacing:.1em">MEDIUM ROBUSTNESS</span>
+<span style="display:inline-flex;align-items:center;gap:7px;font:500 12px/1 var(--font-heading);color:var(--sail-6)"><span aria-hidden="true">□</span>Gap — no evidence attached</span>
+</div>
+<div style="padding:16px;background:var(--sheet-well);border-radius:2px;display:flex;flex-direction:column;gap:8px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">WHAT IT REQUIRES</span>
+<p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The applicant demonstrates that the UAS design addresses failure conditions whose effects could reach the ground risk buffer. At medium robustness the claim must be supported by analysis and by test or service evidence, and validated by a competent third party.</p>
+<span style="display:inline-flex;align-items:center;align-self:flex-start;min-height:24px;padding:0 10px;border:1px solid var(--accent-line);border-radius:999px;font:500 10px/1 var(--font-heading);color:var(--text-hi)">AMC1 Art.11 · Annex E · OSO #05</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">EVIDENCE THAT SATISFIES IT</span>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet);padding:12px 14px;display:flex;align-items:center;gap:10px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid);min-height:44px"><span aria-hidden="true" style="color:var(--text-low)">□</span>Functional hazard assessment covering the failure set</div>
+<div style="background:var(--sheet);padding:12px 14px;display:flex;align-items:center;gap:10px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid);min-height:44px"><span aria-hidden="true" style="color:var(--text-low)">□</span>Manufacturer reliability statement or service history</div>
+<div style="background:var(--sheet);padding:12px 14px;display:flex;align-items:center;gap:10px;font:400 13px/1.4 var(--font-heading);color:var(--text-mid);min-height:44px"><span aria-hidden="true" style="color:var(--text-low)">□</span>Third-party validation record</div>
+</div>
+</div>
+<div style="padding:20px;border:1px dashed var(--hairline-strong);border-radius:2px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+<span style="font:500 13px/1.4 var(--font-heading);color:var(--text-mid)">Drop evidence here, or</span>
+<button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)">CHOOSE FILES</button>
+<span style="font:400 11px/1.4 var(--font-heading);color:var(--text-low)">PDF, DOCX or XLSX · 40 MB maximum · stored in EU Frankfurt</span>
+</div>
+<div style="margin-top:auto;display:flex;gap:10px"><button style="flex:1;background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">MARK NOT APPLICABLE</button><button style="flex:1;background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">SAVE</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDossier }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2px;flex:1">
+<div style="background:var(--sheet);padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0">
+<div>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">Sections</h3>
+<p style="margin:4px 0 0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid)">Powerline corridor — Mur valley · SAIL III · Rulebase 2026.2</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><span style="color:var(--accent)" aria-hidden="true">▣</span><span style="flex:1;font:500 14px/1.4 var(--font-heading);color:var(--text-hi)">ConOps</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low)">8 sections</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><span style="color:var(--accent)" aria-hidden="true">▣</span><span style="flex:1;font:500 14px/1.4 var(--font-heading);color:var(--text-hi)">SORA assessment tables</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low)">6 tables</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><span style="color:var(--sail-3)" aria-hidden="true">◧</span><span style="flex:1;font:500 14px/1.4 var(--font-heading);color:var(--text-hi)">OSO matrix</span><span style="font:500 12px/1 var(--font-heading);color:var(--sail-3)">3 gaps</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><span style="color:var(--text-low)" aria-hidden="true">□</span><span style="flex:1;font:500 14px/1.4 var(--font-heading);color:var(--text-mid)">ERP skeleton</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low)">not started</span></div>
+<div style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><span style="color:var(--accent)" aria-hidden="true">▣</span><span style="flex:1;font:500 14px/1.4 var(--font-heading);color:var(--text-hi)">Derivation trace appendix</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low)">14 nodes</span></div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)">GENERATE v4</button><button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">DOWNLOAD DOCX</button></div>
+<div style="padding-top:20px;border-top:1px solid var(--hairline)">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">VERSION HISTORY</span>
+<div style="margin-top:12px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:12px;align-items:baseline"><span style="font:600 13px/1.4 var(--font-heading);color:var(--text-hi);min-width:28px;font-variant-numeric:tabular-nums">v3</span><span style="flex:1;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Rulebase 2026.2 · OSO #08 evidence added</span><span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low)">2 h ago</span></div>
+<div style="display:flex;gap:12px;align-items:baseline"><span style="font:600 13px/1.4 var(--font-heading);color:var(--text-hi);min-width:28px;font-variant-numeric:tabular-nums">v2</span><span style="flex:1;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Rulebase 2026.2 · altitude corrected to 118 m</span><span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low)">Yesterday</span></div>
+<div style="display:flex;gap:12px;align-items:baseline"><span style="font:600 13px/1.4 var(--font-heading);color:var(--text-hi);min-width:28px;font-variant-numeric:tabular-nums">v1</span><span style="flex:1;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">Rulebase 2026.1 · first generation</span><span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low)">12 Sep</span></div>
+</div>
+</div>
+</div>
+<div style="background:var(--sheet);padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">Preview</h3><span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low)">Page 14 of 62</span></div>
+<dc-import name="MediaSlot" slot="dossier-preview" kind="image" ratio="3/4" size="900×1200" note="Rendered page from the generated DOCX: OSO matrix with evidence references." dev="{{ slots }}" hint-size="100%,420px"></dc-import>
+<div style="display:flex;gap:12px;align-items:flex-start;padding-top:12px;border-top:1px solid var(--hairline)"><div style="width:3px;align-self:stretch;background:var(--hairline-strong);flex:none"></div><p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.</p></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet);padding:24px;display:flex;flex-direction:column;gap:2px;flex:1">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:20px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">ORGANISATION</span>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:400 12px/1.3 var(--font-heading);color:var(--text-mid)">Legal name</span><input type="text" value="Steiermark Inspect GmbH" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:400 12px/1.3 var(--font-heading);color:var(--text-mid)">Operator registration</span><input type="text" value="AUT8j2kx91mfq" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px;font-variant-numeric:tabular-nums"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:400 12px/1.3 var(--font-heading);color:var(--text-mid)">Competent authority</span><select style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px"><option>Austro Control (AT)</option><option>LBA (DE)</option><option>ILT (NL)</option></select></label>
+</div>
+<div style="background:var(--sheet-well);padding:20px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">MEMBERS · 3 OF 5 SEATS</span>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 0"><div style="width:30px;height:30px;border-radius:999px;background:var(--sheet-alt);display:flex;align-items:center;justify-content:center;font:600 11px/1 var(--font-heading);color:var(--text-hi)">KL</div><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">K. Leitner</span><span style="font:500 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-mid)">OWNER</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 0"><div style="width:30px;height:30px;border-radius:999px;background:var(--sheet-alt);display:flex;align-items:center;justify-content:center;font:600 11px/1 var(--font-heading);color:var(--text-hi)">MR</div><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">M. Reiter</span><span style="font:500 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-mid)">PILOT</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 0"><div style="width:30px;height:30px;border-radius:999px;background:var(--sheet-alt);display:flex;align-items:center;justify-content:center;font:600 11px/1 var(--font-heading);color:var(--text-hi)">AS</div><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">A. Stiegler</span><span style="font:500 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-mid)">COMPLIANCE</span></div>
+</div>
+<button style="align-self:flex-start;background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 16px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">INVITE MEMBER</button>
+</div>
+<div style="background:var(--sheet-well);padding:20px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">BILLING</span>
+<div style="display:flex;align-items:baseline;gap:10px"><span style="font:700 32px/1 var(--font-heading);color:var(--text-hi);font-variant-numeric:tabular-nums">€249</span><span style="font:400 13px/1.4 var(--font-heading);color:var(--text-mid)">per month · Team</span></div>
+<div style="display:flex;justify-content:space-between;font:500 13px/1.4 var(--font-heading);color:var(--text-mid)"><span>Next invoice</span><span style="color:var(--text-hi);font-variant-numeric:tabular-nums">01 Nov 2026</span></div>
+<div style="display:flex;justify-content:space-between;font:500 13px/1.4 var(--font-heading);color:var(--text-mid)"><span>Dossiers this period</span><span style="color:var(--text-hi);font-variant-numeric:tabular-nums">11</span></div>
+<button style="align-self:flex-start;background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 16px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">MANAGE PLAN</button>
+</div>
+<div style="background:var(--sheet-well);padding:20px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">DATA REGION</span>
+<div style="display:flex;gap:2px"><button style="flex:1;min-height:44px;background:var(--accent);color:var(--accent-ink);border:0;font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer">EU · FRANKFURT</button><button style="flex:1;min-height:44px;background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);font:600 11px/1 var(--font-heading);letter-spacing:.08em;cursor:pointer">EU · DUBLIN</button></div>
+<p style="margin:0;font:400 12px/1.45 var(--font-heading);color:var(--text-low);text-wrap:pretty">Evidence files, mission data and generated dossiers stay in the selected region. Changing it migrates existing records and takes up to an hour.</p>
+</div>
+<div style="background:var(--sheet-well);padding:20px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RULEBASE PINNING</span>
+<div style="display:flex;flex-direction:column;gap:2px">
+<label style="display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer"><input type="radio" name="rb" checked="checked" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">Pin to 2026.2 · 01 Oct 2026</span></label>
+<label style="display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer"><input type="radio" name="rb" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 13px/1.3 var(--font-heading);color:var(--text-mid)">Always use the latest rulebase</span></label>
+</div>
+<p style="margin:0;font:400 12px/1.45 var(--font-heading);color:var(--text-low);text-wrap:pretty">Pinning keeps determinations reproducible while an application is open with the authority. Existing dossiers always keep the rulebase they were generated against.</p>
+</div>
+<div style="background:var(--sheet-well);padding:20px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">APPEARANCE</span>
+<div style="display:flex;gap:2px;border:1px solid var(--hairline-strong);border-radius:999px;overflow:hidden;align-self:flex-start"><button onClick="{{ setDark }}" style="min-height:40px;padding:0 20px;background:transparent;color:var(--text-mid);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.1em">DARK</button><button onClick="{{ setLight }}" style="min-height:40px;padding:0 20px;background:transparent;color:var(--text-mid);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.1em">LIGHT</button></div>
+<p style="margin:0;font:400 12px/1.45 var(--font-heading);color:var(--text-low);text-wrap:pretty">Dark is the default. Light is intended for printed review and bright field conditions.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStates }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet);padding:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2px;flex:1;align-content:start">
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:16px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">COMPUTATION IN PROGRESS</span>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;animation:stageTick var(--t-ui) var(--ease-ui) both"><span style="color:var(--accent)" aria-hidden="true">▣</span><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">Facts validated</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">0.21 s</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;animation:stageTick var(--t-ui) var(--ease-ui) 200ms both"><span style="color:var(--accent)" aria-hidden="true">▣</span><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">iGRC resolved</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">0.44 s</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;animation:stageTick var(--t-ui) var(--ease-ui) 400ms both"><span style="color:var(--accent)" aria-hidden="true">▣</span><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">Ground mitigations applied</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">0.18 s</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;border-left:2px solid var(--accent);padding-left:10px"><span style="color:var(--accent)" aria-hidden="true">◧</span><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-hi)">Airspace assessment</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">running</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;opacity:.45"><span aria-hidden="true">□</span><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-mid)">SAIL and OSO set</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low)">queued</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;opacity:.45"><span aria-hidden="true">□</span><span style="flex:1;font:500 13px/1.3 var(--font-heading);color:var(--text-mid)">Containment check</span><span style="font:500 12px/1 var(--font-heading);color:var(--text-low)">queued</span></div>
+</div>
+<p style="margin:0;font:400 12px/1.45 var(--font-heading);color:var(--text-low)">Elapsed 0.83 s. You can leave this page; the run continues.</p>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">EMPTY — OPERATIONS</span>
+<dc-import name="MediaSlot" slot="empty-operations" kind="illustration" ratio="1/1" size="480×480" note="Line schematic: an empty operational volume outline over a blank chart." dev="{{ slots }}" hint-size="180px,180px"></dc-import>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">No operations yet</h3>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Start with the aircraft and the area. The engine needs eleven facts to reach a SAIL; the wizard collects them in about four minutes.</p>
+<button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">NEW OPERATION</button>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">EMPTY — DOSSIERS</span>
+<dc-import name="MediaSlot" slot="empty-dossiers" kind="illustration" ratio="1/1" size="480×480" note="Line schematic: an unbound document stack, corner registration marks." dev="{{ slots }}" hint-size="180px,180px"></dc-import>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">No dossiers yet</h3>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">A dossier is built from a determination. Run one first, then assemble the sections here.</p>
+<button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">SEE DETERMINATIONS</button>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:14px;border-left:3px solid var(--sail-6)">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--sail-6)">ERROR — DETERMINATION FAILED</span>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">The run stopped at the airspace assessment</h3>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The geo-zone service did not answer within 20 seconds. No partial determination was recorded; your facts are intact.</p>
+<div style="padding:12px;background:var(--sheet);border-radius:2px;font:500 12px/1.5 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums">ref ENG-5081 · 15 Oct 2026 09:41 UTC · rulebase 2026.2</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">RETRY RUN</button><button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">COPY REFERENCE</button></div>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:14px;border-left:3px solid var(--sail-3)">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--sail-3)">OFFLINE</span>
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">Working from the last sync</h3>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Determinations and dossier generation need a connection. You can read this verdict, the trace and the OSO matrix as they stood at 09:12.</p>
+<div style="display:flex;align-items:center;gap:10px;font:500 12px/1 var(--font-heading);color:var(--text-mid)"><span style="width:7px;height:7px;background:var(--sail-3);border-radius:999px"></span>Retrying every 30 s</div>
+</div>
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">LOADING — TABLE SKELETON</span>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="height:44px;background:var(--sheet);border-bottom:1px solid var(--hairline)"></div>
+<div style="height:44px;background:var(--sheet);border-bottom:1px solid var(--hairline)"></div>
+<div style="height:44px;background:var(--sheet);border-bottom:1px solid var(--hairline);opacity:.7"></div>
+<div style="height:44px;background:var(--sheet);border-bottom:1px solid var(--hairline);opacity:.45"></div>
+<div style="height:44px;background:var(--sheet);opacity:.25"></div>
+</div>
+<p style="margin:0;font:400 12px/1.45 var(--font-heading);color:var(--text-low)">Static blocks, no shimmer. Rows resolve top to bottom as data arrives.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isOverlays }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--sheet);padding:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;align-content:start;flex:1">
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">TOASTS</span>
+<div style="display:flex;align-items:center;gap:12px;background:var(--sheet-raised);border-left:3px solid var(--accent);padding:14px 16px;box-shadow:var(--shadow-overlay)"><span style="flex:1;font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">Dossier v4 generated</span><button style="background:transparent;border:0;color:var(--accent);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer;min-height:44px;padding:0 4px">DOWNLOAD</button></div>
+<div style="display:flex;align-items:center;gap:12px;background:var(--sheet-raised);border-left:3px solid var(--sail-3);padding:14px 16px;box-shadow:var(--shadow-overlay)"><span style="flex:1;font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">OSO #05 still has no evidence</span><button style="background:transparent;border:0;color:var(--text-mid);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer;min-height:44px;padding:0 4px">OPEN</button></div>
+<div style="display:flex;align-items:center;gap:12px;background:var(--sheet-raised);border-left:3px solid var(--sail-6);padding:14px 16px;box-shadow:var(--shadow-overlay)"><span style="flex:1;font:500 13px/1.4 var(--font-heading);color:var(--text-hi)">Upload rejected — file over 40 MB</span><button style="background:transparent;border:0;color:var(--text-mid);font:600 10px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer;min-height:44px;padding:0 4px">DISMISS</button></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">MODAL</span>
+<div style="background:var(--sheet-raised);box-shadow:var(--shadow-overlay);padding:24px;display:flex;flex-direction:column;gap:16px" role="dialog">
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">Change the pinned rulebase?</h3>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Moving from 2026.1 to 2026.2 re-runs 4 open determinations. Two of them change SAIL. Dossiers already generated keep their original rulebase.</p>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:12px 14px;display:flex;justify-content:space-between;gap:12px;font:500 13px/1.4 var(--font-heading);color:var(--text-hi)"><span>BVLOS pipeline run — Leibnitz</span><span style="color:var(--sail-4)">IV → V</span></div>
+<div style="background:var(--sheet-well);padding:12px 14px;display:flex;justify-content:space-between;gap:12px;font:500 13px/1.4 var(--font-heading);color:var(--text-hi)"><span>Roof survey — Reininghaus</span><span style="color:var(--text-mid)">II → II</span></div>
+</div>
+<div style="display:flex;gap:10px;justify-content:flex-end"><button style="background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">CANCEL</button><button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">CHANGE AND RE-RUN</button></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">DESTRUCTIVE CONFIRMATION</span>
+<div style="background:var(--sheet-raised);box-shadow:var(--shadow-overlay);padding:24px;display:flex;flex-direction:column;gap:16px;border-top:3px solid var(--sail-6)" role="alertdialog">
+<h3 style="margin:0;font:600 18px/1.3 var(--font-heading);color:var(--text-hi)">Delete this operation and its 3 dossiers?</h3>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Evidence files stay in the vault. The determination, its trace and the generated dossiers are removed permanently.</p>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:400 12px/1.3 var(--font-heading);color:var(--text-mid)">Type the operation name to confirm</span><input type="text" placeholder="Powerline corridor — Mur valley" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:44px;padding:0 12px"></label>
+<div style="display:flex;gap:10px;justify-content:flex-end"><button style="background:transparent;color:var(--text-mid);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">KEEP</button><button disabled="disabled" style="background:var(--sail-6);color:#fff;border:0;border-radius:2px;min-height:44px;padding:0 18px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:not-allowed;opacity:.35">DELETE</button></div>
+</div>
+</div>
+</div>
+</sc-if>
+<!--/app-screens--></main>
+
+<sc-if value="{{ mobile }}" hint-placeholder-val="{{ true }}">
+<nav style="position:sticky;bottom:0;background:var(--sheet);display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:2px 0 env(safe-area-inset-bottom)">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+<button onClick="{{ n.onGo }}" style="{{ n.style }}">
+<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="{{ n.d }}"></path></svg>
+</button>
+</sc-for>
+</nav>
+</sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isPricing }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:2px">
+<header style="background:var(--sheet);display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 24px;min-height:64px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><span style="font-family:var(--font-wordmark);font-weight:300;font-size:20px;letter-spacing:-.03em;color:var(--text-hi);white-space:nowrap">SORA Copilot</span></div>
+<button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:0 20px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">START A SORA</button>
+</header>
+<section style="background:var(--sheet);padding:64px 48px 32px">
+<h1 style="{{ displayStyle }}">Pay for the assessment, not the appointment.</h1>
+<p style="margin:0;max-width:60ch;font:400 18px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The category checker is free and needs no account. Everything else is priced against what a consultant would charge for one dossier.</p>
+</section>
+<section style="background:var(--sheet);padding:0 48px 48px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<sc-for list="{{ tiers }}" as="t" hint-placeholder-count="5">
+<div style="background:var(--sheet-well);padding:24px;display:flex;flex-direction:column;gap:16px;min-height:360px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">{{ t.name }}</span>
+<div><div style="font:700 36px/1 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi);font-variant-numeric:tabular-nums">{{ t.price }}</div><div style="margin-top:6px;font:400 12px/1.4 var(--font-heading);color:var(--text-low)">{{ t.unit }}</div></div>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;flex:1"><sc-for list="{{ t.feats }}" as="f" hint-placeholder-count="4"><li style="display:flex;gap:8px;font:400 13px/1.45 var(--font-heading);color:var(--text-mid)"><span style="color:var(--text-low);flex:none">—</span><span>{{ f }}</span></li></sc-for></ul>
+<button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:999px;min-height:44px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--sheet-raised)">{{ t.cta }}</button>
+</div>
+</sc-for>
+</div>
+</section>
+<section style="background:var(--sheet);padding:48px">
+<h2 style="margin:0 0 24px;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">What is included at every tier</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px">
+<p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">Full derivation trace.</strong> Every determination is traceable to the clause that produced it, on every plan, including the free checker's estimate.</p>
+<p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">Rulebase stamping.</strong> Results are reproducible. The version and date travel with the determination and into the export.</p>
+<p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">EU data residency.</strong> Mission data, evidence and dossiers stay in Frankfurt or Dublin, your choice.</p>
+<p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty"><strong style="color:var(--text-hi);font-weight:600">No lock-in.</strong> Dossiers export as DOCX and PDF. Cancel and keep everything you generated.</p>
+</div>
+</section>
+<footer style="background:var(--ground);padding:40px 48px;display:flex;gap:16px;align-items:flex-start"><div style="width:4px;align-self:stretch;background:var(--accent);flex:none"></div><p style="margin:0;max-width:72ch;font:400 13px/1.6 var(--font-heading);color:rgba(245,245,245,.7);text-wrap:pretty">SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.</p></footer>
+</div>
+</sc-if>
+
+<sc-if value="{{ isChecker }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:2px">
+<header style="background:var(--sheet);display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 24px;min-height:64px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><span style="font-family:var(--font-wordmark);font-weight:300;font-size:20px;letter-spacing:-.03em;color:var(--text-hi);white-space:nowrap">SORA Copilot</span></div>
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">Rulebase 2026.2 · 01 Oct 2026</span>
+</header>
+<section style="background:var(--sheet);padding:48px 48px 24px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">FREE CATEGORY CHECKER</span>
+<h1 style="margin:12px 0 12px;font:600 32px/1.12 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi);max-width:24ch;text-wrap:pretty">Three questions. Category, and an estimated SAIL.</h1>
+<p style="margin:0;max-width:62ch;font:400 15px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">No account. Nothing is stored. The estimate is indicative — a full determination needs the flight geography and your claimed mitigations.</p>
+</section>
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:2px">
+<div style="background:var(--sheet);padding:32px 48px 48px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">01 — AIRCRAFT MASS AND SIZE</span>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q1" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">Under 250 g</span></label>
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q1" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">250 g to 4 kg, class marked</span></label>
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q1" checked="checked" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">4 kg to 25 kg</span></label>
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q1" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">Over 25 kg</span></label>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">02 — WHAT IS UNDERNEATH</span>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q2" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">Controlled ground area</span></label>
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q2" checked="checked" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">Sparsely populated</span></label>
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q2" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">Populated area</span></label>
+<label style="background:var(--sheet-well);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:48px"><input type="radio" name="q2" style="width:18px;height:18px;accent-color:var(--accent)"><span style="font:500 14px/1.3 var(--font-heading);color:var(--text-hi)">Assembly of people</span></label>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">03 — HOW YOU WILL FLY IT</span>
+<div style="display:flex;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<button style="flex:1;min-height:48px;background:var(--sheet-well);color:var(--text-mid);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em">VLOS</button>
+<button style="flex:1;min-height:48px;background:var(--sheet-well);color:var(--text-mid);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em">EVLOS</button>
+<button style="flex:1;min-height:48px;background:var(--accent);color:var(--accent-ink);border:0;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em">BVLOS</button>
+</div>
+</div>
+</div>
+<div style="background:var(--sheet-raised);padding:48px;display:flex;flex-direction:column;gap:24px">
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">RESULT</span>
+<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+<dc-import name="SailBadge" level="3" size="lg" hint-size="132px,132px"></dc-import>
+<div style="display:flex;flex-direction:column;gap:8px;min-width:200px">
+<span style="font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">Specific category</span>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">This operation needs an operational authorisation. Estimated SAIL III before mitigations are claimed.</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:12px 16px;display:flex;justify-content:space-between;gap:12px;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);min-height:44px;align-items:center"><span style="color:var(--text-mid)">Estimated iGRC</span><span style="font-variant-numeric:tabular-nums">5</span></div>
+<div style="background:var(--sheet-well);padding:12px 16px;display:flex;justify-content:space-between;gap:12px;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);min-height:44px;align-items:center"><span style="color:var(--text-mid)">Estimated ARC</span><span>c</span></div>
+<div style="background:var(--sheet-well);padding:12px 16px;display:flex;justify-content:space-between;gap:12px;font:500 13px/1.4 var(--font-heading);color:var(--text-hi);min-height:44px;align-items:center"><span style="color:var(--text-mid)">OSOs at this SAIL</span><span style="font-variant-numeric:tabular-nums">24</span></div>
+</div>
+<p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Mitigations can move this. Claiming M1 sheltering and M2 impact reduction at medium robustness typically reaches SAIL II for an operation like this.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;min-height:48px;padding:0 24px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">RUN THE FULL ASSESSMENT</button><button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:999px;min-height:48px;padding:0 24px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">EMAIL ME THIS ESTIMATE</button></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding-top:20px;border-top:1px solid var(--hairline)"><div style="width:3px;align-self:stretch;background:var(--hairline-strong);flex:none"></div><p style="margin:0;font:400 13px/1.55 var(--font-heading);color:var(--text-mid);text-wrap:pretty">SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.</p></div>
+</div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLegal }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:2px">
+<header style="background:var(--sheet);display:flex;align-items:center;gap:10px;padding:12px 24px;min-height:64px"><div style="width:14px;height:14px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><span style="font-family:var(--font-wordmark);font-weight:300;font-size:20px;letter-spacing:-.03em;color:var(--text-hi);white-space:nowrap">SORA Copilot</span></header>
+<section style="background:var(--sheet);padding:48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:48px">
+<nav style="display:flex;flex-direction:column;gap:2px;align-self:start">
+<a href="#" style="text-decoration:none;padding:12px;background:var(--sheet-raised);color:var(--text-hi);font:600 11px/1 var(--font-heading);letter-spacing:.1em;min-height:44px;display:flex;align-items:center;box-shadow:inset 2px 0 0 var(--accent)">DISCLAIMER</a>
+<a href="#" style="text-decoration:none;padding:12px;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;min-height:44px;display:flex;align-items:center">TERMS OF SERVICE</a>
+<a href="#" style="text-decoration:none;padding:12px;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;min-height:44px;display:flex;align-items:center">PRIVACY</a>
+<a href="#" style="text-decoration:none;padding:12px;color:var(--text-mid);font:600 11px/1 var(--font-heading);letter-spacing:.1em;min-height:44px;display:flex;align-items:center">RULEBASE CHANGELOG</a>
+</nav>
+<div style="grid-column:span 2;min-width:0;display:flex;flex-direction:column;gap:32px;max-width:72ch">
+<div>
+<h1 style="margin:0 0 16px;font:600 32px/1.12 var(--font-heading);letter-spacing:-.02em;color:var(--text-hi)">Disclaimer</h1>
+<div style="padding:20px;background:var(--accent);color:var(--accent-ink);border-radius:2px"><p style="margin:0;font:600 18px/1.5 var(--font-heading);text-wrap:pretty">SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.</p></div>
+<p style="margin:16px 0 0;font:400 15px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The determinations this service produces are decision support. They are computed from the facts you confirm, against a stated version of the rulebase, and they are shown with the reasoning that produced them so that you can check it. They are not an authorisation, a declaration, or a legal opinion, and they do not transfer any part of the operator's responsibility under Regulation (EU) 2019/947.</p>
+<p style="margin:16px 0 0;font:400 15px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">You remain the accountable party for the accuracy of the facts you enter, for the evidence you attach to each OSO, and for the operation itself.</p>
+</div>
+<div>
+<h2 style="margin:0 0 16px;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">Rulebase changelog</h2>
+<div style="display:flex;flex-direction:column;gap:2px;background:var(--hairline);border:1px solid var(--hairline)">
+<div style="background:var(--sheet-well);padding:16px;display:flex;gap:16px;flex-wrap:wrap"><span style="font:600 13px/1.4 var(--font-heading);color:var(--text-hi);min-width:120px;font-variant-numeric:tabular-nums">2026.2 · 01 Oct</span><span style="flex:1;min-width:220px;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Austrian annex: AT-R-114 boundary updated. Adjacent-area assessment now flags populated cells within 500 m of the ground risk buffer.</span></div>
+<div style="background:var(--sheet-well);padding:16px;display:flex;gap:16px;flex-wrap:wrap"><span style="font:600 13px/1.4 var(--font-heading);color:var(--text-hi);min-width:120px;font-variant-numeric:tabular-nums">2026.1 · 14 Jun</span><span style="flex:1;min-width:220px;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">M2 robustness criteria aligned to the revised AMC. Three OSOs reworded; none changed robustness level.</span></div>
+<div style="background:var(--sheet-well);padding:16px;display:flex;gap:16px;flex-wrap:wrap"><span style="font:600 13px/1.4 var(--font-heading);color:var(--text-hi);min-width:120px;font-variant-numeric:tabular-nums">2025.4 · 02 Dec</span><span style="flex:1;min-width:220px;font:400 13px/1.5 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Containment requirements separated from OSO #24 and surfaced as their own determination output.</span></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSignin }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2px;min-height:820px">
+<div style="background:var(--sheet);padding:48px;display:flex;flex-direction:column;justify-content:space-between;gap:40px">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;background:var(--accent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><span style="font-family:var(--font-wordmark);font-weight:300;font-size:20px;letter-spacing:-.03em;color:var(--text-hi);white-space:nowrap">SORA Copilot</span></div>
+<div style="max-width:40ch"><h1 style="margin:0 0 16px;font-family:var(--font-wordmark);font-weight:300;font-size:36px;line-height:1.08;letter-spacing:-.03em;color:var(--text-hi);text-wrap:pretty">From mission to dossier in minutes.</h1><p style="margin:0;font:400 15px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">Every line cites its rule. Determinations are stamped with the rulebase version that produced them, so a result you defend today is the same result in six months.</p></div>
+<span style="font:500 12px/1.4 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums">Rulebase 2026.2 · 01 Oct 2026 · EU Frankfurt</span>
+</div>
+<div style="background:var(--sheet-raised);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:24px">
+<div style="max-width:380px;width:100%;display:flex;flex-direction:column;gap:20px">
+<h2 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi)">Sign in</h2>
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">WORK EMAIL</span><input type="email" placeholder="name@operator.at" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:48px;padding:0 14px"></label>
+<button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:48px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer" style-hover="background:var(--accent-press)" style-active="transform:scale(.98)">SEND MAGIC LINK</button>
+<div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:1px;background:var(--hairline)"></div><span style="font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">OR</span><div style="flex:1;height:1px;background:var(--hairline)"></div></div>
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;color:var(--text-low)">PASSWORD</span><input type="password" style="background:var(--field-bg);border:1px solid var(--field-border);border-radius:2px;color:var(--text-hi);min-height:48px;padding:0 14px"></label>
+<button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:48px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">SIGN IN</button>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-mid)">No account yet? <a href="#" style="color:var(--text-hi)">Create one</a>. The category checker needs no account at all.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isErrors }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:2px;min-height:720px">
+<div style="background:var(--sheet);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:20px">
+<span style="font:700 72px/1 var(--font-heading);letter-spacing:-.03em;color:var(--text-hi);font-variant-numeric:tabular-nums">404</span>
+<h1 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);max-width:20ch;text-wrap:pretty">That page is not on the chart</h1>
+<p style="margin:0;max-width:44ch;font:400 15px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">The link may be from an older rulebase, or the operation it pointed at was deleted. Your determinations are unaffected.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">GO TO OPERATIONS</button><button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">BACK</button></div>
+</div>
+<div style="background:var(--sheet-raised);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:20px;border-top:3px solid var(--sail-6)">
+<span style="font:700 72px/1 var(--font-heading);letter-spacing:-.03em;color:var(--text-hi);font-variant-numeric:tabular-nums">500</span>
+<h1 style="margin:0;font:600 24px/1.2 var(--font-heading);letter-spacing:-.015em;color:var(--text-hi);max-width:22ch;text-wrap:pretty">The engine did not answer</h1>
+<p style="margin:0;max-width:44ch;font:400 15px/1.6 var(--font-heading);color:var(--text-mid);text-wrap:pretty">No determination was written. Nothing you entered was lost. If this repeats, send the reference below — it identifies the exact run and rulebase.</p>
+<div style="padding:12px 14px;background:var(--sheet-well);border-radius:2px;font:500 12px/1.5 var(--font-heading);color:var(--text-mid);font-variant-numeric:tabular-nums;align-self:flex-start">ref ENG-5081 · 15 Oct 2026 09:41 UTC · rulebase 2026.2</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button style="background:var(--accent);color:var(--accent-ink);border:0;border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">RETRY</button><button style="background:transparent;color:var(--text-hi);border:1px solid var(--hairline-strong);border-radius:2px;min-height:44px;padding:0 20px;font:600 11px/1 var(--font-heading);letter-spacing:.1em;cursor:pointer">COPY REFERENCE</button></div>
+</div>
+</div>
+</sc-if>
+<!--/screens--></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1500,&quot;height&quot;:980}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'landing', theme: 'dark', vp: 'desktop', slots: false, zoom: 1,
+    wizStep: 3, treeKey: 1, openNodes: { n1: true, n3: true }, cf: null,
+    drawer: false, modal: null, chatOpen: true, layers: { fg: true, cv: true, grb: true, pop: true, zones: true },
+    facts: { alt: 'unconfirmed', ac: 'confirmed', env: 'unconfirmed' },
+    faq: 0, stateDemo: 'loading'
+  };
+  componentDidMount() {
+    this.fit();
+    requestAnimationFrame(this.fit);
+    setTimeout(this.fit, 120);
+    window.addEventListener('resize', this.fit);
+    if (window.ResizeObserver) {
+      this.ro = new ResizeObserver(this.fit);
+      if (this.scrollEl) this.ro.observe(this.scrollEl);
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.fit);
+    if (this.ro) this.ro.disconnect();
+  }
+  setScrollEl = el => {
+    this.scrollEl = el;
+    if (el && this.ro) { this.ro.disconnect(); this.ro.observe(el); }
+    if (el) requestAnimationFrame(this.fit);
+  };
+  fit = () => {
+    const measured = this.scrollEl ? this.scrollEl.clientWidth : 0;
+    // a sub-600px reading here means layout has not settled; fall back to the window
+    const w = measured > 600 ? measured : window.innerWidth;
+    const avail = Math.max(360, w - 32);
+    const target = this.state.vp === 'mobile' ? 390 : 1440;
+    const z = Math.min(1, avail / target);
+    if (Math.abs(z - this.state.zoom) > 0.005) this.setState({ zoom: z });
+  };
+  set = (k, v) => this.setState({ [k]: v }, this.fit);
+  pill(active) {
+    return 'padding:7px 14px;min-height:32px;border:0;cursor:pointer;white-space:nowrap;font:600 11px/1 var(--font-heading);letter-spacing:.08em;' +
+      (active ? 'background:#caff01;color:#000' : 'background:transparent;color:rgba(245,245,245,.55)');
+  }
+  renderVals() {
+    const s = this.state;
+    const toggle = (g, k) => () => this.setState(p => ({ [g]: { ...p[g], [k]: !p[g][k] } }));
+    const faqSrc = [
+      ['Does SORA Copilot grant my authorisation?', 'No. It prepares and verifies the assessment. Your national aviation authority grants the authorisation. The disclaimer appears on the verdict screen and in every export.'],
+      ['Which rulebase does a determination use?', 'The one pinned to your organisation at the moment of the run. The version and date are stamped on the determination and carried into the dossier, so a result is reproducible months later.'],
+      ['What happens to facts I describe in prose?', 'They arrive as unconfirmed chips. Nothing reaches the engine until you confirm it. The boundary between extraction and computation is visible in the interface.'],
+      ['Can I see why a SAIL came out the way it did?', 'Every node of the derivation tree names the rule that fired and cites the clause. The raw facts sit at the leaves. Expand any branch down to the input.'],
+      ['Which authorities is it built against?', 'JARUS SORA 2.5 as adopted in EU 2019/947 AMC/GM, with national annexes for Austria, Germany and the Netherlands. Others on request.']
+    ].map((f, i) => ({
+      q: f[0], a: f[1], open: s.faq === i,
+      onToggle: () => this.setState({ faq: s.faq === i ? -1 : i }),
+      aStyle: 'margin:0;padding:' + (s.faq === i ? '0 80px 24px 0' : '0') + ';max-height:' + (s.faq === i ? '200px' : '0') + ';overflow:hidden;opacity:' + (s.faq === i ? '1' : '0') + ';transition:max-height var(--t-panel) var(--ease-ui),opacity var(--t-ui) var(--ease-ui),padding var(--t-panel) var(--ease-ui);font:400 15px/1.55 var(--font-heading);color:var(--text-mid)',
+      mark: s.faq === i ? '–' : '+'
+    }));
+    const tiers = [
+      { name: 'FREE', price: '€0', unit: 'category checker only', cta: 'START', feats: ['Open / specific / certified determination', 'Estimated SAIL, no dossier', 'No account required'], accent: false },
+      { name: 'PER DOSSIER', price: '€149', unit: 'one authority-ready dossier', cta: 'BUY ONE', feats: ['Full derivation trace', 'DOCX and PDF export', 'Rulebase pinning for 12 months'], accent: false },
+      { name: 'PRO', price: '€89', unit: 'per month, one operator', cta: 'START PRO', feats: ['Unlimited determinations', 'Unlimited dossiers', 'Fleet records and evidence vault', 'Counterfactual advisor'], accent: true },
+      { name: 'TEAM', price: '€249', unit: 'per month, five seats', cta: 'START TEAM', feats: ['Everything in Pro', 'Shared fleet and evidence', 'Review and approval states', 'Audit log export'], accent: false },
+      { name: 'CONSULTANCY', price: 'Contact', unit: 'per client workspace', cta: 'TALK TO US', feats: ['Unlimited client workspaces', 'White-label dossier cover', 'National annex requests', 'Data region selection'], accent: false }
+    ];
+    const appScreens = ['dashboard', 'fleet', 'wizard', 'verdict', 'oso', 'dossier', 'settings', 'states', 'overlays'];
+    const titles = { dashboard: 'Operations', fleet: 'Drone fleet', wizard: 'New operation', verdict: 'Determination', oso: 'Determination', dossier: 'Dossier builder', settings: 'Settings', states: 'Data surface states', overlays: 'Overlays' };
+    const navSrc = [
+      ['dashboard', 'Operations', 'M3 4h14M3 9h14M3 14h9'],
+      ['fleet', 'Drone fleet', 'M4 10h12M10 4v12'],
+      ['wizard', 'New operation', 'M10 3v14M3 10h14'],
+      ['verdict', 'Determinations', 'M3 15l4-6 3 4 3-7 4 9'],
+      ['dossier', 'Dossiers', 'M5 3h7l3 3v11H5z'],
+      ['settings', 'Settings', 'M10 7a3 3 0 100 6 3 3 0 000-6z']
+    ].map(n => ({
+      key: n[0], label: n[1], d: n[2],
+      onGo: () => this.set('screen', n[0]),
+      style: 'display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 14px;border:0;cursor:pointer;text-align:left;white-space:nowrap;font:500 13px/1 var(--font-heading);border-radius:2px;transition:background var(--t-ui) var(--ease-ui);' +
+        (s.screen === n[0] || (n[0] === 'verdict' && s.screen === 'oso') ? 'background:var(--sheet-raised);color:var(--text-hi);box-shadow:inset 2px 0 0 var(--accent)' : 'background:transparent;color:var(--text-mid)')
+    }));
+    const statusInk = { draft: 'var(--text-low)', determined: 'var(--text-hi)', 'dossier ready': 'var(--accent)', submitted: 'var(--text-mid)', authorised: 'var(--accent)' };
+    const glyph = { draft: '□', determined: '■', 'dossier ready': '◆', submitted: '◧', authorised: '▣' };
+    const mob = s.vp === 'mobile';
+    const opsCols = 'grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) 92px minmax(0,1fr) 110px 110px;gap:16px';
+    const opsHeadStyle = mob ? 'display:none'
+      : 'display:grid;' + opsCols + ';padding:12px 24px;border-bottom:1px solid var(--hairline);background:var(--sheet-well)';
+    const opsRowStyle = mob
+      ? 'display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 14px;align-items:center;padding:16px;border-bottom:1px solid var(--hairline);cursor:pointer;background:transparent;text-align:left;width:100%;border-left:0;border-right:0;border-top:0'
+      : 'display:grid;' + opsCols + ';padding:14px 24px;align-items:center;border-bottom:1px solid var(--hairline);cursor:pointer;min-height:44px;background:transparent;text-align:left;width:100%;border-left:0;border-right:0;border-top:0;transition:background var(--t-ui) var(--ease-ui)';
+    const cellName = mob
+      ? 'grid-column:1/-1;font:600 15px/1.35 var(--font-heading);color:var(--text-hi);text-wrap:pretty'
+      : 'font:500 14px/1.4 var(--font-heading);color:var(--text-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    const cellSite = mob
+      ? 'grid-column:1/-1;font:400 13px/1.4 var(--font-heading);color:var(--text-mid)'
+      : 'font:400 13px/1.4 var(--font-heading);color:var(--text-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    const cellMeta = mob
+      ? 'grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;font:500 12px/1.4 var(--font-heading);color:var(--text-low);font-variant-numeric:tabular-nums'
+      : '';
+    const ops = [
+      ['Powerline corridor — Mur valley', 'Graz Süd, AT', 3, 'dossier ready', '2026.2', '2 h ago'],
+      ['Roof survey — Reininghaus block 4', 'Graz, AT', 2, 'determined', '2026.2', 'Yesterday'],
+      ['Quarry volumetrics — Peggau', 'Peggau, AT', 2, 'authorised', '2026.1', '12 Sep'],
+      ['BVLOS pipeline run — Leibnitz', 'Leibnitz, AT', 4, 'submitted', '2026.1', '04 Sep'],
+      ['Crowd overflight — Schlossberg event', 'Graz, AT', 5, 'draft', '—', '—'],
+      ['Thermal inspection — Werk 2', 'Kapfenberg, AT', 1, 'determined', '2026.2', '28 Aug']
+    ].map(o => ({
+      name: o[0], site: o[1], sail: o[2], status: o[3], rb: o[4], run: o[5],
+      glyph: glyph[o[3]], statusLabel: o[3].charAt(0).toUpperCase() + o[3].slice(1),
+      statusStyle: 'display:inline-flex;align-items:center;gap:7px;font:500 12px/1 var(--font-heading);color:' + statusInk[o[3]],
+      onGo: () => this.set('screen', 'verdict'),
+      cName: cellName, cSite: cellSite, cMeta: cellMeta, mobileCard: mob,
+      metaLine: o[4] === '—' ? 'Not yet run' : 'Rulebase ' + o[4] + ' · ' + o[5]
+    }));
+    const fleet = [
+      ['Freefly Alta X', 'ALTA-X-01', '1.32 m', '15.9 kg', '18 m/s', '22 m/s', '3.85 kJ', 'Parachute · FTS'],
+      ['DJI Matrice 350 RTK', 'M350-04', '0.89 m', '6.47 kg', '17 m/s', '23 m/s', '1.71 kJ', 'Parachute'],
+      ['Wingcopter 198', 'WC198-01', '1.98 m', '24.0 kg', '28 m/s', '36 m/s', '15.6 kJ', 'Parachute · DAA · FTS'],
+      ['DJI Mavic 3E', 'M3E-11', '0.38 m', '0.92 kg', '15 m/s', '21 m/s', '0.20 kJ', '—']
+    ].map(f => ({ model: f[0], reg: f[1], dim: f[2], mtom: f[3], cruise: f[4], vmax: f[5], ke: f[6], mit: f[7] }));
+    const cfApplied = !!s.cf;
+    const sailNow = cfApplied ? 2 : 3;
+    const chain = [
+      { k: 'iGRC', v: '5', note: '1.32 m · sparsely populated' },
+      { k: 'GRC', v: cfApplied ? '3' : '4', note: cfApplied ? 'M1 medium · M2 low' : 'M1 low · M2 low' },
+      { k: 'ARC', v: 'c', note: 'Class G · 118 m AGL' },
+      { k: 'Residual ARC', v: 'b', note: 'Operational restriction' },
+      { k: 'SAIL', v: cfApplied ? 'II' : 'III', note: 'GRC × residual ARC' }
+    ].map((c, i) => ({ ...c, delay: 'animation:chainLink var(--t-panel) var(--ease-ui) ' + (i * 90) + 'ms both' }));
+    const cfs = [
+      { id: 'alt', title: 'Lower maximum altitude to 90 m AGL', effect: 'Residual ARC c → b', result: 'III', cost: 'No equipment change. Reduces corridor coverage by 11%.' },
+      { id: 'm1', title: 'Claim M1(B) sheltering at medium robustness', effect: 'GRC 4 → 3', result: 'II', cost: 'Requires a ground-risk buffer survey and a signed procedure.' },
+      { id: 'para', title: 'Fit the parachute already on ALTA-X-01 and evidence it', effect: 'M2 low → medium', result: 'II', cost: 'Evidence: deployment test report, maintenance log.' }
+    ].map(c => ({ ...c, onApply: () => this.setState({ cf: s.cf === c.id ? null : c.id, treeOn: false }, () => setTimeout(() => this.setState({ treeOn: true }), 30)), applied: s.cf === c.id, btnLabel: s.cf === c.id ? 'APPLIED · UNDO' : 'APPLY AND RE-RUN', btnStyle: 'min-height:44px;padding:0 14px;border-radius:2px;cursor:pointer;font:600 11px/1 var(--font-heading);letter-spacing:.08em;border:1px solid var(--hairline-strong);' + (s.cf === c.id ? 'background:var(--accent);color:var(--accent-ink);border-color:var(--accent)' : 'background:transparent;color:var(--text-hi)') }));
+    const osos = [
+      ['OSO #01', 'Operator competent / proven', 'High', 'evidenced'],
+      ['OSO #03', 'UAS maintained by competent entity', 'Medium', 'evidenced'],
+      ['OSO #05', 'UAS designed considering system safety', 'Medium', 'gap'],
+      ['OSO #07', 'Inspection of UAS to ensure consistency', 'Medium', 'evidenced'],
+      ['OSO #08', 'Operational procedures defined and validated', 'Medium', 'partial'],
+      ['OSO #09', 'Remote crew trained and current', 'Medium', 'evidenced'],
+      ['OSO #13', 'External services adequate to the operation', 'Low', 'gap'],
+      ['OSO #16', 'Multi-crew coordination', 'Low', 'evidenced'],
+      ['OSO #20', 'A human factors evaluation has been performed', 'Low', 'partial'],
+      ['OSO #24', 'UAS designed and qualified for adverse conditions', 'Medium', 'gap']
+    ].map(o => {
+      const tone = { evidenced: ['var(--text-hi)', '▣', 'Evidenced'], partial: ['var(--sail-3)', '◧', 'Partial'], gap: ['var(--sail-6)', '□', 'Gap'] }[o[3]];
+      return { id: o[0], name: o[1], rob: o[2], state: o[3], ink: tone[0], glyph: tone[1], label: tone[2], onOpen: () => this.set('screen', 'oso'),
+        robStyle: 'display:inline-flex;align-items:center;min-height:24px;padding:0 10px;border-radius:999px;font:600 10px/1 var(--font-heading);letter-spacing:.1em;border:1px solid var(--hairline-strong);color:var(--text-mid);background:' + (o[2] === 'High' ? 'var(--sheet-alt)' : 'transparent') };
+    });
+    return {
+      faqItems: faqSrc, tiers: tiers, navItems: navSrc, ops: ops, fleet: fleet,
+      chain: chain, cfs: cfs, osos: osos, sailNow: sailNow, cfApplied: cfApplied,
+      opsHeadStyle: opsHeadStyle, opsRowStyle: opsRowStyle,
+      displayStyle: 'margin:0 0 20px;font-family:var(--font-wordmark);font-weight:300;font-size:' +
+        (mob ? '36px;line-height:1.08;letter-spacing:-.03em' : '60px;line-height:1.04;letter-spacing:-.035em') +
+        ';color:var(--text-hi);text-wrap:pretty',
+      sectionPad: mob ? 'padding:32px 16px' : 'padding:64px 48px',
+      chainCellStyle: 'flex:1 1 ' + (mob ? '46%' : '132px') + ';min-width:0',
+      osoGridStyle: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(' + (mob ? '100%' : '360px') + ',1fr));gap:2px;background:var(--hairline);border:1px solid var(--hairline)',
+      stepperStyle: 'background:var(--sheet);padding:0 12px;display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--hairline);' + (mob ? 'overflow-x:auto;flex-wrap:nowrap' : 'flex-wrap:wrap'),
+      steps: ['Aircraft', 'Operation', 'Map', 'Ground', 'Airspace', 'Mitigations', 'Review'].map((l, i) => ({
+        label: l, n: String(i + 1), onGo: () => this.set('wizStep', i + 1),
+        style: 'display:flex;align-items:center;gap:8px;background:transparent;border:0;cursor:pointer;min-height:44px;padding:0 10px;font:600 11px/1 var(--font-heading);letter-spacing:.08em;text-align:left;' +
+          (s.wizStep === i + 1 ? 'color:var(--text-hi)' : s.wizStep > i + 1 ? 'color:var(--text-mid)' : 'color:var(--text-low)'),
+        tick: 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;font:600 10px/1 var(--font-heading);border-radius:999px;' +
+          (s.wizStep === i + 1 ? 'background:var(--accent);color:var(--accent-ink)' : s.wizStep > i + 1 ? 'background:var(--sheet-alt);color:var(--text-hi)' : 'border:1px solid var(--hairline-strong);color:var(--text-low)')
+      })),
+      step1: s.wizStep === 1, step2: s.wizStep === 2, step3: s.wizStep === 3, step4: s.wizStep === 4,
+      step5: s.wizStep === 5, step6: s.wizStep === 6, step7: s.wizStep === 7,
+      stepTitle: ['Select aircraft', 'Operation type and envelope', 'Flight geography', 'Ground environment', 'Airspace', 'Mitigations claimed', 'Review and confirm'][s.wizStep - 1],
+      next: () => this.set('wizStep', Math.min(7, s.wizStep + 1)),
+      prev: () => this.set('wizStep', Math.max(1, s.wizStep - 1)),
+      toggleChat: () => this.set('chatOpen', !s.chatOpen),
+      confirmFact: k => () => this.setState(p => ({ facts: { ...p.facts, [k]: 'confirmed' } })),
+      rejectFact: k => () => this.setState(p => ({ facts: { ...p.facts, [k]: 'rejected' } })),
+      factChips: [
+        { k: 'ac', text: 'Aircraft: Freefly Alta X (ALTA-X-01)', state: s.facts.ac },
+        { k: 'alt', text: 'Maximum altitude: 118 m AGL', state: s.facts.alt },
+        { k: 'env', text: 'Ground environment: sparsely populated', state: s.facts.env }
+      ].map(f => ({
+        ...f,
+        onConfirm: () => this.setState(p => ({ facts: { ...p.facts, [f.k]: 'confirmed' } })),
+        onReject: () => this.setState(p => ({ facts: { ...p.facts, [f.k]: 'rejected' } })),
+        unconfirmed: f.state === 'unconfirmed',
+        style: 'display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:2px;background:var(--sheet-well);border-left:3px solid ' +
+          (f.state === 'confirmed' ? 'var(--accent)' : f.state === 'rejected' ? 'var(--hairline-strong)' : 'var(--sail-3)'),
+        textStyle: 'margin:0;font:500 13px/1.4 var(--font-heading);text-wrap:pretty;' + (f.state === 'rejected' ? 'color:var(--text-low);text-decoration:line-through' : 'color:var(--text-hi)'),
+        tagStyle: 'font:600 10px/1 var(--font-heading);letter-spacing:.1em;color:' + (f.state === 'confirmed' ? 'var(--accent)' : f.state === 'rejected' ? 'var(--text-low)' : 'var(--sail-3)'),
+        tag: f.state.toUpperCase()
+      })),
+      layerRows: [
+        { k: 'fg', label: 'Flight geography', swatch: 'background:var(--accent)' },
+        { k: 'cv', label: 'Contingency volume', swatch: 'border:2px dashed var(--accent-line)' },
+        { k: 'grb', label: 'Ground risk buffer', swatch: 'border:2px solid var(--sail-4)' },
+        { k: 'pop', label: 'Population density', swatch: 'background:var(--sheet-alt)' },
+        { k: 'zones', label: 'ED-269 geo-zones', swatch: 'border:2px solid var(--arc-c)' }
+      ].map(l => ({
+        ...l, on: !!s.layers[l.k], onToggle: toggle('layers', l.k),
+        boxStyle: 'width:18px;height:18px;flex:none;border-radius:2px;' + l.swatch + ';opacity:' + (s.layers[l.k] ? '1' : '.25'),
+        rowStyle: 'display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 10px;background:transparent;border:0;cursor:pointer;text-align:left;font:500 13px/1 var(--font-heading);color:' + (s.layers[l.k] ? 'var(--text-hi)' : 'var(--text-low)'),
+        mark: s.layers[l.k] ? '●' : '○'
+      })),
+      mapStyles: {
+        fg: 'position:absolute;left:18%;top:34%;width:52%;height:22%;background:var(--accent);opacity:' + (s.layers.fg ? '.28' : '0') + ';border:2px solid var(--accent);transition:opacity var(--t-ui) var(--ease-ui);animation:volExtrude var(--t-media) var(--ease-instrument) both',
+        cv: 'position:absolute;left:13%;top:27%;width:62%;height:36%;border:2px dashed var(--accent-line);opacity:' + (s.layers.cv ? '1' : '0') + ';transition:opacity var(--t-ui) var(--ease-ui);animation:volExtrude var(--t-media) var(--ease-instrument) 120ms both',
+        grb: 'position:absolute;left:8%;top:19%;width:72%;height:52%;border:2px solid var(--sail-4);opacity:' + (s.layers.grb ? '.9' : '0') + ';transition:opacity var(--t-ui) var(--ease-ui);animation:volExtrude var(--t-media) var(--ease-instrument) 240ms both',
+        pop: 'position:absolute;inset:0;opacity:' + (s.layers.pop ? '1' : '0') + ';transition:opacity var(--t-ui) var(--ease-ui);background-image:repeating-linear-gradient(45deg,var(--hairline) 0 2px,transparent 2px 9px)',
+        zones: 'position:absolute;right:6%;top:8%;width:26%;height:34%;border:2px solid var(--arc-c);background:var(--arc-c);opacity:' + (s.layers.zones ? '.22' : '0') + ';transition:opacity var(--t-ui) var(--ease-ui)'
+      },
+      treeOn: s.treeOn !== false,
+      replayTree: () => this.setState({ treeOn: false }, () => setTimeout(() => this.setState({ treeOn: true }), 30)),
+      isProduct: appScreens.indexOf(s.screen) > -1,
+      pageTitle: titles[s.screen] || '',
+      screen: s.screen, theme: s.theme, slots: s.slots, zoom: String(s.zoom), scrollRef: this.setScrollEl,
+      frameW: s.vp === 'mobile' ? 390 : 1440,
+      mobile: s.vp === 'mobile', desktop: s.vp !== 'mobile',
+      onScreen: e => this.set('screen', e.target.value),
+      setDesktop: () => this.set('vp', 'desktop'), setMobile: () => this.set('vp', 'mobile'),
+      setDark: () => this.set('theme', 'dark'), setLight: () => this.set('theme', 'light'),
+      toggleSlots: () => this.set('slots', !s.slots),
+      vpDesktopStyle: this.pill(s.vp === 'desktop'), vpMobileStyle: this.pill(s.vp === 'mobile'),
+      darkStyle: this.pill(s.theme === 'dark'), lightStyle: this.pill(s.theme === 'light'),
+      slotStyle: 'padding:7px 12px;border:1px solid rgba(245,245,245,.25);border-radius:999px;cursor:pointer;white-space:nowrap;font:600 11px/1 var(--font-heading);letter-spacing:.08em;' + (s.slots ? 'background:#caff01;color:#000' : 'background:transparent;color:rgba(245,245,245,.55)'),
+      isLanding: s.screen === 'landing', isPricing: s.screen === 'pricing', isChecker: s.screen === 'checker',
+      isLegal: s.screen === 'legal', isSignin: s.screen === 'signin', isDashboard: s.screen === 'dashboard',
+      isFleet: s.screen === 'fleet', isWizard: s.screen === 'wizard', isVerdict: s.screen === 'verdict',
+      isOso: s.screen === 'oso', isDossier: s.screen === 'dossier', isSettings: s.screen === 'settings',
+      isStates: s.screen === 'states', isOverlays: s.screen === 'overlays', isErrors: s.screen === 'errors',
+      toggleLayer: toggle.bind(null, 'layers'), layers: s.layers,
+      wizStep: s.wizStep, faq: s.faq, drawer: s.drawer, modal: s.modal, chatOpen: s.chatOpen,
+      treeKey: s.treeKey, openNodes: s.openNodes, cf: s.cf, facts: s.facts, stateDemo: s.stateDemo
+    };
+  }
+}
+</script>
+</body>
+</html>

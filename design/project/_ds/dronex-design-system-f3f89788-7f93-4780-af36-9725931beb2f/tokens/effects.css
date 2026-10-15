@@ -1,0 +1,17 @@
+/* Dronex is a flat system: no drop shadows anywhere in the source.
+   Depth comes from hairline gaps between sheets and from value contrast.
+   The only "elevation" is a legibility gradient over photography. */
+:root {
+  --shadow-none: none;
+  --shadow-card: none;
+  --shadow-raised: none;
+  /* reserved for overlays that must sit above photography */
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+  --scrim-bottom: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 55%); /* @kind other */
+  --scrim-left: linear-gradient(to right, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 60%); /* @kind other */
+  --scrim-flat: rgba(0, 0, 0, 0.28);
+
+  --blur-chip: blur(10px); /* @kind other */
+  --image-filter: saturate(0.95) contrast(1.02); /* @kind other */
+}

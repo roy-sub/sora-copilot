@@ -1,0 +1,259 @@
+/* SORA Copilot — token system
+   Built on the Dronex palette (black / paper / concrete / lime, inherited in full).
+   Extensions are declared, not smuggled: a graphite sheet ramp so a dark panel can be
+   built out of more than one ink level, and a six-step SAIL risk ramp, which the brand
+   does not define and the product cannot exist without.
+
+   The ground is ALWAYS black. The theme switch flips the SHEETS, not the page.
+   dark  = graphite sheets on black
+   light = Dronex as shipped: paper sheets on black
+
+   Engineer: put data-theme on <html>. Mirrors tailwind.theme.ts exactly. */
+
+/* ---------------------------------------------------------------- brand base */
+:root {
+  --black: #000000;
+  --paper: #f5f5f5;
+  --concrete: #d9d9d9;
+  --lime: #caff01;
+  --lime-press: #b2e200;
+  --lime-tint: #eaffa3;
+
+  /* graphite ramp — SORA extension to the Dronex base.
+     Four structural steps so a panel is a construction, not a background colour. */
+  --graphite-900: #0a0c0d;
+  --graphite-800: #121517;
+  --graphite-700: #191d20;
+  --graphite-600: #21262a;
+  --graphite-500: #2d3439;
+  --graphite-400: #3d464c;
+
+  /* ---------------------------------------------------------- SAIL risk ramp */
+  /* Greenless and lime-free by construction: no hue falls between 95 and 150,
+     so a risk state can never be mistaken for the brand accent or for "safe".
+     Fills and 2px bands only in dark theme — never small type on a dark ground. */
+  --sail-1: #8a95a1;
+  --sail-2: #a79b93;
+  --sail-3: #c99a3f;
+  --sail-4: #dd7f31;
+  --sail-5: #d4502f;
+  --sail-6: #b82633;
+  --sail-1-ink: #0a0c0d;
+  --sail-2-ink: #0a0c0d;
+  --sail-3-ink: #0a0c0d;
+  --sail-4-ink: #0a0c0d;
+  --sail-5-ink: #ffffff;
+  --sail-6-ink: #ffffff;
+
+  /* ARC band — air risk is a different axis from ground risk and must not reuse
+     the SAIL ramp. Four steps of one hue at rising chroma. */
+  --arc-a: #7d8894;
+  --arc-b: #6f93ad;
+  --arc-c: #4f86b8;
+  --arc-d: #2f6ea8;
+
+  /* ------------------------------------------------------------- dark (default) */
+  --ground: var(--black);
+  --sheet: var(--graphite-800);
+  --sheet-raised: var(--graphite-700);
+  --sheet-well: var(--graphite-900);
+  --sheet-alt: var(--graphite-600);
+  --hairline: #262c31;
+  --hairline-strong: var(--graphite-400);
+
+  --text-hi: #eef1f3;
+  --text-mid: #9fa9b1;
+  --text-low: #7b858d;
+  --text-on-accent: var(--black);
+  --text-on-sheet-invert: var(--paper);
+
+  --field-bg: var(--graphite-900);
+  --field-border: var(--graphite-500);
+  --field-border-hover: var(--graphite-400);
+
+  --accent: var(--lime);
+  --accent-press: var(--lime-press);
+  --accent-ink: var(--black);
+  --accent-wash: rgba(202, 255, 1, 0.10);
+  --accent-line: rgba(202, 255, 1, 0.45);
+
+  --focus-ring: var(--lime);
+  --focus-offset: var(--black);
+
+  --warn: var(--sail-3);
+  --fail: var(--sail-6);
+  --ok: var(--text-hi);
+
+  --scrim: rgba(0, 0, 0, 0.72);
+
+  /* --------------------------------------------------------------- structure */
+  --gap-sheet: 2px;            /* Dronex signature: the ground shows through */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  --radius-0: 0px;             /* sheets, panels, SAIL plate, table cells */
+  --radius-sm: 2px;            /* buttons, inputs, chips */
+  --radius-md: 10px;           /* media frames, drawers, map canvas, mobile cards */
+  --radius-pill: 999px;        /* pills, circular badges, toggles */
+
+  --border-hairline: 1px solid var(--hairline);
+  --border-strong: 1px solid var(--hairline-strong);
+
+  /* elevation is material, not optical — exactly one shadow exists, for things
+     that genuinely leave the plane */
+  --shadow-card: none;
+  --shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.64);
+
+  --touch-min: 44px;
+  --rail-w: 240px;
+  --rail-w-collapsed: 64px;
+  --content-max: 1240px;
+  --measure: 68ch;
+
+  /* ------------------------------------------------------------------ motion */
+  --ease-ui: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-instrument: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-tap: 90ms;
+  --t-ui: 160ms;
+  --t-panel: 240ms;
+  --t-media: 420ms;
+  --t-compute: 1200ms;
+
+  /* -------------------------------------------------------------------- type */
+  /* next/font self-hosts both faces and exposes them as --font-archivo / --font-outfit */
+  --font-heading: var(--font-archivo), "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-archivo), "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-wordmark: var(--font-outfit), "Outfit", "Archivo", sans-serif;
+
+  --size-display: 60px;
+  --size-h1: 32px;
+  --size-h2: 24px;
+  --size-h3: 18px;
+  --size-h4: 15px;
+  --size-body-lg: 18px;
+  --size-body: 15px;
+  --size-body-sm: 13px;
+  --size-label: 12px;
+  --size-micro: 11px;
+  --size-data: 14px;
+  --size-data-sm: 12px;
+  --size-figure: 72px;
+
+  --tracking-head: -0.025em;
+  --tracking-body: 0em;
+  --tracking-label: 0.1em;
+  --tracking-wordmark: -0.035em;
+
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-head: 600;
+  --weight-strong: 700;
+  --weight-wordmark: 300;
+}
+
+/* ------------------------------------------------------------------ light theme */
+/* Derived by rule: sheets flip graphite -> paper, the black ground is untouched,
+   the SAIL ramp drops 10-16% lightness so every step also works as TYPE on paper. */
+[data-theme="light"] {
+  --sheet: var(--paper);
+  --sheet-raised: #ffffff;
+  --sheet-well: var(--concrete);
+  --sheet-alt: #e7e7e7;
+  --hairline: rgba(0, 0, 0, 0.12);
+  --hairline-strong: rgba(0, 0, 0, 0.45);
+
+  --text-hi: #000000;
+  --text-mid: rgba(0, 0, 0, 0.64);
+  --text-low: rgba(0, 0, 0, 0.45);
+
+  --field-bg: #ffffff;
+  --field-border: rgba(0, 0, 0, 0.2);
+  --field-border-hover: rgba(0, 0, 0, 0.45);
+
+  --accent-wash: rgba(202, 255, 1, 0.35);
+  --accent-line: rgba(0, 0, 0, 0.45);
+  --focus-ring: #000000;
+  --focus-offset: var(--paper);
+
+  --sail-1: #566270;
+  --sail-2: #6d6158;
+  --sail-3: #8a6410;
+  --sail-4: #a0511a;
+  --sail-5: #b2361a;
+  --sail-6: #9c1726;
+  --sail-1-ink: #ffffff;
+  --sail-2-ink: #ffffff;
+  --sail-3-ink: #ffffff;
+  --sail-4-ink: #ffffff;
+  --sail-5-ink: #ffffff;
+  --sail-6-ink: #ffffff;
+
+  --arc-a: #4a545f;
+  --arc-b: #3c647e;
+  --arc-c: #255d87;
+  --arc-d: #114a79;
+
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.28);
+}
+
+/* ------------------------------------------- Dronex component interop
+   The design-system bundle's components read Dronex's own semantic tokens, which
+   assume a paper sheet. Remap them onto the SORA surface of the active theme so a
+   mounted Dronex Button, Tag, Input or IconBadge is correct on graphite as well as
+   on paper. Values only — no component is restyled. */
+:root {
+  --surface-sheet: var(--sheet);
+  --surface-card: var(--sheet);
+  --surface-card-alt: var(--sheet-alt);
+  --surface-field: var(--field-bg);
+  --text-heading: var(--text-hi);
+  --text-body: var(--text-mid);
+  --text-muted: var(--text-low);
+  --border-hairline: var(--hairline);
+  --border-strong: var(--hairline-strong);
+  --ink-06: rgba(245, 245, 245, 0.06);
+  --ink-12: rgba(245, 245, 245, 0.12);
+  --ink-20: rgba(245, 245, 245, 0.2);
+  --ink-45: var(--text-low);
+  --ink-64: var(--text-mid);
+  --white: var(--sheet-raised);
+}
+
+[data-theme="light"] {
+  --ink-06: rgba(0, 0, 0, 0.06);
+  --ink-12: rgba(0, 0, 0, 0.12);
+  --ink-20: rgba(0, 0, 0, 0.2);
+  --white: #ffffff;
+}
+
+/* ------------------------------------------------------------ global floor */
+*:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--lime);
+  color: var(--black);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

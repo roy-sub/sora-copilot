@@ -1,0 +1,15 @@
+/* Borders are hairlines, never heavy. Outline buttons/tags use a 1px
+   12%-ink stroke; dark surfaces use an 18% paper stroke. */
+:root {
+  --border-width: 1px;
+  --border-outline: var(--border-width) solid var(--border-hairline);
+  --border-outline-invert: var(--border-width) solid var(--border-on-invert);
+  --border-ink: var(--border-width) solid var(--border-strong);
+
+  /* crop-mark motif: short dashes at media corners */
+  --tick-length: 18px;
+  --tick-thickness: 2px;
+  --tick-inset: 12px;
+  --tick-color: var(--black);
+  --tick-color-invert: var(--paper);
+}

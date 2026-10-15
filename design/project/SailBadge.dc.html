@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/tokens/fonts.css">
+<link rel="stylesheet" href="tokens.css">
+<script src="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/_ds_bundle.js"></script>
+</helmet>
+<div style="{{ plate }}" role="img" aria-label="{{ aria }}">
+<span style="{{ numeral }}">{{ roman }}</span>
+<div style="{{ segWrap }}">
+<sc-for list="{{ segs }}" as="seg" hint-placeholder-count="6"><i style="{{ seg.style }}"></i></sc-for>
+</div>
+<span style="{{ capStyle }}">SAIL</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:220,&quot;height&quot;:200},&quot;level&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:1,&quot;max&quot;:6,&quot;tsType&quot;:&quot;1|2|3|4|5|6&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sm&quot;,&quot;md&quot;,&quot;lg&quot;],&quot;default&quot;:&quot;lg&quot;,&quot;tsType&quot;:&quot;'sm'|'md'|'lg'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const lvl = Math.min(6, Math.max(1, parseInt(this.props.level, 10) || 1));
+    const size = this.props.size || 'md';
+    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'][lvl - 1];
+    const fill = 'var(--sail-' + lvl + ')';
+    const ink = 'var(--sail-' + lvl + '-ink)';
+    // geometry is the second encoding: I-II square, III-IV one notched corner,
+    // V-VI notched plus a 2px outer band. Never colour alone.
+    const notch = lvl >= 3 ? 'polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)' : 'none';
+    const band = lvl >= 5 ? '2px solid ' + ink : '0';
+    const dim = { sm: 40, md: 64, lg: 132 }[size];
+    const num = { sm: 14, md: 24, lg: 56 }[size];
+    const pad = { sm: 4, md: 8, lg: 16 }[size];
+    const segs = [];
+    for (let i = 1; i <= 6; i++) {
+      segs.push({
+        style: 'display:block;flex:1;height:' + (size === 'lg' ? 6 : 3) + 'px;background:' + ink +
+          ';opacity:' + (i <= lvl ? '1' : '.22')
+      });
+    }
+    return {
+      roman: roman, segs: segs,
+      aria: 'SAIL ' + roman + ' of VI',
+      plate: 'display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:' + (size === 'lg' ? 12 : 5) + 'px;' +
+        'width:' + dim + 'px;height:' + dim + 'px;padding:' + pad + 'px;box-sizing:border-box;background:' + fill +
+        ';color:' + ink + ';clip-path:' + notch + ';outline:' + band + ';outline-offset:-' + (size === 'lg' ? 7 : 4) + 'px;border-radius:0',
+      numeral: 'font:600 ' + num + 'px/1 var(--font-heading);letter-spacing:.02em;font-variant-numeric:tabular-nums',
+      segWrap: 'display:flex;gap:' + (size === 'lg' ? 4 : 2) + 'px;width:' + (size === 'lg' ? 84 : dim - pad * 2 - 4) + 'px',
+      capStyle: size === 'sm' ? 'display:none' : 'font:600 ' + (size === 'lg' ? 12 : 9) + 'px/1 var(--font-heading);letter-spacing:.14em'
+    };
+  }
+}
+</script>
+</body>
+</html>

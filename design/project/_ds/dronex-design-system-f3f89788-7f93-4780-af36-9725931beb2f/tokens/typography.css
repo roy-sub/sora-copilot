@@ -1,0 +1,53 @@
+/* Type system. Three registers only:
+   wordmark (geometric light), headline (grotesque semibold, tight),
+   body/label (grotesque regular / semibold caps). */
+:root {
+  /* families live in tokens/fonts.css */
+
+  /* sizes — desktop 1440 reference */
+  --size-wordmark: 112px;
+  --size-display: 64px;
+  --size-h1: 52px;
+  --size-h2: 38px;
+  --size-h3: 28px;
+  --size-h4: 20px;
+  --size-stat: 56px;
+  --size-body-lg: 18px;
+  --size-body: 16px;
+  --size-body-sm: 14px;
+  --size-caption: 13px;
+  --size-label: 11px;
+
+  /* line heights */
+  --leading-wordmark: 0.9;
+  --leading-tight: 1.02;
+  --leading-snug: 1.12;
+  --leading-body: 1.5;
+  --leading-label: 1;
+
+  /* tracking */
+  --tracking-wordmark: -0.035em;
+  --tracking-head: -0.025em;
+  --tracking-body: -0.005em;
+  --tracking-label: 0.1em;
+
+  /* weights */
+  --weight-wordmark: 300;
+  --weight-head: 600;
+  --weight-strong: 700;
+  --weight-medium: 500;
+  --weight-body: 400;
+
+  /* ---- composed roles ---- */
+  --type-wordmark: var(--weight-wordmark) var(--size-wordmark) / var(--leading-wordmark) var(--font-wordmark);
+  --type-display: var(--weight-head) var(--size-display) / var(--leading-tight) var(--font-heading);
+  --type-h1: var(--weight-head) var(--size-h1) / var(--leading-tight) var(--font-heading);
+  --type-h2: var(--weight-head) var(--size-h2) / var(--leading-snug) var(--font-heading);
+  --type-h3: var(--weight-head) var(--size-h3) / var(--leading-snug) var(--font-heading);
+  --type-h4: var(--weight-head) var(--size-h4) / var(--leading-snug) var(--font-heading);
+  --type-stat: var(--weight-strong) var(--size-stat) / 1 var(--font-heading);
+  --type-body: var(--weight-body) var(--size-body) / var(--leading-body) var(--font-body);
+  --type-body-sm: var(--weight-body) var(--size-body-sm) / var(--leading-body) var(--font-body);
+  --type-caption: var(--weight-body) var(--size-caption) / 1.45 var(--font-body);
+  --type-label: var(--weight-head) var(--size-label) / var(--leading-label) var(--font-ui);
+}

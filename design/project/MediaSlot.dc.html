@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/tokens/fonts.css">
+<link rel="stylesheet" href="tokens.css">
+<script src="_ds/dronex-design-system-f3f89788-7f93-4780-af36-9725931beb2f/_ds_bundle.js"></script>
+</helmet>
+<div style="position:relative;width:100%;aspect-ratio:{{ ratio }};background:var(--sheet-well);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+<div style="position:absolute;inset:0;opacity:.5;background-image:linear-gradient(var(--hairline) 1px,transparent 1px),linear-gradient(90deg,var(--hairline) 1px,transparent 1px);background-size:48px 48px"></div>
+<div style="position:absolute;top:12px;left:12px;width:18px;height:2px;background:var(--text-low)"></div>
+<div style="position:absolute;top:12px;left:12px;width:2px;height:18px;background:var(--text-low)"></div>
+<div style="position:absolute;top:12px;right:12px;width:18px;height:2px;background:var(--text-low)"></div>
+<div style="position:absolute;top:12px;right:12px;width:2px;height:18px;background:var(--text-low)"></div>
+<div style="position:absolute;bottom:12px;left:12px;width:18px;height:2px;background:var(--text-low)"></div>
+<div style="position:absolute;bottom:12px;left:12px;width:2px;height:18px;background:var(--text-low)"></div>
+<div style="position:absolute;bottom:12px;right:12px;width:18px;height:2px;background:var(--text-low)"></div>
+<div style="position:absolute;bottom:12px;right:12px;width:2px;height:18px;background:var(--text-low)"></div>
+<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;text-align:center;max-width:380px">
+<div style="display:flex;align-items:center;gap:8px">
+<div style="width:7px;height:7px;background:var(--accent)"></div>
+<span style="font:600 11px/1 var(--font-heading);letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid)">{{ kind }} · {{ size }}</span>
+</div>
+<p style="margin:0;font:400 13px/1.5 var(--font-heading);color:var(--text-low);text-wrap:pretty">{{ note }}</p>
+<sc-if value="{{ dev }}" hint-placeholder-val="{{ true }}">
+<code style="font:500 11px/1 var(--font-heading);letter-spacing:.06em;color:var(--accent-ink);background:var(--accent);padding:4px 7px;border-radius:2px">{{ slot }}</code>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:380},&quot;slot&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;hero-loop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;image&quot;,&quot;video&quot;,&quot;illustration&quot;],&quot;default&quot;:&quot;video&quot;,&quot;tsType&quot;:&quot;'image'|'video'|'illustration'&quot;},&quot;ratio&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;16/9&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;1440×810&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;note&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Operational volume being drawn, then the SAIL badge resolving.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dev&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return {
+      ratio: p.ratio || '16/9',
+      kind: (p.kind || 'image').toUpperCase(),
+      size: p.size || '',
+      note: p.note || '',
+      slot: p.slot || '',
+      dev: !!p.dev
+    };
+  }
+}
+</script>
+</body>
+</html>

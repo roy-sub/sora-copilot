@@ -1,0 +1,47 @@
+/* Dronex palette — sampled directly from the source mockups.
+   Four values carry the whole brand: ink black, paper off-white,
+   concrete grey and the acid lime. */
+:root {
+  /* base */
+  --black: #000000;
+  --paper: #f5f5f5;
+  --white: #ffffff;
+  --concrete: #d9d9d9;
+  --lime: #caff01;
+
+  /* derived neutrals (tints of ink on paper) */
+  --ink-80: rgba(0, 0, 0, 0.8);
+  --ink-64: rgba(0, 0, 0, 0.64);
+  --ink-45: rgba(0, 0, 0, 0.45);
+  --ink-20: rgba(0, 0, 0, 0.2);
+  --ink-12: rgba(0, 0, 0, 0.12);
+  --ink-06: rgba(0, 0, 0, 0.06);
+  --paper-70: rgba(245, 245, 245, 0.7);
+  --paper-45: rgba(245, 245, 245, 0.45);
+
+  /* lime steps — only for press/hover, never as a second accent */
+  --lime-press: #b2e200;
+  --lime-tint: #eaffa3;
+
+  /* ---- semantic ---- */
+  --surface-page: var(--black);
+  --surface-sheet: var(--paper);
+  --surface-card: var(--paper);
+  --surface-card-alt: var(--concrete);
+  --surface-accent: var(--lime);
+  --surface-invert: var(--black);
+  --surface-field: var(--white);
+
+  --text-heading: var(--black);
+  --text-body: var(--ink-64);
+  --text-muted: var(--ink-45);
+  --text-on-accent: var(--black);
+  --text-on-invert: var(--paper);
+  --text-on-invert-muted: var(--paper-45);
+
+  --border-hairline: var(--ink-12);
+  --border-strong: var(--black);
+  --border-on-invert: rgba(245, 245, 245, 0.18);
+
+  --mark-crosshair: var(--lime);
+}

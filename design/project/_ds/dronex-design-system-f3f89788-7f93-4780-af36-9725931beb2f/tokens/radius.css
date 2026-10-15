@@ -1,0 +1,14 @@
+/* Two radii only: square (structural sheets, lime action blocks) and
+   full pill (buttons, tags, fields, social chips). Media gets a soft 10px. */
+:root {
+  --radius-0: 0px;
+  --radius-media: 10px;
+  --radius-card: 10px;
+  --radius-pill: 999px;
+
+  --radius-sheet: var(--radius-0);
+  --radius-block-cta: var(--radius-0);
+  --radius-button: var(--radius-pill);
+  --radius-tag: var(--radius-pill);
+  --radius-field: var(--radius-pill);
+}

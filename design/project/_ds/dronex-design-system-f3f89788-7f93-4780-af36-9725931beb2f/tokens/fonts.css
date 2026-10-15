@@ -1,0 +1,17 @@
+/* Dronex webfonts.
+   SUBSTITUTION NOTICE: no font binaries were supplied with the source mockups.
+   Archivo (grotesque) stands in for the headline/UI face; Outfit (geometric)
+   stands in for the light "Dronex" wordmark. Replace with the real licensed
+   faces when available — swap the @import + the --font-* values only. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Outfit:wght@200;300;400&display=swap");
+
+:root {
+  --font-grotesk: "Archivo", "Helvetica Neue", Helvetica, sans-serif;
+  --font-geometric: "Outfit", "Century Gothic", sans-serif;
+
+  /* semantic aliases */
+  --font-wordmark: var(--font-geometric);
+  --font-heading: var(--font-grotesk);
+  --font-body: var(--font-grotesk);
+  --font-ui: var(--font-grotesk);
+}
