@@ -39,10 +39,29 @@ ALLOWED_EVIDENCE_TYPES = {
 }
 
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+PDF_TYPE = "application/pdf"
+
+#: The media type a generated dossier is stored and served as. A dossier served under
+#: the wrong type is a file the operator's machine refuses to open, so this is derived
+#: from the format rather than assumed.
+DOSSIER_TYPES = {"docx": DOCX_TYPE, "pdf": PDF_TYPE}
+
 
 
 class StorageError(RuntimeError):
     """The file could not be stored or read."""
+
+
+def dossier_content_type(fmt: str) -> str:
+    """The media type for a generated dossier, or a refusal.
+
+    Derived rather than assumed: a PDF served as a DOCX is a file the operator's machine
+    declines to open, and they would have no way to tell why.
+    """
+    try:
+        return DOSSIER_TYPES[fmt]
+    except KeyError:
+        raise StorageError(f"unknown dossier format {fmt!r}") from None
 
 
 class RejectedFile(StorageError):

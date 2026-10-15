@@ -94,7 +94,7 @@ compliance product is worse than an honest gap.
 | Rules engine | clingo (Answer Set Programming) |
 | Counterfactuals | bounded enumeration over the real engine |
 | Geospatial | shapely, pyproj, PostGIS |
-| Documents | python-docx, WeasyPrint |
+| Documents | one content path, rendered to DOCX (python-docx) or PDF (WeasyPrint) |
 | Language model | Anthropic, for intake and prose only |
 | Database | Supabase Postgres (EU) + PostGIS + RLS |
 | Auth | Supabase Auth — email and magic link |

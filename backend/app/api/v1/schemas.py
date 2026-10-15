@@ -326,7 +326,9 @@ class DossierOut(BaseModel):
 
 class DossierIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    format: Literal["docx"] = "docx"
+    #: DOCX to edit alongside the authority's own forms, PDF to file. Both are rendered
+    #: from one content path, so they cannot disagree.
+    format: Literal["docx", "pdf"] = "docx"
     note: str | None = Field(default=None, max_length=300)
 
 

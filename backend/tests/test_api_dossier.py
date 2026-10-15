@@ -447,3 +447,146 @@ def test_the_checklist_appendix_never_invents_a_fee_or_a_lead_time(
     appendix = text[start:]
     hits = re.findall(r"(€\s?\d[\d.,]*|\d+\s?(?:working\s+)?(?:days?|weeks?|months?))", appendix, re.I)
     assert not hits, f"the submission appendix quotes an unverified figure: {hits}"
+
+
+# ------------------------------------------------------------------ the two formats
+
+def _pdf_text(data: bytes) -> str:
+    """Every bit of text in the PDF, so assertions can be about content."""
+    import io
+
+    from pypdf import PdfReader
+
+    return "\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(data)).pages)
+
+
+def test_a_pdf_dossier_is_a_pdf_and_is_served_as_one(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    """Asking for PDF used to store a DOCX under a .pdf name. It must not any more."""
+    dossier = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={"format": "pdf"}, headers=auth
+    )
+    assert dossier.status_code == 201, dossier.text
+    assert dossier.json()["format"] == "pdf"
+
+    got = client.get(
+        f"/api/v1/operations/{operation['id']}/dossier/{dossier.json()['id']}/download",
+        headers=auth,
+    )
+    assert got.status_code == 200
+    assert got.content.startswith(b"%PDF-"), "the bytes are not a PDF"
+    assert got.headers["content-type"].startswith("application/pdf")
+    assert ".pdf" in got.headers["content-disposition"]
+    assert not zipfile.is_zipfile(io.BytesIO(got.content)), "that is a DOCX wearing a .pdf name"
+
+
+def test_the_pdf_and_the_docx_say_the_same_thing(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    """The one bug this product cannot ship: two exports that disagree about the SAIL.
+
+    Both formats come from one content path, and this is what holds that to be true.
+    """
+    def _generate(fmt: str) -> bytes:
+        made = client.post(
+            f"/api/v1/operations/{operation['id']}/dossier", json={"format": fmt}, headers=auth
+        )
+        assert made.status_code == 201, made.text
+        return client.get(
+            f"/api/v1/operations/{operation['id']}/dossier/{made.json()['id']}/download",
+            headers=auth,
+        ).content
+
+    docx = _docx_text(_generate("docx"))
+    pdf = _pdf_text(_generate("pdf"))
+
+    d = determined
+    # Every risk value, in both, verbatim from the stored determination.
+    for value in [
+        f"SAIL {d['sail']}",
+        str(d["igrc"]),
+        str(d["final_grc"]),
+        d["rulebase_version"],
+    ]:
+        assert value in docx, f"{value!r} missing from the DOCX"
+        assert value in pdf, f"{value!r} missing from the PDF"
+
+    for phrase in [
+        "national aviation authority grants the authorisation",
+        "UNVERIFIED",
+        "Justification trace",
+        "Submission checklist",
+    ]:
+        assert phrase in docx, f"{phrase!r} missing from the DOCX"
+        assert phrase in pdf, f"{phrase!r} missing from the PDF"
+
+    # The trace is the whole point of the appendix; it must survive both renderers.
+    for node in d["trace"][:6]:
+        assert node["rule_id"] in docx
+        assert node["rule_id"] in pdf
+
+
+def test_the_pdf_carries_the_disclaimer_on_every_page(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    """A printed page is read on its own, so the running header is not decoration."""
+    import io
+
+    from pypdf import PdfReader
+
+    made = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={"format": "pdf"}, headers=auth
+    )
+    data = client.get(
+        f"/api/v1/operations/{operation['id']}/dossier/{made.json()['id']}/download", headers=auth
+    ).content
+    pages = PdfReader(io.BytesIO(data)).pages
+    assert len(pages) >= 3, "a dossier that fits on two pages is missing something"
+    for i, page in enumerate(pages):
+        text = page.extract_text() or ""
+        assert "national aviation authority grants the authorisation" in text, (
+            f"page {i + 1} has no disclaimer"
+        )
+        assert "UNVERIFIED RULEBASE" in text, f"page {i + 1} has no unverified banner"
+
+
+def test_an_unknown_format_is_refused_rather_than_silently_producing_a_docx(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    res = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={"format": "odt"}, headers=auth
+    )
+    assert res.status_code == 422
+    assert res.json()["code"] == "validation_failed"
+
+
+def test_the_builder_refuses_an_unknown_format_directly() -> None:
+    """Guard below the API, where a future caller might not go through Pydantic."""
+    import pytest as _pytest
+
+    from app.services import dossier as builder
+
+    with _pytest.raises(ValueError, match="unknown dossier format"):
+        builder.build(
+            builder.DossierInput(
+                operation={}, organisation={}, drone=None, mission={}, determination={},
+                evidence=[], geo=None, version=1,
+            ),
+            "odt",  # type: ignore[arg-type]
+        )
+
+
+def test_consecutive_bullets_share_one_list_but_a_break_starts_a_new_one() -> None:
+    """A run of single-item lists reads as loose; a page break must still cut cleanly."""
+    from app.services.docwriter import HtmlWriter
+
+    w = HtmlWriter(disclaimer="d", stamp="s", banner=None)
+    w.bullet("one")
+    w.bullet("two")
+    w.page_break()
+    w.bullet("three")
+    html = "".join(w._parts)
+    assert html.count("<ul>") == 2, html
+    assert "<li>one</li><li>two</li>" in html
+    assert '<div class="break"></div><ul><li>three</li></ul>' in html

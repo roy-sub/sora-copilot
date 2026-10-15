@@ -15,11 +15,11 @@ import { Disclaimer, RulebaseStamp } from "@/components/Brand";
 import { EmptyState } from "@/components/app/EmptyState";
 import { MediaSlot } from "@/components/MediaSlot";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Field";
+import { Segmented, Select } from "@/components/ui/Field";
 import { useToast } from "@/components/Toast";
 import { PlanLimit, isPlanLimit } from "@/components/PlanLimit";
 import { ApiError } from "@/lib/api";
-import { api, type DossierSection, type DossierStatus } from "@/lib/api-client";
+import { api, type DossierFormat, type DossierSection, type DossierStatus } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import { useDossierStatus, useGenerateDossier, useOperations } from "@/lib/hooks";
 import { downloadFile } from "@/lib/upload";
@@ -106,12 +106,15 @@ function Builder({ operationId }: { operationId: string }) {
   // A plan refusal is kept as the error object rather than its message, because the
   // upgrade panel renders the limit, the usage and the plan, not the prose.
   const [limit, setLimit] = useState<ApiError | null>(null);
+  // DOCX to edit alongside the authority's own forms, PDF to file. The two are rendered
+  // from one content path on the server, so the choice is about what you do with it.
+  const [format, setFormat] = useState<DossierFormat>("docx");
 
   const run = () => {
     setError(null);
     setLimit(null);
     setTicked(0);
-    generate.mutate(undefined, {
+    generate.mutate({ format }, {
       onSuccess: (dossier) => {
         setTicked(Number.MAX_SAFE_INTEGER);
         push({
@@ -122,7 +125,7 @@ function Builder({ operationId }: { operationId: string }) {
             onClick: () =>
               downloadFile(
                 api.dossierDownloadPath(operationId, dossier.id),
-                `sora-dossier-v${dossier.version}.docx`,
+                `sora-dossier-v${dossier.version}.${dossier.format}`,
               ).catch(() => push({ tone: "fail", text: "Download failed" })),
           },
         });
@@ -211,26 +214,39 @@ function Builder({ operationId }: { operationId: string }) {
           </div>
         )}
 
-        <div className="flex gap-2.5 flex-wrap">
+        <div className="flex gap-2.5 flex-wrap items-center">
           <Button disabled={!status.can_generate || generate.isPending} onClick={run}>
             {generate.isPending ? "Generating" : `Generate v${status.next_version}`}
           </Button>
+          <Segmented
+            label="Format"
+            value={format}
+            onChange={(v) => setFormat(v as DossierFormat)}
+            options={[
+              { value: "docx", label: "DOCX" },
+              { value: "pdf", label: "PDF" },
+            ]}
+          />
           {status.versions[0] && (
             <Button
               variant="secondary"
               onClick={() =>
                 downloadFile(
                   api.dossierDownloadPath(operationId, status.versions[0].id),
-                  `sora-dossier-v${status.versions[0].version}.docx`,
+                  `sora-dossier-v${status.versions[0].version}.${status.versions[0].format}`,
                 ).catch((e) =>
                   push({ tone: "fail", text: e instanceof Error ? e.message : "Download failed" }),
                 )
               }
             >
-              Download DOCX
+              Download {status.versions[0].format.toUpperCase()}
             </Button>
           )}
         </div>
+        <span className="t-cap text-ink-low pretty">
+          DOCX to edit alongside the authority&apos;s own forms; PDF to file. Both are
+          rendered from the same stored determination and say the same thing.
+        </span>
 
         <VersionHistory status={status} operationId={operationId} />
       </div>
@@ -288,14 +304,14 @@ function VersionHistory({
               {v.note ?? "Generated from the stored determination"}
             </span>
             <span className="t-data-sm text-ink-low tnum">
-              {new Date(v.generated_at).toLocaleDateString("en-GB")}
+              {v.format.toUpperCase()} · {new Date(v.generated_at).toLocaleDateString("en-GB")}
             </span>
             <button
               type="button"
               onClick={() =>
                 downloadFile(
                   api.dossierDownloadPath(operationId, v.id),
-                  `sora-dossier-v${v.version}.docx`,
+                  `sora-dossier-v${v.version}.${v.format}`,
                 ).catch((e) =>
                   push({ tone: "fail", text: e instanceof Error ? e.message : "Download failed" }),
                 )

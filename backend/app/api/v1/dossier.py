@@ -363,12 +363,14 @@ def generate(
         prose=prose,
         outlines=geo,
     )
-    document = builder.build(data)
+    document = builder.build(data, body.format)
 
     store = storage.get_storage()
     path = storage.dossier_path(str(operation_id), version, body.format)
     try:
-        stored = store.put(storage.DOSSIER_BUCKET, path, document, storage.DOCX_TYPE)
+        stored = store.put(
+            storage.DOSSIER_BUCKET, path, document, storage.dossier_content_type(body.format)
+        )
     except storage.StorageError as exc:
         raise ProblemError(
             code="storage_failed",
@@ -502,9 +504,10 @@ def download(
             status_code=410,
             detail=f"{exc} Generate a new version — the determination it renders is unchanged.",
         ) from exc
-    name = f"sora-dossier-v{row['version']}.{row.get('format', 'docx')}"
+    fmt = str(row.get("format") or "docx")
+    name = f"sora-dossier-v{row['version']}.{fmt}"
     return Response(
         content=data,
-        media_type=storage.DOCX_TYPE,
+        media_type=storage.dossier_content_type(fmt),
         headers={"content-disposition": f'attachment; filename="{name}"'},
     )

@@ -1,4 +1,4 @@
-"""The authority-ready dossier, as DOCX.
+"""The authority-ready dossier, as DOCX or PDF.
 
 Sections, in order: cover, ConOps, operational volume, the SORA assessment tables
 (iGRC → GRC → ARC → SAIL), the OSO compliance matrix, the mitigation evidence index, an
@@ -13,36 +13,33 @@ Three rules this module keeps:
    printed page can be read on its own.
 3. **An UNVERIFIED rulebase is stated on the cover and on every page.** A dossier built
    on seed tables must not be able to pass for one that was checked.
+4. **The two formats are one document.** The content is described once, against the
+   ``Writer`` protocol in ``docwriter.py``, and a backend turns it into `.docx` or
+   `.pdf`. A PDF whose SAIL did not match the DOCX's would be the worst bug this product
+   could ship, so there is no second code path in which it could happen.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from io import BytesIO
-from typing import Any
-
-from docx import Document as new_document
-from docx.document import Document
-from docx.enum.section import WD_SECTION
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
-from docx.shared import Cm, Pt, RGBColor
+from typing import Any, Literal
 
 from app.domain.common import DISCLAIMER
 from app.national import PackError, load_pack, tailor
 from app.services import mapimage
+from app.services.docwriter import Writer, writer_for
+
+#: What ``POST /dossier`` will render. Anything else is refused rather than silently
+#: producing a DOCX under another extension.
+DossierFormat = Literal["docx", "pdf"]
+FORMATS: tuple[DossierFormat, ...] = ("docx", "pdf")
 
 UNVERIFIED_BANNER = (
     "UNVERIFIED RULEBASE — the regulatory tables behind this assessment have not been "
     "checked against the published JARUS SORA 2.5 text. This document must not be "
     "submitted to an authority."
 )
-
-INK = RGBColor(0x1A, 0x1A, 0x1A)
-MUTED = RGBColor(0x5A, 0x60, 0x66)
-WARN = RGBColor(0x8A, 0x52, 0x10)
 
 ENVIRONMENT_LABELS = {
     "controlled_ground_area": "controlled ground area",
@@ -79,70 +76,9 @@ class DossierInput:
     outlines: dict[str, Any] | None = None
 
 
-def _style(document: Document) -> None:
-    normal = document.styles["Normal"]
-    normal.font.name = "Calibri"
-    normal.font.size = Pt(10.5)
-    normal.font.color.rgb = INK
-    # East-Asian font name too, or Word substitutes its own for some glyphs.
-    normal.element.rPr.rFonts.set(qn("w:eastAsia"), "Calibri")
-    normal.paragraph_format.space_after = Pt(6)
-    normal.paragraph_format.line_spacing = 1.15
 
 
-def _header(document: Document, unverified: bool, stamp: str) -> None:
-    """The disclaimer on every page, and the UNVERIFIED banner when it applies."""
-    for section in document.sections:
-        header = section.header
-        header.is_linked_to_previous = False
-        first = header.paragraphs[0]
-        first.text = ""
-        run = first.add_run(DISCLAIMER)
-        run.font.size = Pt(7.5)
-        run.font.color.rgb = MUTED
-        first.paragraph_format.space_after = Pt(0)
 
-        line = header.add_paragraph()
-        run = line.add_run(stamp)
-        run.font.size = Pt(7.5)
-        run.font.color.rgb = MUTED
-
-        if unverified:
-            warning = header.add_paragraph()
-            run = warning.add_run(UNVERIFIED_BANNER)
-            run.font.size = Pt(7.5)
-            run.bold = True
-            run.font.color.rgb = WARN
-
-
-def _h(document: Document, text: str, level: int = 1) -> None:
-    heading = document.add_heading(text, level=level)
-    for run in heading.runs:
-        run.font.color.rgb = INK
-        run.font.name = "Calibri"
-
-
-def _kv_table(document: Document, rows: list[tuple[str, str]]) -> None:
-    table = document.add_table(rows=0, cols=2)
-    table.style = "Light Grid Accent 1"
-    table.alignment = WD_TABLE_ALIGNMENT.LEFT
-    for key, value in rows:
-        cells = table.add_row().cells
-        cells[0].text = key
-        cells[1].text = value
-        for paragraph in cells[0].paragraphs:
-            for run in paragraph.runs:
-                run.bold = True
-    table.columns[0].width = Cm(6.5)
-    table.columns[1].width = Cm(10.5)
-    document.add_paragraph()
-
-
-def _note(document: Document, text: str) -> None:
-    paragraph = document.add_paragraph()
-    run = paragraph.add_run(text)
-    run.font.size = Pt(8.5)
-    run.font.color.rgb = MUTED
 
 
 def _sail_text(determination: dict[str, Any]) -> str:
@@ -150,39 +86,31 @@ def _sail_text(determination: dict[str, Any]) -> str:
     return "Certified category" if sail == "certified_category" else f"SAIL {sail}"
 
 
-def build(data: DossierInput) -> bytes:
-    """Render the dossier. Returns the .docx bytes."""
+def build(data: DossierInput, fmt: DossierFormat = "docx") -> bytes:
+    """Render the dossier. Returns the bytes of a `.docx` or a `.pdf`.
+
+    The content below is format-agnostic by construction: everything goes through
+    ``Writer``, so the two documents say the same thing or neither does.
+    """
+    if fmt not in FORMATS:
+        raise ValueError(f"unknown dossier format {fmt!r}")
+
     d = data.determination
     unverified = bool(d.get("warnings"))
     stamp = (
         f"Rulebase {d.get('rulebase_version')} · determination {str(d.get('id'))[:8]}"
         f" · dossier v{data.version}"
     )
-
-    document = new_document()
-    _style(document)
-
-    section = document.sections[0]
-    section.top_margin = Cm(2.6)
-    section.bottom_margin = Cm(2.0)
-    section.left_margin = Cm(2.2)
-    section.right_margin = Cm(2.2)
+    w = writer_for(
+        fmt,
+        disclaimer=DISCLAIMER,
+        stamp=stamp,
+        banner=UNVERIFIED_BANNER if unverified else None,
+    )
 
     # ---------------------------------------------------------------- cover
-    title = document.add_paragraph()
-    title.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = title.add_run("Specific Operations Risk Assessment")
-    run.bold = True
-    run.font.size = Pt(22)
-
-    subtitle = document.add_paragraph()
-    run = subtitle.add_run(str(data.operation.get("name", "Operation")))
-    run.font.size = Pt(14)
-    run.font.color.rgb = MUTED
-
-    document.add_paragraph()
-    _kv_table(
-        document,
+    w.title("Specific Operations Risk Assessment", str(data.operation.get("name", "Operation")))
+    w.kv_table(
         [
             ("Operator", str(data.organisation.get("name", "—"))),
             ("Operator registration", str(data.organisation.get("operator_registration") or "—")),
@@ -195,39 +123,34 @@ def build(data: DossierInput) -> bytes:
             ("Mission hash", str(d.get("mission_hash", ""))[:32]),
             ("Dossier version", str(data.version)),
             ("Generated", datetime.now(UTC).strftime("%d %b %Y %H:%M UTC")),
-        ],
+        ]
     )
 
     if unverified:
-        _h(document, "Verification status", 2)
-        paragraph = document.add_paragraph()
-        run = paragraph.add_run(UNVERIFIED_BANNER)
-        run.bold = True
-        run.font.color.rgb = WARN
+        w.heading("Verification status", 2)
+        w.warning(UNVERIFIED_BANNER)
         for warning in d.get("warnings", []):
-            document.add_paragraph(str(warning), style="List Bullet")
+            w.bullet(str(warning))
 
-    document.add_paragraph(DISCLAIMER)
+    w.paragraph(DISCLAIMER)
 
     # ---------------------------------------------------------------- ConOps
-    document.add_section(WD_SECTION.NEW_PAGE)
-    _h(document, "1. Concept of operations")
+    w.page_break()
+    w.heading("1. Concept of operations")
     if data.prose and data.prose.get("conops"):
         for block in data.prose["conops"].split("\n\n"):
             if block.strip():
-                document.add_paragraph(block.strip())
-        _note(
-            document,
+                w.paragraph(block.strip())
+        w.note(
             "Narrative generated from the facts and values above. No risk value in it "
-            "was produced by a language model.",
+            "was produced by a language model."
         )
     else:
-        _conops_from_facts(document, data)
+        _conops_from_facts(w, data)
 
-    _h(document, "1.1 Aircraft", 2)
+    w.heading("1.1 Aircraft", 2)
     drone = data.drone or {}
-    _kv_table(
-        document,
+    w.kv_table(
         [
             ("Model", str(drone.get("name", "—"))),
             ("Registration", str(drone.get("registration") or "—")),
@@ -239,15 +162,12 @@ def build(data: DossierInput) -> bytes:
                 "Kinetic energy at maximum speed",
                 f"{float(drone.get('kinetic_energy_j') or 0) / 1000:.1f} kJ",
             ),
-            (
-                "Fitted mitigations",
-                ", ".join(drone.get("fitted_mitigations") or []) or "none",
-            ),
-        ],
+            ("Fitted mitigations", ", ".join(drone.get("fitted_mitigations") or []) or "none"),
+        ]
     )
 
     # ---------------------------------------------------------------- volume
-    _h(document, "2. Operational volume")
+    w.heading("2. Operational volume")
     volume = data.mission.get("volume") or {}
     rows = [
         ("Maximum altitude", f"{volume.get('max_altitude_agl_m', '—')} m AGL"),
@@ -266,28 +186,24 @@ def build(data: DossierInput) -> bytes:
             ("Ground risk buffer", f"{data.geo.get('ground_risk_buffer_km2', '—')} km²"),
             ("Adjacent area", f"{data.geo.get('adjacent_area_km2', '—')} km²"),
         ]
-    _kv_table(document, rows)
+    w.kv_table(rows)
 
-    _volume_chart(document, data)
+    _volume_chart(w, data)
 
     if data.geo and data.geo.get("derivations"):
-        _h(document, "2.2 How the volumes were derived", 2)
+        w.heading("2.2 How the volumes were derived", 2)
         for derivation in data.geo["derivations"]:
-            paragraph = document.add_paragraph(style="List Bullet")
-            paragraph.add_run(f"{derivation.get('value_m')} m — ").bold = True
-            paragraph.add_run(str(derivation.get("rule", "")))
-        _note(
-            document,
+            w.lead_bullet(f"{derivation.get('value_m')} m — ", str(derivation.get("rule", "")))
+        w.note(
             "Derived from the drawn flight geography in an equal-area projection. No "
-            "volume in this dossier was entered by hand.",
+            "volume in this dossier was entered by hand."
         )
     else:
-        _note(document, "The operational volumes have not been derived for this operation.")
+        w.note("The operational volumes have not been derived for this operation.")
 
     # ---------------------------------------------------------------- the chain
-    _h(document, "3. SORA assessment")
-    _kv_table(
-        document,
+    w.heading("3. SORA assessment")
+    w.kv_table(
         [
             ("Intrinsic ground risk class (iGRC)", _or_dash(d.get("igrc"))),
             ("Final ground risk class (GRC)", _or_dash(d.get("final_grc"))),
@@ -296,46 +212,44 @@ def build(data: DossierInput) -> bytes:
             ("SAIL", _sail_text(d)),
             ("TMPR", str(d.get("tmpr", "—"))),
             ("Containment", _containment_text(d)),
-        ],
+        ]
     )
 
-    _h(document, "3.1 Ground environment", 2)
-    _kv_table(
-        document,
+    w.heading("3.1 Ground environment", 2)
+    w.kv_table(
         [
             ("Ground environment", _environment(data.mission)),
             (
                 "Peak population density",
                 f"{data.mission.get('population_density_per_km2', '—')} ppl/km²",
             ),
-        ],
+        ]
     )
 
-    _h(document, "3.2 Mitigations claimed", 2)
+    w.heading("3.2 Mitigations claimed", 2)
     claims = data.mission.get("mitigations") or {}
     claimed = [(MITIGATION_LABELS.get(k, k), str(v)) for k, v in claims.items() if v and v != "none"]
     if claimed:
-        _kv_table(document, claimed)
+        w.kv_table(claimed)
     else:
-        document.add_paragraph("No mitigations claimed.")
+        w.paragraph("No mitigations claimed.")
 
-    _h(document, "3.3 Airspace", 2)
-    _kv_table(
-        document,
+    w.heading("3.3 Airspace", 2)
+    w.kv_table(
         [
             ("Airspace class", str(data.mission.get("airspace_class", "—")).upper()),
             ("Controlled airspace", _yes_no(data.mission.get("controlled_airspace"))),
             ("Inside the aerodrome environment", _yes_no(data.mission.get("near_aerodrome"))),
             ("Atypical or segregated airspace", _yes_no(data.mission.get("atypical_airspace"))),
-        ],
+        ]
     )
 
     # ---------------------------------------------------------------- OSO matrix
-    document.add_section(WD_SECTION.NEW_PAGE)
-    _h(document, "4. Operational safety objectives")
+    w.page_break()
+    w.heading("4. Operational safety objectives")
     osos = d.get("osos") or []
     required = [o for o in osos if o.get("required_robustness") != "none"]
-    document.add_paragraph(
+    w.paragraph(
         f"{len(required)} of {len(osos)} objectives apply at {_sail_text(d)}. "
         "Objectives that do not apply are listed so that it is clear they were considered."
     )
@@ -344,65 +258,52 @@ def build(data: DossierInput) -> bytes:
     for item in data.evidence:
         by_oso.setdefault(str(item.get("oso_id") or ""), []).append(item)
 
-    table = document.add_table(rows=1, cols=5)
-    table.style = "Light Grid Accent 1"
-    for cell, text in zip(
-        table.rows[0].cells, ["OSO", "Objective", "Required", "Status", "Evidence"], strict=False
-    ):
-        cell.text = text
-        for paragraph in cell.paragraphs:
-            for run in paragraph.runs:
-                run.bold = True
-
+    oso_rows: list[list[str]] = []
     for oso in osos:
-        cells = table.add_row().cells
-        cells[0].text = str(oso.get("oso_id", ""))
-        cells[1].text = str(oso.get("title", ""))
         level = str(oso.get("required_robustness", "none"))
-        cells[2].text = "not applicable" if level == "none" else level
-        cells[3].text = "not applicable" if level == "none" else str(oso.get("status", "unmet"))
         files = by_oso.get(str(oso.get("oso_id", "")), [])
-        cells[4].text = "\n".join(str(f.get("filename")) for f in files) if files else "—"
-
-    document.add_paragraph()
-    _note(
-        document,
+        oso_rows.append(
+            [
+                str(oso.get("oso_id", "")),
+                str(oso.get("title", "")),
+                "not applicable" if level == "none" else level,
+                "not applicable" if level == "none" else str(oso.get("status", "unmet")),
+                ", ".join(str(f.get("filename")) for f in files) if files else "—",
+            ]
+        )
+    w.table(["OSO", "Objective", "Required", "Status", "Evidence"], oso_rows)
+    w.note(
         "Required robustness is assigned by the rulebase from the computed SAIL. Evidence "
         "status reflects what has been attached in SORA Copilot, not an authority's view "
-        "of its sufficiency.",
+        "of its sufficiency."
     )
 
     # ---------------------------------------------------------------- evidence index
-    _h(document, "5. Mitigation and evidence index")
+    w.heading("5. Mitigation and evidence index")
     if data.evidence:
-        table = document.add_table(rows=1, cols=4)
-        table.style = "Light Grid Accent 1"
-        for cell, text in zip(
-            table.rows[0].cells, ["File", "Attached to", "Size", "Uploaded"], strict=False
-        ):
-            cell.text = text
-            for paragraph in cell.paragraphs:
-                for run in paragraph.runs:
-                    run.bold = True
-        for item in data.evidence:
-            cells = table.add_row().cells
-            cells[0].text = str(item.get("filename", ""))
-            cells[1].text = str(item.get("oso_id") or "the operation")
-            size = item.get("bytes")
-            cells[2].text = f"{int(size) / 1024:.0f} kB" if size else "—"
-            cells[3].text = str(item.get("uploaded_at", ""))[:10]
-        document.add_paragraph()
+        w.table(
+            ["File", "Attached to", "Size", "Uploaded"],
+            [
+                [
+                    str(item.get("filename", "")),
+                    str(item.get("oso_id") or "the operation"),
+                    f"{int(item['bytes']) / 1024:.0f} kB" if item.get("bytes") else "—",
+                    str(item.get("uploaded_at", ""))[:10],
+                ]
+                for item in data.evidence
+            ],
+        )
     else:
-        document.add_paragraph("No evidence files have been attached to this operation.")
+        w.paragraph("No evidence files have been attached to this operation.")
 
     # ---------------------------------------------------------------- ERP
-    _h(document, "6. Emergency response plan")
+    w.heading("6. Emergency response plan")
     if data.prose and data.prose.get("erp"):
         for block in data.prose["erp"].split("\n\n"):
             if block.strip():
-                document.add_paragraph(block.strip())
+                w.paragraph(block.strip())
     else:
-        document.add_paragraph(
+        w.paragraph(
             "This section is a skeleton. SORA Copilot does not write an emergency response "
             "plan for you: it depends on the site, the crew and the local services, none of "
             "which the tool knows. The headings below are the ones an authority will expect."
@@ -415,61 +316,50 @@ def build(data: DossierInput) -> bytes:
             "Notification of the competent authority and occurrence reporting",
             "Crew debrief and return to service",
         ):
-            document.add_paragraph(heading, style="List Bullet")
+            w.bullet(heading)
 
     # ---------------------------------------------------------------- the appendix
-    document.add_section(WD_SECTION.NEW_PAGE)
-    _h(document, "Appendix A — Justification trace")
-    document.add_paragraph(
+    w.page_break()
+    w.heading("Appendix A — Justification trace")
+    w.paragraph(
         "Every conclusion the rules engine reached, the rule that produced it, and the "
         "clause that rule comes from. The engine cannot produce a conclusion without a "
         "justification: a model in which one is missing is rejected as unsatisfiable."
     )
 
     trace = d.get("trace") or []
-    table = document.add_table(rows=1, cols=4)
-    table.style = "Light Grid Accent 1"
-    for cell, text in zip(
-        table.rows[0].cells, ["Conclusion", "Rule", "Citation", "From"], strict=False
-    ):
-        cell.text = text
-        for paragraph in cell.paragraphs:
-            for run in paragraph.runs:
-                run.bold = True
-
+    trace_rows: list[list[str]] = []
     for node in trace:
-        cells = table.add_row().cells
-        cells[0].text = str(node.get("conclusion", ""))
-        cells[1].text = str(node.get("rule_id", ""))
         citation = node.get("citation") or {}
         suffix = "" if citation.get("verified") else "  [UNVERIFIED]"
         page = f", p. {citation.get('page')}" if citation.get("page") else ""
-        cells[2].text = f"{citation.get('document', '')} · {citation.get('section', '')}{page}{suffix}"
-        cells[3].text = ", ".join(node.get("premises") or []) or "—"
+        trace_rows.append(
+            [
+                str(node.get("conclusion", "")),
+                str(node.get("rule_id", "")),
+                f"{citation.get('document', '')} · {citation.get('section', '')}{page}{suffix}",
+                ", ".join(node.get("premises") or []) or "—",
+            ]
+        )
+    w.table(["Conclusion", "Rule", "Citation", "From"], trace_rows)
+    w.note(f"{len(trace)} nodes. Mission hash {d.get('mission_hash', '')}.")
 
-    document.add_paragraph()
-    _note(document, f"{len(trace)} nodes. Mission hash {d.get('mission_hash', '')}.")
-
-    _h(document, "Appendix B — Rulebase provenance", 1)
-    document.add_paragraph(
+    w.heading("Appendix B — Rulebase provenance", 1)
+    w.paragraph(
         f"This determination was computed against rulebase {d.get('rulebase_version')}. "
         "A determination is pinned to the rulebase version it was computed against, so a "
         "later change to the rulebase does not alter this record."
     )
     if unverified:
         for warning in d.get("warnings", []):
-            document.add_paragraph(str(warning), style="List Bullet")
+            w.bullet(str(warning))
 
-    _submission_checklist(document, data)
+    _submission_checklist(w, data)
 
-    _header(document, unverified, stamp)
-
-    buffer = BytesIO()
-    document.save(buffer)
-    return buffer.getvalue()
+    return w.render()
 
 
-def _volume_chart(document: Document, data: DossierInput) -> None:
+def _volume_chart(w: Writer, data: DossierInput) -> None:
     """The volumes as a chart, drawn from the same geometry the engine read.
 
     Not a basemap: a dossier is printed and archived, and a third-party tile would be a
@@ -488,16 +378,15 @@ def _volume_chart(document: Document, data: DossierInput) -> None:
     )
     if png is None:
         return
-    _h(document, "2.1 Operational volumes", 2)
-    document.add_picture(BytesIO(png), width=Cm(16.0))
-    _note(
-        document,
+    w.heading("2.1 Operational volumes", 2)
+    w.image(png, 16.0)
+    w.note(
         "Drawn from the submitted flight geography and the volumes derived from it. "
-        "North is up; the scale bar matches the grid spacing.",
+        "North is up; the scale bar matches the grid spacing."
     )
 
 
-def _conops_from_facts(document: Document, data: DossierInput) -> None:
+def _conops_from_facts(w: Writer, data: DossierInput) -> None:
     """The ConOps written from the facts, with no language model involved."""
     mission = data.mission
     drone = data.drone or {}
@@ -505,7 +394,7 @@ def _conops_from_facts(document: Document, data: DossierInput) -> None:
     environment = ENVIRONMENT_LABELS.get(
         str(mission.get("ground_environment")), str(mission.get("ground_environment", "—"))
     )
-    document.add_paragraph(
+    w.paragraph(
         f"{data.organisation.get('name', 'The operator')} will conduct "
         f"{str(mission.get('operation_type', '—')).upper()} operations with a "
         f"{drone.get('name', 'the aircraft')}"
@@ -514,21 +403,20 @@ def _conops_from_facts(document: Document, data: DossierInput) -> None:
         f"ground environment."
     )
     if mission.get("population_density_per_km2") is not None:
-        document.add_paragraph(
+        w.paragraph(
             f"The peak population density recorded across the ground risk buffer is "
             f"{mission.get('population_density_per_km2')} people per square kilometre, "
             "which is the row used for the intrinsic ground risk class."
         )
-    document.add_paragraph(
+    w.paragraph(
         f"The operation is planned in class {str(mission.get('airspace_class', '—')).upper()} "
         f"airspace. It is {'inside' if mission.get('near_aerodrome') else 'outside'} an "
         f"aerodrome environment and "
         f"{'in' if mission.get('controlled_airspace') else 'outside'} controlled airspace."
     )
-    _note(
-        document,
+    w.note(
         "Written from the confirmed facts. No language model contributed to this section, "
-        "and no language model contributed any risk value anywhere in this document.",
+        "and no language model contributed any risk value anywhere in this document."
     )
 
 
@@ -561,7 +449,7 @@ def _authority(organisation: dict[str, Any]) -> str:
     return f"{pack.authority} ({pack.country})" if pack.country != "EU" else pack.authority
 
 
-def _submission_checklist(document: Document, data: DossierInput) -> None:
+def _submission_checklist(w: Writer, data: DossierInput) -> None:
     """Appendix C — what travels with this document, in the operator's own country.
 
     Cut to the SAIL the engine produced and the OSOs it required, so the list is this
@@ -582,10 +470,10 @@ def _submission_checklist(document: Document, data: DossierInput) -> None:
     except PackError:
         return
 
-    _h(document, f"Appendix C — Submission checklist: {pack.country_name}", 1)
-    document.add_paragraph(pack.summary)
+    w.heading(f"Appendix C — Submission checklist: {pack.country_name}", 1)
+    w.paragraph(pack.summary)
     if (warning := pack.warning()) is not None:
-        _note(document, warning)
+        w.note(warning)
 
     for kind, heading in (
         ("process", "Process"),
@@ -597,31 +485,25 @@ def _submission_checklist(document: Document, data: DossierInput) -> None:
         rows = [i for i in due if i.kind == kind]
         if not rows:
             continue
-        _h(document, heading, 2)
+        w.heading(heading, 2)
         for item in rows:
-            paragraph = document.add_paragraph(style="List Bullet")
-            paragraph.add_run(item.title).bold = True
-            if item.detail:
-                paragraph.add_run(f" — {item.detail}")
-            flag = paragraph.add_run(
+            detail = f" — {item.detail}" if item.detail else ""
+            flag = (
                 f"  [UNVERIFIED: {item.source}]" if not item.verified else f"  [{item.source}]"
             )
-            flag.italic = True
-            flag.font.size = Pt(8)
+            w.lead_bullet(item.title, f"{detail}{flag}")
 
     if pending:
-        _h(document, "Not due at this SAIL", 2)
-        document.add_paragraph(
+        w.heading("Not due at this SAIL", 2)
+        w.paragraph(
             "Listed because raising the SAIL would add them to the file, so the cost of a "
             "less favourable determination is visible before it is incurred."
         )
         for item in pending:
             at = f" (from SAIL {item.min_sail})" if item.min_sail else ""
-            document.add_paragraph(f"{item.title}{at}", style="List Bullet")
+            w.bullet(f"{item.title}{at}")
 
-    evidence_count = len(data.evidence)
-    _note(
-        document,
+    w.note(
         f"{len(due)} items due · {len(pending)} not due at SAIL {_sail_text(d)} · "
-        f"{evidence_count} evidence file(s) already attached in SORA Copilot.",
+        f"{len(data.evidence)} evidence file(s) already attached in SORA Copilot."
     )

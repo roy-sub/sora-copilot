@@ -43,6 +43,7 @@ export type Evidence = S["EvidenceOut"];
 export type Dossier = S["DossierOut"];
 export type DossierStatus = S["DossierStatusOut"];
 export type DossierSection = S["DossierSectionOut"];
+export type DossierFormat = Dossier["format"];
 export type Extractor = IntakeChat["extractor"];
 export type Sail = S["SAIL"];
 export type Arc = S["ARC"];
@@ -150,10 +151,10 @@ export const api = {
     request<void>(`${V1}/operations/${id}/evidence/${evidenceId}`, { method: "DELETE" }),
 
   dossierStatus: (id: string) => request<DossierStatus>(`${V1}/operations/${id}/dossier`),
-  generateDossier: (id: string, note?: string) =>
+  generateDossier: (id: string, format: DossierFormat = "docx", note?: string) =>
     request<Dossier>(`${V1}/operations/${id}/dossier`, {
       method: "POST",
-      body: { format: "docx", note: note ?? null },
+      body: { format, note: note ?? null },
     }),
 
   rulebase: () => request<Rulebase>(`${V1}/rulebase/current`, { anonymous: true }),

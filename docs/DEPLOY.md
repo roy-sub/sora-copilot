@@ -52,7 +52,8 @@ loses no data. `/healthz` stays green while it is paused, by design;
 The Dockerfile is multi-stage on `python:3.12-slim` and installs WeasyPrint's runtime
 libraries (`libcairo2`, `libpango-1.0-0`, `libpangocairo-1.0-0`, `libpangoft2-1.0-0`,
 `libgdk-pixbuf-2.0-0`, `libffi8`, `shared-mime-info`) plus a font, so PDF output is not
-blank. It runs as a non-root user and honours Render's `$PORT`.
+blank. These are load-bearing: a dossier exported as PDF goes through WeasyPrint, and
+without the font it renders with blank glyph boxes rather than failing loudly. It runs as a non-root user and honours Render's `$PORT`.
 
 ### The cold start is a product problem, not just an ops one
 

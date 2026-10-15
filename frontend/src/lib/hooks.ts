@@ -17,6 +17,7 @@ import {
   api,
   type CategoryCheckIn,
   type DraftPatch,
+  type DossierFormat,
   type DroneIn,
   type DronePatch,
   type OperationIn,
@@ -355,7 +356,8 @@ export function useDossierStatus(id: string | null) {
 export function useGenerateDossier(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (note?: string) => api.generateDossier(id, note),
+    mutationFn: ({ format = "docx", note }: { format?: DossierFormat; note?: string } = {}) =>
+      api.generateDossier(id, format, note),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.dossier(id) });
       qc.invalidateQueries({ queryKey: keys.operation(id) });

@@ -33,6 +33,8 @@ dev = [
   "httpx>=0.28,<0.29",
   "ruff>=0.14,<0.15",
   "mypy>=1.18,<2",
+  # Reads the generated PDF back, so the PDF and the DOCX can be proved to agree.
+  "pypdf>=6,<7",
 ]
 
 [build-system]

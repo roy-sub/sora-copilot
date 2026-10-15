@@ -1663,9 +1663,9 @@ export interface components {
             /**
              * Format
              * @default docx
-             * @constant
+             * @enum {string}
              */
-            format: "docx";
+            format: "docx" | "pdf";
             /** Note */
             note?: string | null;
         };

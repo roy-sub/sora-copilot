@@ -165,6 +165,24 @@ So:
 
 Do not mistake the second for the first.
 
+## One dossier, two formats
+
+The dossier is what reaches an authority, and an operator wants DOCX to edit alongside
+the authority's own forms or PDF to file. A PDF whose SAIL did not match the DOCX's
+would be the worst bug this product could ship, so there is no second code path in which
+it could happen: `services/dossier.py` describes the document **once**, against the
+`Writer` protocol in `services/docwriter.py`, and a backend turns those calls into
+`.docx` (python-docx) or `.pdf` (WeasyPrint, through print CSS).
+
+The vocabulary is deliberately small — headings, paragraphs, bullets, key/value tables,
+grid tables, notes, images, page breaks. Anything richer would start to encode layout in
+the content path, which is where drift begins.
+
+The PDF is rendered from HTML rather than converted from the DOCX: converting would need
+LibreOffice, which does not fit on a free tier. A test renders both formats from the same
+determination and asserts every risk value, the disclaimer, the UNVERIFIED banner and the
+trace appear in each; another asserts the running header is on every page of the PDF.
+
 ## Plan gating
 
 Commercial limits are the one place a request is refused for a reason that is not
