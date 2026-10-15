@@ -7,6 +7,7 @@ itself, so it can never pull the engine towards the network or the database.
 from app.domain.common import (
     ALTITUDE_BAND_THRESHOLD_M,
     ARC,
+    DISCLAIMER,
     SAIL,
     AirspaceClass,
     AltitudeBand,
@@ -34,7 +35,7 @@ from app.domain.trace import Trace, TraceNode
 __all__ = [
     "ALTITUDE_BAND_THRESHOLD_M",
     "ARC",
-    "SAIL",
+    "DISCLAIMER",
     "SAIL",
     "AirspaceClass",
     "AltitudeBand",

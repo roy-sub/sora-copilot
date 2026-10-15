@@ -56,6 +56,15 @@ export type OperationStatus = Operation["status"];
 export type Country = Org["country"];
 export type DataRegion = Org["data_region"];
 export type GeoJSONPolygon = S["GeoJSONPolygon"];
+export type BillingState = S["BillingStateOut"];
+export type PlanSummary = S["PlanOut"];
+export type PlanLimits = S["PlanLimitsOut"];
+export type PlanName = PlanSummary["name"];
+export type CheckoutResult = S["CheckoutOut"];
+export type NationalPack = S["NationalPackOut"];
+export type NationalCountry = S["NationalCountryOut"];
+export type SubmissionChecklist = S["SubmissionChecklistOut"];
+export type PackItem = S["PackItemOut"];
 
 export type { Problem };
 
@@ -148,6 +157,24 @@ export const api = {
     }),
 
   rulebase: () => request<Rulebase>(`${V1}/rulebase/current`, { anonymous: true }),
+
+  billing: () => request<BillingState>(`${V1}/billing`),
+  checkout: (plan: "pro" | "team" | "per_dossier") =>
+    request<CheckoutResult>(`${V1}/billing/checkout`, {
+      method: "POST",
+      body: {
+        plan,
+        success_path: "/app/settings/?checkout=done",
+        cancel_path: "/app/settings/?checkout=cancelled",
+      },
+    }),
+  billingPortal: () => request<{ url: string }>(`${V1}/billing/portal`, { method: "POST" }),
+
+  countries: () => request<NationalCountry[]>(`${V1}/national`, { anonymous: true }),
+  nationalPack: (code: string) =>
+    request<NationalPack>(`${V1}/national/${code}`, { anonymous: true }),
+  submissionChecklist: (id: string) =>
+    request<SubmissionChecklist>(`${V1}/national/operations/${id}/checklist`),
 
   categoryCheck: (body: CategoryCheckIn) =>
     request<CategoryCheck>(`${V1}/public/category-check`, {

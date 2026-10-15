@@ -29,6 +29,13 @@ export interface Problem {
   errors?: { field: string; message: string; type: string }[];
   /** Present on the 409 from POST /determine: nothing reaches the engine unconfirmed. */
   unconfirmed_fields?: string[];
+  /** Present on the 402 from a plan limit. The upgrade panel is rendered from these
+   *  fields rather than from the prose, so the copy and the numbers cannot disagree. */
+  feature?: string;
+  plan?: string;
+  limit?: number | null;
+  used?: number | null;
+  upgrade_to?: string | null;
 }
 
 export class ApiError extends Error {
@@ -46,6 +53,11 @@ export class ApiError extends Error {
 
   get status(): number {
     return this.problem.status;
+  }
+
+  /** A refusal for commercial rather than regulatory reasons. */
+  get isPlanLimit(): boolean {
+    return this.problem.code === "plan_limit";
   }
 }
 

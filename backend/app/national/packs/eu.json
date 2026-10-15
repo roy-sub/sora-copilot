@@ -1,0 +1,26 @@
+{
+  "country": "EU",
+  "country_name": "European Union (no member state chosen)",
+  "authority": "the competent authority of your state of registration",
+  "authority_url": null,
+  "summary": "No member state is selected for this organisation, so only the EU-level frame applies: the operational authorisation is granted by the competent authority of the state where the operator is registered, on the strength of a risk assessment the operator supplies. Choose a country in Settings to get that authority's process checklist.",
+  "complete": false,
+  "items": [
+    {
+      "id": "eu.process.pick_country",
+      "kind": "process",
+      "title": "Choose the state of registration",
+      "detail": "Set the country in Settings. The determination itself does not change — the national overrides are empty until an annex is transcribed — but the submission checklist does.",
+      "provenance": "seed",
+      "source": "Verify which authority is competent for your operation against EU 2019/947."
+    },
+    {
+      "id": "eu.attachment.dossier",
+      "kind": "attachment",
+      "title": "SORA dossier — the risk assessment and its derivation",
+      "detail": "Exported from SORA Copilot as DOCX.",
+      "provenance": "seed",
+      "source": "Verify the authority's expected structure for the risk assessment annex."
+    }
+  ]
+}

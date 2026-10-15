@@ -156,7 +156,11 @@ def test_a_changed_mitigation_produces_a_new_determination(
 
 
 def test_counterfactuals_are_offered_and_each_lowers_sail(
-    client: TestClient, auth: dict[str, str], operation: dict[str, Any], complete_draft: dict[str, Any]
+    client: TestClient,
+    auth: dict[str, str],
+    operation: dict[str, Any],
+    complete_draft: dict[str, Any],
+    pro: dict[str, Any],
 ) -> None:
     client.post(f"/api/v1/operations/{operation['id']}/determine", headers=auth)
     res = client.post(f"/api/v1/operations/{operation['id']}/counterfactual", json={"limit": 5}, headers=auth)
@@ -171,7 +175,11 @@ def test_counterfactuals_are_offered_and_each_lowers_sail(
 
 
 def test_applying_a_counterfactual_changes_the_draft_but_not_the_determination(
-    client: TestClient, auth: dict[str, str], operation: dict[str, Any], complete_draft: dict[str, Any]
+    client: TestClient,
+    auth: dict[str, str],
+    operation: dict[str, Any],
+    complete_draft: dict[str, Any],
+    pro: dict[str, Any],
 ) -> None:
     """Applying must not silently become a determination — that line is the product."""
     before = client.post(f"/api/v1/operations/{operation['id']}/determine", headers=auth).json()

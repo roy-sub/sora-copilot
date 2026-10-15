@@ -19,6 +19,7 @@ import { ComputationProgress, useStagedRun } from "@/components/ComputationProgr
 import { SailBadge, SailPlaceholder, SailScale, useSteppedLevel } from "@/components/SailBadge";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useToast } from "@/components/Toast";
+import { PlanLimit, isPlanLimit } from "@/components/PlanLimit";
 import { RiskChainReadout } from "@/components/verdict/Chain";
 import { GapAnalysis } from "@/components/verdict/GapAnalysis";
 import { OsoDrawer } from "@/components/verdict/OsoDrawer";
@@ -163,7 +164,11 @@ function VerdictView({
   const [openOso, setOpenOso] = useState<string | null>(null);
 
   const { data: osos = [] } = useOsos(operationId);
-  const { data: counterfactuals, isLoading: loadingCfs } = useCounterfactuals(operationId);
+  const {
+    data: counterfactuals,
+    isLoading: loadingCfs,
+    error: cfError,
+  } = useCounterfactuals(operationId);
   const apply = useApplyCounterfactual(operationId);
   const rerun = useRunDetermination(operationId);
 
@@ -284,7 +289,12 @@ function VerdictView({
 
               {loadingCfs && <p className="m-0 t-body-sm text-ink-low">Searching…</p>}
 
-              {!loadingCfs && counterfactuals && counterfactuals.suggestions.length === 0 && (
+              {/* The advisor is a paid feature. The refusal replaces the list rather
+                  than sitting above it, because an empty list next to an upgrade panel
+                  reads as a failure. */}
+              {isPlanLimit(cfError) && <PlanLimit error={cfError} compact />}
+
+              {!loadingCfs && !cfError && counterfactuals && counterfactuals.suggestions.length === 0 && (
                 <p className="m-0 p-4 bg-sheet-well t-body-sm text-ink-mid pretty">
                   No change within the advisor&apos;s reach lowers this SAIL. It searches
                   single changes first, then pairs; something larger — a different
@@ -292,7 +302,7 @@ function VerdictView({
                 </p>
               )}
 
-              {counterfactuals && counterfactuals.suggestions.length > 0 && (
+              {!cfError && counterfactuals && counterfactuals.suggestions.length > 0 && (
                 <div className="flex flex-col gap-sheet bg-hairline">
                   {counterfactuals.suggestions.map((s) => (
                     <CounterfactualCard

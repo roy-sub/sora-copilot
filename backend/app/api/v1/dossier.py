@@ -17,10 +17,11 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, File, Form, UploadFile, status
 from fastapi.responses import Response
 
-from app.api.v1.deps_api import RepoDep, not_found
+from app.api.v1.deps_api import RepoDep, SettingsDep, not_found
+from app.api.v1.gate import GateDep
 from app.api.v1.schemas import (
     DossierIn,
     DossierOut,
@@ -29,7 +30,7 @@ from app.api.v1.schemas import (
     EvidenceOut,
     OsoOut,
 )
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.db.repo import NotFound, Row
 from app.deps import CurrentUserDep, OrgContextDep
 from app.problem import ProblemError
@@ -41,7 +42,6 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/operations", tags=["dossier"])
 
-SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 def _own(repo: RepoDep, org_id: UUID, operation_id: UUID) -> Row:
@@ -123,6 +123,7 @@ async def upload_evidence(
     ctx: OrgContextDep,
     user: CurrentUserDep,
     repo: RepoDep,
+    gate: GateDep,
     file: Annotated[UploadFile, File()],
     oso_id: Annotated[str | None, Form()] = None,
 ) -> EvidenceOut:
@@ -131,7 +132,10 @@ async def upload_evidence(
     The file is validated before it is stored — size and type — so the operator learns
     immediately rather than when someone tries to read it.
     """
+    # Ownership before the plan gate: answering 402 for an operation that is not yours
+    # would confirm it exists.
     _own(repo, ctx.org_id, operation_id)
+    gate.require_count("evidence")
     data = await file.read()
     filename = file.filename or "evidence"
     try:
@@ -317,9 +321,13 @@ def generate(
     body: DossierIn,
     ctx: OrgContextDep,
     repo: RepoDep,
+    gate: GateDep,
     settings: SettingsDep,
 ) -> DossierOut:
     operation = _own(repo, ctx.org_id, operation_id)
+    # Checked here; spent at the end. A credit must not be burned by a generation that
+    # then fails in the renderer or the object store.
+    spend_credit = gate.require_dossier()
     determination = repo.latest_determination(operation_id)
     if determination is None:
         raise ProblemError(
@@ -379,6 +387,11 @@ def generate(
             "note": body.note,
         },
     )
+    if spend_credit and not repo.spend_dossier_credit(ctx.org_id):
+        # Another export in the same moment took the last credit. The document is built
+        # and stored; refusing now would charge nothing and deliver nothing, so it is
+        # recorded and the race is logged rather than resolved against the operator.
+        log.warning("dossier %s: credit vanished between check and spend", row["id"])
     if operation.get("status") in ("draft", "determined"):
         repo.update_operation(ctx.org_id, operation_id, {"status": "dossier_ready"})
     return _dossier_out(row, _signed(store, storage.DOSSIER_BUCKET, stored.path))

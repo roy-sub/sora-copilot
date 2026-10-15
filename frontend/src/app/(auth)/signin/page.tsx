@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SignInForm } from "./SignInForm";
 import { STAMP, Wordmark } from "@/components/Brand";
 
@@ -16,7 +17,9 @@ export default function SignIn() {
         <span className="t-data-sm text-ink-low">{STAMP} · EU Frankfurt</span>
       </div>
       <div className="bg-sheet-raised p-6 md:p-12 flex flex-col justify-center gap-6">
-        <SignInForm />
+        <Suspense fallback={<div className="min-h-[360px]" aria-busy />}>
+          <SignInForm />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,8 +1,14 @@
 # SORA Copilot — Build Plan
 
-**Status:** Phase 1 in progress. The four build-changing questions are answered (§0);
-the remaining items in §7 are either stated defaults or deferred to the phase that needs
-them, and none of them block Phase 1 work — only the Phase 1 DoD *demonstration*.
+**Status: all eight phases implemented.** See §10 for the phase-by-phase state and how
+each Definition of Done was checked.
+
+What remains is not code. No regulatory table has been verified against its published
+source (§8), and no national annex has been transcribed — the engine's
+`90_national_*.lp` files deliberately assert nothing, and the country packs under
+`backend/app/national/packs/` are marked UNVERIFIED item by item. Until you supply those
+documents the product is a working engine with honest labels on it, which is the right
+state to be in, but not something an operator should file with an authority.
 
 ---
 
@@ -13,18 +19,21 @@ them, and none of them block Phase 1 work — only the Phase 1 DoD *demonstratio
 | §5.1 Map | **MapLibre GL, keep the SVG renderer for the dossier** | Wizard map becomes MapLibre with a keyless basemap and the designed layers as style layers. `MapVolumeEditor`'s SVG renderer is retained as the static map render for the DOCX. Needs `NEXT_PUBLIC_MAP_STYLE_URL`. Phase 4. |
 | §5.2 Derivation tree | **React Flow + dagre, rebuild the motion** | Custom node/edge components reproduce the design's node anatomy and the `edge-draw` / `node-settle` timings; the existing mobile outline stays as the `<480px` treatment. The hand-laid SVG tree is replaced. Phase 5. |
 | §6.3 Altitude threshold | **500 ft = 152.4 m, correct the UI copy** | Engine keys ARC on 500 ft AGL. Approved design text "above 150 m AGL" is relabelled "above 500 ft (152 m)" wherever it appears. Signed off as a deliberate edit to design copy. |
-| §6.5 Interim SAIL in the UI | **Keep the checker and verdict working, labelled** | Both keep computing client-side through phases 1–6, each carrying an explicit "preliminary estimate — computed in your browser, not a determination" label. Cut over to clingo at Phase 3 (verdict) and Phase 7 (checker), at which point the labels and the TypeScript engine are removed together. |
+| §6.5 Interim SAIL in the UI | **Keep the checker and verdict working, labelled** | Both kept computing client-side through phases 1–6 behind a "preliminary estimate — computed in your browser, not a determination" label. **Done:** the verdict cut over at Phase 3, the checker at Phase 7, and `frontend/src/engine/` was deleted with the labels in the same commit. Nothing in the UI computes a risk value any more. |
 
 Proceeding on my stated recommendations, reversible on request: **Tailwind v4 CSS-first**
 (§5.3), **`ANTHROPIC_MODEL=claude-sonnet-5-5`** as the env default (§7.3), **raw clingo
 API rather than clorm** (§4.1), **`frontend/src/`** rather than the spec's literal
 `frontend/app/` (§4.9).
 
-Still open, and deliberately not blocking Phase 1: Supabase keys (§7.1 — gates the DoD
-demo, not the code), `docker build` execution (§7.2), the official SORA 2.5 tables
-(§7.4 — gates Phase 2 verification), the density raster (§7.5 — Phase 4), the
-`igrc.csv` speed column and `assembly` modelling (§6.1, §6.2 — Phase 2), per-tier plan
-limits (§6.8 — Phase 8).
+Resolved since: the `igrc.csv` speed column is kept (§6.1), `assembly` is modelled
+(§6.2), the density raster is replaced by operator-entered density with a confirmable
+environment hint (§7.5), and the per-tier plan limits are set in
+`backend/app/services/plans.py` (§6.8 — see §10, phase 8).
+
+**Still open, and now the only things standing between this and a usable compliance
+product:** the Supabase project (§7.1), the official SORA 2.5 tables (§7.4, §8), and the
+Austrian annex plus Austro Control's published process (§8).
 
 Two governing documents:
 
@@ -343,7 +352,9 @@ noting it here so there is no ambiguity later.
 
 ---
 
-## 8. Files you will need to fill in (UNVERIFIED rulebase)
+## 8. Files you will need to fill in
+
+### 8a. The rulebase (UNVERIFIED)
 
 All under `backend/app/engine/rulebase/sora_2_5/tables/`. Each ships with a header block
 naming document / version / section / page and `verified: false`, and seed values taken
@@ -362,9 +373,40 @@ from the spec §6.3 matrix and the existing TypeScript rulebase — **never from
 | `citations.csv` | rule id → document, section, page, url | the same documents |
 | `cf_costs.csv` | effort cost per counterfactual parameter | **mine, not regulatory** — needs your review, not a source |
 
-One known content question: the current TypeScript rulebase uses **17 OSOs** (#01–09,
-13, 16–20, 23, 24) because that is SORA 2.5; the design copy says "~24 OSOs", which is
-SORA 2.0. I will keep 17 and derive the count from the table, as now.
+Four more tables were added during Phase 2 and are in the same state:
+`igrc_columns.csv` (the dimension/speed column bands, which the spec's matrix dropped),
+`thresholds.csv`, `arc_residual.csv` and `density_environment_hint.csv`. The last is
+**ours, not regulatory** — it maps a population density to a *suggested* ground
+environment that the operator confirms, and it never suggests `controlled` or
+`assembly`. `make rulebase` prints the live list.
+
+One known content question: the rulebase uses **17 OSOs** (#01–09, 13, 16–20, 23, 24)
+because that is SORA 2.5; the design copy says "~24 OSOs", which is SORA 2.0. The count
+is derived from the table rather than written anywhere.
+
+### 8b. The country packs (UNVERIFIED)
+
+`backend/app/national/packs/at.json` — 14 items covering the Austro Control process, the
+forms and the attachments. Every one is `"provenance": "seed"` with a `source` field
+saying what to check it against. Set `provenance` to `"official"` and put the document
+and clause in `source` once you have confirmed an item; the UNVERIFIED banner disappears
+on its own when the last one flips, in the app and in the dossier's Appendix C alike.
+
+Deliberately absent, and the reason three items read "UNKNOWN — ask the authority":
+
+- the application form's exact name and version,
+- the fee,
+- the statutory lead time,
+- the minimum sum insured.
+
+A test fails if an unverified item ever quotes a figure, and a second test fails if the
+dossier's appendix renders one. `backend/app/national/packs/de.json` is a stub with the
+LBA named and nothing else; `eu.json` covers "no member state chosen".
+
+The engine's national overrides are separate and still empty on purpose:
+`backend/app/engine/rulebase/sora_2_5/90_national_at.lp` and `90_national_de.lp` assert
+only that the country uses the EU baseline, and say so in the trace. Nothing in a country
+pack can change a determination.
 
 ---
 
@@ -385,3 +427,37 @@ worker, no paid service beyond the Anthropic key); the LLM never computes a
 determination, enforced by `tests/test_boundary.py` from the first backend commit; every
 determination carries a full trace, citations and a pinned rulebase version; no invented
 regulatory values; engine changes ship with passing golden tests.
+
+---
+
+## 10. Phase state
+
+Every phase is implemented. The checks below are what was actually run, not a plan.
+
+| Phase | State | Definition of Done, as checked |
+|---|---|---|
+| **1** Skeleton | done | Both sides run with one command and no configuration. `/healthz` answers. Static export builds. Migration 001 executed against a real Postgres 16 (PostGIS and the Supabase schemas shimmed) — 12 tables, RLS enabled *and* forced, the sign-up trigger, the generated kinetic-energy column, the empty-trace refusal, the idempotency index, the buckets. |
+| **2** Engine v1 | done | The whole chain in clingo: iGRC → M1/M2 → GRC → ARC → residual ARC → SAIL → OSOs → containment → TMPR. `because/3` on every conclusion, with an integrity constraint that makes an unjustified conclusion *unsatisfiable* — proved by injecting one and watching the solver refuse. 13 golden cases. `--models=2` on every run, so a non-deterministic rulebase fails rather than picking. CSV→LP generation refuses a malformed table. |
+| **3** Data + API | done | 68 OpenAPI paths, a generated TypeScript client, org scoping resolved from the verified JWT and never from a request body. `MemoryRepo` and `SupabaseRepo` behind one Protocol, so every API test describes behaviour both must provide. |
+| **4** Geo + wizard | done | Volume derivation in an equal-area projection centred on the operation, refusing a self-intersecting outline; every derived figure carries the rule and the inputs that produced it. Seven-step wizard with fact confirmation. |
+| **5** Verdict + counterfactuals | done | React Flow + dagre derivation tree with the design's draw-and-settle motion. Counterfactual search runs the **real engine** on each candidate — single changes first, then bounded pairs (0.6 s) — so a suggestion that would not actually lower SAIL cannot be offered. |
+| **6** Dossier + intake | done | DOCX with the full justification appendix; a test asserts every risk value in the document equals the stored determination. Evidence upload with type and size validation. The intake model proposes facts and nothing else: its tool schema has no field a conclusion could go in. |
+| **7** Marketing + checker + Austria | done | The public checker answers from the same engine, rate-limited per IP without Redis. The Austria pack ships as structured, per-item-verifiable data rendered both in the app (`/app/authority/`) and into the dossier as Appendix C. Germany is a stub; the EU pack covers "no member state chosen". |
+| **8** Billing + deploy | done | Stripe Checkout and a webhook that verifies the signature before reading a field and claims the event id before running a handler. Plan gating on fleet, operations, determinations, dossiers, evidence, the advisor and the prose panel, each refusing with a 402 carrying the feature, the limit, the usage and the plan that lifts it. Migration 002 executed against real Postgres. `backend/scripts/smoke.sh` walks the whole product against a deployed host. |
+
+### What a reviewer should be suspicious of, and where to look
+
+- **"The LLM never decides anything."** `tests/test_boundary.py` walks the AST of real
+  source files and checks reachability *transitively*. An earlier version recorded only
+  package names and so passed with a real two-hop path to the database in place; it was
+  rewritten and then verified by inserting that violation and watching it fail. The same
+  file now covers Stripe.
+- **"Every determination carries a trace."** Not a convention — an integrity constraint
+  in `00_core.lp`, plus a check constraint in migration 001 that refuses a row with an
+  empty trace.
+- **"No invented regulatory values."** 14 of 14 rulebase tables and 14 of 14 Austria pack
+  items are marked unverified, in the data *and* in the UI *and* in the dossier. A test
+  fails if an unverified pack item ever quotes a fee, a duration or a sum insured.
+- **Plan gating cannot leak existence.** Ownership is checked before the plan gate on
+  every operation-scoped endpoint, so another organisation's operation answers 404 and
+  not 402. There is a test for each one.

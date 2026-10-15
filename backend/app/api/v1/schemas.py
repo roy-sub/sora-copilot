@@ -395,4 +395,128 @@ class CategoryCheckOut(BaseModel):
     disclaimer: str
 
 
+# ------------------------------------------------------------------ national packs
+
+
+class PackItemOut(BaseModel):
+    id: str
+    kind: Literal["process", "form", "attachment", "contact", "note"]
+    title: str
+    detail: str
+    min_sail: SAIL | None = None
+    osos: list[str]
+    url: str | None = None
+    verified: bool
+    source: str
+
+
+class NationalPackOut(BaseModel):
+    country: Literal["AT", "DE", "EU"]
+    country_name: str
+    authority: str
+    authority_url: str | None = None
+    summary: str
+    complete: bool
+    items: list[PackItemOut]
+    unverified_ids: list[str]
+    warning: str | None = None
+
+
+class NationalCountryOut(BaseModel):
+    country: Literal["AT", "DE", "EU"]
+    country_name: str
+    authority: str
+    complete: bool
+    items: int
+    unverified: int
+
+
+class SubmissionChecklistOut(BaseModel):
+    """A country pack narrowed to one operation's SAIL and required OSOs."""
+
+    operation_id: UUID
+    country: Literal["AT", "DE", "EU"]
+    country_name: str
+    authority: str
+    authority_url: str | None = None
+    summary: str
+    sail: SAIL | Literal["certified_category"] | None = None
+    due: list[PackItemOut]
+    pending: list[PackItemOut] = Field(
+        description="Items this pack holds that are not due at the current SAIL."
+    )
+    evidence_attached: int = Field(description="Evidence files already uploaded for this operation.")
+    dossier_versions: int
+    warning: str | None = None
+    disclaimer: str
+
+
+# ------------------------------------------------------------------ billing
+
+
+class PlanLimitsOut(BaseModel):
+    """What a plan allows. `null` means unlimited; 0 means the feature is not included."""
+
+    seats: int
+    drones: int | None = None
+    operations: int | None = None
+    determinations_per_month: int | None = None
+    dossiers_per_month: int | None = None
+    evidence_files: int | None = None
+    counterfactuals: bool
+    conversational_intake: bool
+    api_access: bool
+    uses_dossier_credits: bool
+
+
+class PlanOut(BaseModel):
+    name: Literal["free", "per_dossier", "pro", "team", "consultancy"]
+    label: str
+    price_label: str
+    limits: PlanLimitsOut
+    #: Whether this deployment can actually sell it, i.e. has a Stripe price configured.
+    purchasable: bool = False
+
+
+class BillingStateOut(BaseModel):
+    plan: PlanOut
+    dossier_credits: int
+    usage: dict[str, int]
+    #: Set when a subscription exists, whatever its state.
+    status: str | None = None
+    current_period_end: datetime | None = None
+    cancel_at_period_end: bool = False
+    #: True when Stripe is configured on this deployment. False means nothing can be
+    #: bought and the UI says so rather than offering a button that fails.
+    billing_configured: bool
+    #: True when the caller may open checkout or the portal at all.
+    can_manage: bool
+    plans: list[PlanOut]
+    portal_available: bool
+
+
+class CheckoutIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    plan: Literal["pro", "team", "per_dossier"]
+    #: Where to send the browser back to. Must be on the configured frontend origin.
+    success_path: str = "/app/settings/?checkout=done"
+    cancel_path: str = "/app/settings/?checkout=cancelled"
+
+
+class CheckoutOut(BaseModel):
+    url: str
+    plan: str
+    mode: Literal["subscription", "payment"]
+
+
+class PortalOut(BaseModel):
+    url: str
+
+
+class WebhookOut(BaseModel):
+    received: bool
+    #: What the handler did, so a Stripe dashboard retry shows whether it was a no-op.
+    outcome: Literal["applied", "ignored", "duplicate"]
+
+
 OsoOut.model_rebuild()

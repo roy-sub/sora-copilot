@@ -147,7 +147,12 @@ export function useRequireAuth(): { ready: boolean; signedIn: boolean } {
   const router = useRouter();
 
   useEffect(() => {
-    if (configured && ready && !session) router.replace("/signin/");
+    if (configured && ready && !session) {
+      // Carry the destination so a visitor who followed a pricing link lands on the
+      // plan panel rather than on a dashboard they did not ask for.
+      const here = window.location.pathname + window.location.search;
+      router.replace(`/signin/?next=${encodeURIComponent(here)}`);
+    }
   }, [configured, ready, session, router]);
 
   return { ready, signedIn: !configured || Boolean(session) };

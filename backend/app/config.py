@@ -37,9 +37,17 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-sonnet-5-5"
     llm_monthly_call_cap: int = Field(default=500, ge=0)
 
-    # ---------------------------------------------------------------- Stripe (phase 8)
+    # ---------------------------------------------------------------- Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
+    #: One price id per paid plan, plus the one-off dossier. A plan with no price id
+    #: configured cannot be bought — the checkout endpoint says so rather than sending
+    #: the operator to a Stripe page that would fail.
+    stripe_price_pro: str = ""
+    stripe_price_team: str = ""
+    stripe_price_dossier: str = ""
+    #: Where Stripe returns the browser. The frontend origin, not the API's.
+    stripe_return_url: str = "http://localhost:3000/app/settings/"
 
     # ---------------------------------------------------------------- Rulebase
     rulebase_version: str = "2.5.0-rc1"
@@ -63,6 +71,25 @@ class Settings(BaseSettings):
     @property
     def anthropic_configured(self) -> bool:
         return bool(self.anthropic_api_key)
+
+    @property
+    def stripe_configured(self) -> bool:
+        """Checkout needs the secret key; the webhook needs its own signing secret.
+
+        Both, because a checkout whose webhook cannot be verified would take money and
+        never grant the plan.
+        """
+        return bool(self.stripe_secret_key and self.stripe_webhook_secret)
+
+    @property
+    def stripe_prices(self) -> dict[str, str]:
+        """Plan name → Stripe price id, for the plans that have one configured."""
+        configured = {
+            "pro": self.stripe_price_pro,
+            "team": self.stripe_price_team,
+            "per_dossier": self.stripe_price_dossier,
+        }
+        return {plan: price for plan, price in configured.items() if price}
 
     def validate_for_runtime(self) -> list[str]:
         """Return the missing-key warnings, or raise in production where they are fatal."""

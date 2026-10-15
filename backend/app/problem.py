@@ -102,8 +102,8 @@ async def validation_handler(request: Request, exc: Exception) -> JSONResponse:
         ProblemError(
             code="validation_failed",
             title="The request body is not valid",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             errors=errors,
         ).body(request.url.path),
-        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
     )

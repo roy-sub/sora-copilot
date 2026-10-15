@@ -30,6 +30,13 @@ Row = dict[str, Any]
 Id = UUID | str
 
 
+def _month_start() -> str:
+    """The first of the current month, UTC, as an ISO string — monthly allowances key on it."""
+    return (
+        datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    )
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -103,6 +110,23 @@ class Repo(Protocol):
     def count_llm_calls_this_month(self, org_id: Id) -> int: ...
     def log_llm_call(self, org_id: Id, data: Row) -> Row: ...
 
+    # -------------------------------------------------------------- plan accounting
+    def count_drones(self, org_id: Id) -> int: ...
+    def count_operations(self, org_id: Id) -> int: ...
+    def count_evidence(self, org_id: Id) -> int: ...
+    def count_determinations_this_month(self, org_id: Id) -> int: ...
+    def count_dossiers_this_month(self, org_id: Id) -> int: ...
+
+    # -------------------------------------------------------------- billing
+    def spend_dossier_credit(self, org_id: Id) -> bool: ...
+    def grant_dossier_credits(self, org_id: Id, credits: int) -> int: ...
+    def org_for_stripe_customer(self, customer_id: str) -> Row | None: ...
+    def upsert_subscription(self, org_id: Id, data: Row) -> Row: ...
+    def list_subscriptions(self, org_id: Id) -> list[Row]: ...
+    def record_purchase(self, org_id: Id, data: Row) -> Row: ...
+    def list_purchases(self, org_id: Id) -> list[Row]: ...
+    def remember_stripe_event(self, event_id: str, data: Row) -> bool: ...
+
     # -------------------------------------------------------------- rulebase
     def current_rulebase(self) -> Row | None: ...
     def upsert_rulebase(self, data: Row) -> Row: ...
@@ -133,6 +157,11 @@ class MemoryRepo:
         self.dossiers: dict[str, Row] = {}
         self.llm_calls: list[Row] = []
         self.rulebases: dict[str, Row] = {}
+        self.subscriptions: dict[str, Row] = {}
+        self.purchases: dict[str, Row] = {}
+        #: Stripe event ids already applied. The webhook's memory, so a redelivery is a
+        #: no-op rather than a second month of credits.
+        self.stripe_events: dict[str, Row] = {}
 
     @property
     def is_durable(self) -> bool:
@@ -169,6 +198,12 @@ class MemoryRepo:
                 "plan": "free",
                 "data_region": "frankfurt",
                 "rulebase_pin": None,
+                # Mirrors migration 002's defaults, so a caller never has to tell the
+                # two stores apart by which keys are present.
+                "dossier_credits": 0,
+                "stripe_customer_id": None,
+                "stripe_subscription_id": None,
+                "plan_period_end": None,
                 "created_at": _now(),
                 "updated_at": _now(),
             }
@@ -438,6 +473,125 @@ class MemoryRepo:
             row = {**data, "id": str(uuid4()), "org_id": str(org_id), "created_at": _now()}
             self.llm_calls.append(row)
             return deepcopy(row)
+
+    # -------------------------------------------------------------- plan accounting
+
+    def count_drones(self, org_id: Id) -> int:
+        with self._lock:
+            return sum(1 for d in self.drones.values() if d["org_id"] == str(org_id))
+
+    def count_operations(self, org_id: Id) -> int:
+        with self._lock:
+            return sum(1 for o in self.operations.values() if o["org_id"] == str(org_id))
+
+    def _own_operation_ids(self, org_id: Id) -> set[str]:
+        return {o["id"] for o in self.operations.values() if o["org_id"] == str(org_id)}
+
+    def count_evidence(self, org_id: Id) -> int:
+        with self._lock:
+            mine = self._own_operation_ids(org_id)
+            return sum(1 for e in self.evidence.values() if e["operation_id"] in mine)
+
+    def count_determinations_this_month(self, org_id: Id) -> int:
+        start = _month_start()
+        with self._lock:
+            mine = self._own_operation_ids(org_id)
+            return sum(
+                1
+                for d in self.determinations.values()
+                if d["operation_id"] in mine and str(d.get("computed_at", "")) >= start
+            )
+
+    def count_dossiers_this_month(self, org_id: Id) -> int:
+        start = _month_start()
+        with self._lock:
+            mine = self._own_operation_ids(org_id)
+            return sum(
+                1
+                for d in self.dossiers.values()
+                if d["operation_id"] in mine and str(d.get("generated_at", "")) >= start
+            )
+
+    # -------------------------------------------------------------- billing
+
+    def spend_dossier_credit(self, org_id: Id) -> bool:
+        """Decrement if there is one to spend. Returns whether a credit was taken.
+
+        Check-then-decrement under the lock, so two concurrent exports cannot both see
+        the last credit.
+        """
+        with self._lock:
+            org = self.orgs.get(str(org_id))
+            if org is None:
+                raise NotFound("org")
+            credits = int(org.get("dossier_credits") or 0)
+            if credits <= 0:
+                return False
+            org["dossier_credits"] = credits - 1
+            return True
+
+    def grant_dossier_credits(self, org_id: Id, credits: int) -> int:
+        with self._lock:
+            org = self.orgs.get(str(org_id))
+            if org is None:
+                raise NotFound("org")
+            org["dossier_credits"] = int(org.get("dossier_credits") or 0) + int(credits)
+            return int(org["dossier_credits"])
+
+    def org_for_stripe_customer(self, customer_id: str) -> Row | None:
+        with self._lock:
+            for org in self.orgs.values():
+                if org.get("stripe_customer_id") == customer_id:
+                    return deepcopy(org)
+        return None
+
+    def upsert_subscription(self, org_id: Id, data: Row) -> Row:
+        key = str(data["stripe_subscription_id"])
+        with self._lock:
+            existing = self.subscriptions.get(key, {})
+            row = {
+                **existing,
+                **data,
+                "id": existing.get("id", str(uuid4())),
+                "org_id": str(org_id),
+                "created_at": existing.get("created_at", _now()),
+                "updated_at": _now(),
+            }
+            self.subscriptions[key] = row
+            return deepcopy(row)
+
+    def list_subscriptions(self, org_id: Id) -> list[Row]:
+        with self._lock:
+            rows = [s for s in self.subscriptions.values() if s["org_id"] == str(org_id)]
+            return [deepcopy(s) for s in sorted(rows, key=lambda s: str(s["created_at"]), reverse=True)]
+
+    def record_purchase(self, org_id: Id, data: Row) -> Row:
+        key = str(data["stripe_session_id"])
+        with self._lock:
+            if key in self.purchases:
+                return deepcopy(self.purchases[key])
+            row = {**data, "id": str(uuid4()), "org_id": str(org_id), "created_at": _now()}
+            self.purchases[key] = row
+            return deepcopy(row)
+
+    def list_purchases(self, org_id: Id) -> list[Row]:
+        with self._lock:
+            rows = [p for p in self.purchases.values() if p["org_id"] == str(org_id)]
+            return [deepcopy(p) for p in sorted(rows, key=lambda p: str(p["created_at"]), reverse=True)]
+
+    def remember_stripe_event(self, event_id: str, data: Row) -> bool:
+        """Record an event id. False means it was already applied, so skip it.
+
+        Claiming the id *before* the handler runs is deliberate: a handler that fails
+        half-way must not be retried blindly against state it already changed. The
+        webhook returns 200 and the failure is logged, because Stripe retries on
+        non-2xx and a retry would hit the same partial state.
+        """
+        with self._lock:
+            if event_id in self.stripe_events:
+                return False
+            self.stripe_events[event_id] = {**data, "id": event_id, "applied_at": _now()}
+            return True
 
     # -------------------------------------------------------------- rulebase
 

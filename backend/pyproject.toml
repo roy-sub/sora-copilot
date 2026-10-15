@@ -23,6 +23,7 @@ dependencies = [
   "python-docx>=1.2,<2",
   "weasyprint>=66,<67",
   "anthropic>=0.75,<1",
+  "stripe>=12,<13",
 ]
 
 [project.optional-dependencies]

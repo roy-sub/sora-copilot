@@ -12,6 +12,7 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.api.v1.deps_api import RepoDep, not_found
+from app.api.v1.gate import GateDep
 from app.api.v1.schemas import (
     ApplyCounterfactualIn,
     CounterfactualIn,
@@ -63,8 +64,18 @@ def run(
     operation_id: UUID,
     ctx: OrgContextDep,
     repo: RepoDep,
+    gate: GateDep,
     force: bool = False,
 ) -> DeterminationOut:
+    try:
+        repo.get_operation(ctx.org_id, operation_id)
+    except NotFound as exc:
+        raise not_found("operation") from exc
+    # Before the run, not after: an engine run costs real CPU on a free-tier instance, so
+    # the limit has to be a refusal rather than a receipt. After the ownership check, so a
+    # 402 cannot confirm another operator's operation.
+    gate.require_count("determinations")
+
     try:
         determination, fresh = service.run(repo, ctx.org_id, operation_id, force=force)
     except NotFound as exc:
@@ -96,8 +107,15 @@ def counterfactual(
     body: CounterfactualIn,
     ctx: OrgContextDep,
     repo: RepoDep,
+    gate: GateDep,
 ) -> CounterfactualOut:
     """Minimal change sets that lower SAIL. Every one is re-run by the engine."""
+    try:
+        repo.get_operation(ctx.org_id, operation_id)
+    except NotFound as exc:
+        raise not_found("operation") from exc
+    gate.require_feature("counterfactuals")
+
     try:
         current = service.latest(repo, ctx.org_id, operation_id)
         suggestions = service.counterfactuals(

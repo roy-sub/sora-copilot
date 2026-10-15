@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FieldLabel, Input } from "@/components/ui/Field";
@@ -10,6 +10,18 @@ import { useAuth } from "@/lib/auth";
 type Mode = "signin" | "signup";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Where to land after signing in.
+ *
+ * Only an in-app path is honoured. A `next` that names a host, or a protocol-relative
+ * `//host`, is discarded: an open redirect on a sign-in form is how a credential page
+ * ends up pointing somewhere else.
+ */
+function nextPath(raw: string | null): string {
+  if (!raw || !raw.startsWith("/app/") || raw.startsWith("//")) return "/app/";
+  return raw;
+}
 
 function FieldError({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -24,6 +36,7 @@ function FieldError({ id, children }: { id: string; children: React.ReactNode })
 
 export function SignInForm() {
   const router = useRouter();
+  const destination = nextPath(useSearchParams().get("next"));
   const { ready, session, configured, sendMagicLink, signInWithPassword, signUpWithPassword } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -36,8 +49,8 @@ export function SignInForm() {
 
   // Already signed in — including the moment a magic link completes in this tab.
   useEffect(() => {
-    if (ready && session) router.replace("/app/");
-  }, [ready, session, router]);
+    if (ready && session) router.replace(destination);
+  }, [ready, session, router, destination]);
 
   const magic = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +92,7 @@ export function SignInForm() {
       } else {
         await signInWithPassword(email, password);
       }
-      router.replace("/app/");
+      router.replace(destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed.");
     } finally {

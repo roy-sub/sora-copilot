@@ -1,5 +1,10 @@
 # Deployment
 
+Where each piece goes and how it is wired. For *where to get the credentials* — which
+dashboard, which button, which line of `.env` — read
+[Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) instead; this page assumes
+you already have them.
+
 Everything runs on free tiers. No Redis, no Celery, no always-on worker, no paid service
 beyond the Anthropic API key.
 
@@ -15,9 +20,11 @@ EU regions throughout: data residency is a stated selling point, not an aftertho
 
 1. Create a project in an **EU region** (Frankfurt or Dublin — the settings screen lets
    an operator choose, so pick the one you will offer first).
-2. SQL Editor → run `backend/app/db/migrations/001_init.sql`. It enables `postgis` and
-   `pgcrypto`, creates every table with RLS enabled and forced, and seeds rulebase
-   version `2.5.0-rc1`.
+2. SQL Editor → run the migrations **in order**:
+   - `backend/app/db/migrations/001_init.sql` — enables `postgis` and `pgcrypto`,
+     creates every table with RLS enabled and forced, and seeds rulebase `2.5.0-rc1`.
+   - `backend/app/db/migrations/002_billing.sql` — subscriptions, dossier credits and
+     the webhook's idempotency log.
 3. Authentication → Providers → Email: enable email, and enable magic links.
 4. Authentication → URL Configuration → Redirect URLs: add
    `http://localhost:3000/app/` and `https://<your-pages-domain>/app/`. Magic links
@@ -58,7 +65,45 @@ mitigations, both already in place:
 - `/healthz` has no dependencies and is pinged by an external free uptime monitor
   (UptimeRobot or similar, 5-minute interval) to keep the instance awake during the day.
 
-## 3. Frontend on Cloudflare Pages
+## 3. Stripe
+
+Optional: the product runs without it, on the free plan, and says so in the plan panel.
+With no `STRIPE_SECRET_KEY` nothing can be bought; with no `STRIPE_WEBHOOK_SECRET` the
+webhook endpoint refuses every request rather than trusting an unverified payload.
+
+1. Create the products and prices (Test mode first): **Pro** and **Team** as recurring
+   monthly prices, **Per dossier** as a one-off price. Copy the three *price* ids
+   (`price_…`, not `prod_…`) into `STRIPE_PRICE_PRO`, `STRIPE_PRICE_TEAM` and
+   `STRIPE_PRICE_DOSSIER`.
+2. Developers → Webhooks → add an endpoint at `https://<render-host>/api/v1/billing/webhook`
+   for these events, and no others:
+   `checkout.session.completed`, `customer.subscription.created`,
+   `customer.subscription.updated`, `customer.subscription.deleted`,
+   `invoice.payment_failed`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+3. Settings → Billing → Customer portal: enable it, and allow cancellation and payment
+   method updates. `POST /api/v1/billing/portal` sends customers there rather than
+   rebuilding any of it.
+4. Set `STRIPE_RETURN_URL` to the **frontend** origin plus the settings path, e.g.
+   `https://<your-pages-domain>/app/settings/`. The checkout endpoint only ever takes a
+   *path* from the caller and resolves it against this origin, so a request cannot
+   redirect a payment confirmation off-site.
+
+A plan is derived from the configured price id and from nothing else — never from a
+product's name or from event metadata — so renaming a product in the dashboard cannot
+change what a customer is entitled to. Every event id is recorded before its handler
+runs, so a redelivery is a no-op.
+
+Verify the endpoint with the Stripe CLI before taking real money:
+
+```bash
+stripe listen --forward-to localhost:8000/api/v1/billing/webhook
+stripe trigger customer.subscription.created
+```
+
+Then confirm `GET /api/v1/billing` reports the new plan, and that sending the same event
+twice answers `{"outcome": "duplicate"}`.
+
+## 4. Frontend on Cloudflare Pages
 
 1. New project → connect the repository.
 2. Build command `npm run build`, output directory `out`, root directory `frontend`.
@@ -68,23 +113,44 @@ mitigations, both already in place:
 The build is a static export (`output: 'export'`, `trailingSlash: true`,
 `images.unoptimized`). No SSR, no server actions, no route handlers — Pages serves files.
 
-## 4. Media
+## 5. Media
 
 Drop real assets into `frontend/public/media/` using the filenames in
 `frontend/src/lib/media-manifest.ts` and rebuild. No code change: `MediaSlot` probes for
 the file and falls back to the designed placeholder when it is missing. `?slots=1` shows
 each slot's id and size budget.
 
-## 5. Smoke test against production
+## 6. Smoke test against production
 
 ```bash
 curl -s https://<render-host>/healthz | jq
 curl -s https://<render-host>/healthz/deep | jq      # expect database: ok
+curl -s https://<render-host>/api/v1/rulebase/current | jq '.version, .verified'
+curl -s -X POST https://<render-host>/api/v1/public/category-check \
+  -H 'content-type: application/json' \
+  -d '{"mass_band":"4to25","ground_environment":"sparsely_populated","operation_type":"bvlos"}' | jq
+
+# The webhook must refuse an unsigned payload. Anything but 400 is a serious problem.
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<render-host>/api/v1/billing/webhook \
+  -H 'content-type: application/json' -d '{"id":"evt_x","type":"customer.subscription.created"}'
 ```
 
-Then in a browser: sign up, land on an empty dashboard, and check that the UNVERIFIED
-banner is visible wherever a risk value appears. If it is not, something is claiming
-verification it does not have.
+Then in a browser, the build spec's definition of done:
+
+1. Sign up and land on an empty dashboard.
+2. Add an aircraft, draw a volume, answer the wizard, confirm every fact.
+3. Run the determination: a SAIL with a readable derivation tree and counterfactuals.
+4. Export the DOCX dossier and reopen the operation — it persisted.
+5. Hit a plan limit on purpose (a fourth operation on the free plan) and check the 402
+   renders as an upgrade panel with the right numbers.
+6. Check that the UNVERIFIED banner is visible wherever a risk value appears. If it is
+   not, something is claiming verification it does not have.
+
+`scripts/smoke.sh` runs steps 1–5 against a deployed host from the command line:
+
+```bash
+BASE=https://<render-host> SUPABASE_JWT_SECRET=... backend/scripts/smoke.sh
+```
 
 ## Local development
 

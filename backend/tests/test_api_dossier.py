@@ -16,6 +16,18 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import SQUARE as SQUARE_FOR_DOSSIER
 
+
+@pytest.fixture(autouse=True)
+def _paid(pro: dict[str, Any]) -> None:
+    """Every test in this module exercises a paid feature.
+
+    Plan gating is the subject of tests/test_api_plans.py, which runs these same
+    endpoints on the free plan and asserts the 402. Here the plan is not the point, so
+    it is set once rather than repeated in twenty signatures.
+    """
+    return None
+
+
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 
@@ -389,3 +401,49 @@ def test_the_chart_is_skipped_when_nothing_has_been_drawn(
     assert client.post(f"/api/v1/operations/{op['id']}/determine", headers=auth).status_code == 200
     res = client.post(f"/api/v1/operations/{op['id']}/dossier", json={}, headers=auth)
     assert res.status_code == 201, res.text
+
+
+def test_the_document_carries_the_countrys_submission_checklist(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    """Appendix C — the administrative half of the file, cut to this operation's SAIL."""
+    dossier = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={}, headers=auth
+    ).json()
+    text = _docx_text(
+        client.get(
+            f"/api/v1/operations/{operation['id']}/dossier/{dossier['id']}/download", headers=auth
+        ).content
+    )
+    assert "Submission checklist: Austria" in text
+    assert "Austro Control" in text
+    # Every line is this project's reading, so every line must say so in the document.
+    assert "UNVERIFIED:" in text
+    assert "Register as a UAS operator" in text
+    # A SAIL IV item must appear under "not due", never as a requirement of a SAIL III file.
+    assert "Not due at this SAIL" in text
+    assert "Design and maintenance evidence" in text
+
+
+def test_the_checklist_appendix_never_invents_a_fee_or_a_lead_time(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    """The dossier is the artefact that reaches an authority. No guessed figure may be in it.
+
+    test_national.py guards the pack data; this guards what the document actually renders,
+    which is the thing a reader would believe.
+    """
+    import re
+
+    dossier = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={}, headers=auth
+    ).json()
+    text = _docx_text(
+        client.get(
+            f"/api/v1/operations/{operation['id']}/dossier/{dossier['id']}/download", headers=auth
+        ).content
+    )
+    start = text.index("Submission checklist")
+    appendix = text[start:]
+    hits = re.findall(r"(€\s?\d[\d.,]*|\d+\s?(?:working\s+)?(?:days?|weeks?|months?))", appendix, re.I)
+    assert not hits, f"the submission appendix quotes an unverified figure: {hits}"

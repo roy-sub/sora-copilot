@@ -7,6 +7,7 @@ from uuid import UUID
 
 from fastapi import Depends
 
+from app.config import Settings, get_settings
 from app.db import get_repo as _get_repo
 from app.db.repo import NotFound, Repo, Row
 from app.deps import OrgContextDep
@@ -18,6 +19,7 @@ def repo() -> Repo:
 
 
 RepoDep = Annotated[Repo, Depends(repo)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 def not_found(what: str) -> ProblemError:

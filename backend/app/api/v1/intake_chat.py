@@ -17,15 +17,15 @@ does with them.
 from __future__ import annotations
 
 import logging
-from typing import Annotated, Literal
+from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.api.v1.deps_api import RepoDep, not_found
+from app.api.v1.deps_api import RepoDep, SettingsDep, not_found
+from app.api.v1.gate import GateDep
 from app.api.v1.operations import _fact_out
 from app.api.v1.schemas import IntakeChatIn, IntakeChatOut
-from app.config import Settings, get_settings
 from app.db.repo import NotFound
 from app.deps import OrgContextDep
 from app.problem import ProblemError
@@ -36,7 +36,6 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/operations", tags=["intake"])
 
-SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 @router.post(
@@ -49,12 +48,18 @@ def chat(
     body: IntakeChatIn,
     ctx: OrgContextDep,
     repo: RepoDep,
+    gate: GateDep,
     settings: SettingsDep,
 ) -> IntakeChatOut:
     try:
         repo.get_operation(ctx.org_id, operation_id)
     except NotFound as exc:
         raise not_found("operation") from exc
+
+    # After the ownership check, so a 402 cannot confirm another operator's operation.
+    # The prose panel is a paid feature; the wizard's form collects the same facts on
+    # every plan, which is what the refusal says.
+    gate.require_feature("conversational_intake")
 
     fleet = repo.list_drones(ctx.org_id)
     use_llm = settings.anthropic_configured

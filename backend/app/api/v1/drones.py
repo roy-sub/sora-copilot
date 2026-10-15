@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.deps_api import RepoDep, not_found
+from app.api.v1.gate import GateDep
 from app.api.v1.schemas import DroneIn, DroneOut, DronePatch
 from app.db.repo import NotFound, Row
 from app.deps import OrgContextDep
@@ -25,7 +26,8 @@ def list_drones(ctx: OrgContextDep, repo: RepoDep) -> list[DroneOut]:
 
 
 @router.post("", response_model=DroneOut, status_code=status.HTTP_201_CREATED)
-def create_drone(body: DroneIn, ctx: OrgContextDep, repo: RepoDep) -> DroneOut:
+def create_drone(body: DroneIn, ctx: OrgContextDep, repo: RepoDep, gate: GateDep) -> DroneOut:
+    gate.require_count("drones")
     if body.max_speed_ms < body.cruise_speed_ms:
         raise ProblemError(
             code="validation_failed",

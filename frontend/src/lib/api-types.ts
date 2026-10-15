@@ -28,6 +28,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The plan, its limits, and usage */
+        get: operations["state_api_v1_billing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open a Stripe Checkout session */
+        post: operations["checkout_api_v1_billing_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/portal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open the Stripe billing portal */
+        post: operations["portal_api_v1_billing_portal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stripe events — signature-verified, idempotent, unauthenticated */
+        post: operations["webhook_api_v1_billing_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/drones": {
         parameters: {
             query?: never;
@@ -91,6 +159,57 @@ export interface paths {
         };
         /** Readiness — checks the database */
         get: operations["healthz_deep_api_v1_healthz_deep_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/national": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Countries with a national pack */
+        get: operations["countries_api_v1_national_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/national/operations/{operation_id}/checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The submission checklist for one operation, at its current SAIL */
+        get: operations["checklist_api_v1_national_operations__operation_id__checklist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/national/{country}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One country's process pack */
+        get: operations["pack_api_v1_national__country__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -543,6 +662,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The plan, its limits, and usage */
+        get: operations["state_billing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open a Stripe Checkout session */
+        post: operations["checkout_billing_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/portal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open the Stripe billing portal */
+        post: operations["portal_billing_portal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stripe events — signature-verified, idempotent, unauthenticated */
+        post: operations["webhook_billing_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/drones": {
         parameters: {
             query?: never;
@@ -606,6 +793,57 @@ export interface paths {
         };
         /** Readiness — checks the database */
         get: operations["healthz_deep_healthz_deep_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/national": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Countries with a national pack */
+        get: operations["countries_national_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/national/operations/{operation_id}/checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The submission checklist for one operation, at its current SAIL */
+        get: operations["checklist_national_operations__operation_id__checklist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/national/{country}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One country's process pack */
+        get: operations["pack_national__country__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1053,6 +1291,33 @@ export interface components {
             /** Suggestion Id */
             suggestion_id: string;
         };
+        /** BillingStateOut */
+        BillingStateOut: {
+            /** Billing Configured */
+            billing_configured: boolean;
+            /** Can Manage */
+            can_manage: boolean;
+            /**
+             * Cancel At Period End
+             * @default false
+             */
+            cancel_at_period_end: boolean;
+            /** Current Period End */
+            current_period_end?: string | null;
+            /** Dossier Credits */
+            dossier_credits: number;
+            plan: components["schemas"]["PlanOut"];
+            /** Plans */
+            plans: components["schemas"]["PlanOut"][];
+            /** Portal Available */
+            portal_available: boolean;
+            /** Status */
+            status?: string | null;
+            /** Usage */
+            usage: {
+                [key: string]: number;
+            };
+        };
         /** Body_upload_evidence_api_v1_operations__operation_id__evidence_post */
         Body_upload_evidence_api_v1_operations__operation_id__evidence_post: {
             /**
@@ -1111,6 +1376,36 @@ export interface components {
             sail?: components["schemas"]["SAIL"] | "certified_category" | null;
             /** Subcategory */
             subcategory?: ("A1" | "A2" | "A3") | null;
+        };
+        /** CheckoutIn */
+        CheckoutIn: {
+            /**
+             * Cancel Path
+             * @default /app/settings/?checkout=cancelled
+             */
+            cancel_path: string;
+            /**
+             * Plan
+             * @enum {string}
+             */
+            plan: "pro" | "team" | "per_dossier";
+            /**
+             * Success Path
+             * @default /app/settings/?checkout=done
+             */
+            success_path: string;
+        };
+        /** CheckoutOut */
+        CheckoutOut: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "subscription" | "payment";
+            /** Plan */
+            plan: string;
+            /** Url */
+            url: string;
         };
         /**
          * Citation
@@ -1697,6 +1992,48 @@ export interface components {
             /** Max Altitude Agl M */
             max_altitude_agl_m?: number | null;
         };
+        /** NationalCountryOut */
+        NationalCountryOut: {
+            /** Authority */
+            authority: string;
+            /** Complete */
+            complete: boolean;
+            /**
+             * Country
+             * @enum {string}
+             */
+            country: "AT" | "DE" | "EU";
+            /** Country Name */
+            country_name: string;
+            /** Items */
+            items: number;
+            /** Unverified */
+            unverified: number;
+        };
+        /** NationalPackOut */
+        NationalPackOut: {
+            /** Authority */
+            authority: string;
+            /** Authority Url */
+            authority_url?: string | null;
+            /** Complete */
+            complete: boolean;
+            /**
+             * Country
+             * @enum {string}
+             */
+            country: "AT" | "DE" | "EU";
+            /** Country Name */
+            country_name: string;
+            /** Items */
+            items: components["schemas"]["PackItemOut"][];
+            /** Summary */
+            summary: string;
+            /** Unverified Ids */
+            unverified_ids: string[];
+            /** Warning */
+            warning?: string | null;
+        };
         /** OperationIn */
         OperationIn: {
             /** Drone Id */
@@ -1851,6 +2188,78 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** PackItemOut */
+        PackItemOut: {
+            /** Detail */
+            detail: string;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "process" | "form" | "attachment" | "contact" | "note";
+            min_sail?: components["schemas"]["SAIL"] | null;
+            /** Osos */
+            osos: string[];
+            /** Source */
+            source: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url?: string | null;
+            /** Verified */
+            verified: boolean;
+        };
+        /**
+         * PlanLimitsOut
+         * @description What a plan allows. `null` means unlimited; 0 means the feature is not included.
+         */
+        PlanLimitsOut: {
+            /** Api Access */
+            api_access: boolean;
+            /** Conversational Intake */
+            conversational_intake: boolean;
+            /** Counterfactuals */
+            counterfactuals: boolean;
+            /** Determinations Per Month */
+            determinations_per_month?: number | null;
+            /** Dossiers Per Month */
+            dossiers_per_month?: number | null;
+            /** Drones */
+            drones?: number | null;
+            /** Evidence Files */
+            evidence_files?: number | null;
+            /** Operations */
+            operations?: number | null;
+            /** Seats */
+            seats: number;
+            /** Uses Dossier Credits */
+            uses_dossier_credits: boolean;
+        };
+        /** PlanOut */
+        PlanOut: {
+            /** Label */
+            label: string;
+            limits: components["schemas"]["PlanLimitsOut"];
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "free" | "per_dossier" | "pro" | "team" | "consultancy";
+            /** Price Label */
+            price_label: string;
+            /**
+             * Purchasable
+             * @default false
+             */
+            purchasable: boolean;
+        };
+        /** PortalOut */
+        PortalOut: {
+            /** Url */
+            url: string;
+        };
         /** ProposedFactOut */
         ProposedFactOut: {
             /** Confidence */
@@ -1927,6 +2336,50 @@ export interface components {
          * @enum {string}
          */
         SAIL: "I" | "II" | "III" | "IV" | "V" | "VI";
+        /**
+         * SubmissionChecklistOut
+         * @description A country pack narrowed to one operation's SAIL and required OSOs.
+         */
+        SubmissionChecklistOut: {
+            /** Authority */
+            authority: string;
+            /** Authority Url */
+            authority_url?: string | null;
+            /**
+             * Country
+             * @enum {string}
+             */
+            country: "AT" | "DE" | "EU";
+            /** Country Name */
+            country_name: string;
+            /** Disclaimer */
+            disclaimer: string;
+            /** Dossier Versions */
+            dossier_versions: number;
+            /** Due */
+            due: components["schemas"]["PackItemOut"][];
+            /**
+             * Evidence Attached
+             * @description Evidence files already uploaded for this operation.
+             */
+            evidence_attached: number;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Pending
+             * @description Items this pack holds that are not due at the current SAIL.
+             */
+            pending: components["schemas"]["PackItemOut"][];
+            /** Sail */
+            sail?: components["schemas"]["SAIL"] | "certified_category" | null;
+            /** Summary */
+            summary: string;
+            /** Warning */
+            warning?: string | null;
+        };
         /** TraceNode */
         TraceNode: {
             citation: components["schemas"]["Citation"];
@@ -1962,6 +2415,16 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** WebhookOut */
+        WebhookOut: {
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "applied" | "ignored" | "duplicate";
+            /** Received */
+            received: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -1987,6 +2450,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrgOut"];
+                };
+            };
+        };
+    };
+    state_api_v1_billing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingStateOut"];
+                };
+            };
+        };
+    };
+    checkout_api_v1_billing_checkout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    portal_api_v1_billing_portal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalOut"];
+                };
+            };
+        };
+    };
+    webhook_api_v1_billing_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookOut"];
                 };
             };
         };
@@ -2175,6 +2731,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeepHealth"];
+                };
+            };
+        };
+    };
+    countries_api_v1_national_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NationalCountryOut"][];
+                };
+            };
+        };
+    };
+    checklist_api_v1_national_operations__operation_id__checklist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionChecklistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pack_api_v1_national__country__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                country: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NationalPackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3106,6 +3744,99 @@ export interface operations {
             };
         };
     };
+    state_billing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingStateOut"];
+                };
+            };
+        };
+    };
+    checkout_billing_checkout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    portal_billing_portal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalOut"];
+                };
+            };
+        };
+    };
+    webhook_billing_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookOut"];
+                };
+            };
+        };
+    };
     list_drones_drones_get: {
         parameters: {
             query?: never;
@@ -3290,6 +4021,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeepHealth"];
+                };
+            };
+        };
+    };
+    countries_national_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NationalCountryOut"][];
+                };
+            };
+        };
+    };
+    checklist_national_operations__operation_id__checklist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionChecklistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pack_national__country__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                country: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NationalPackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

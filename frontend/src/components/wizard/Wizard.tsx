@@ -35,6 +35,7 @@ import { IntakePanel } from "@/components/wizard/IntakePanel";
 import { MITIGATIONS, MitigationCard } from "@/components/wizard/MitigationCard";
 import { STEPS, WizardStepper, stepIndex, type StepKey } from "@/components/wizard/WizardStepper";
 import { ApiError } from "@/lib/api";
+import { PlanLimit, isPlanLimit } from "@/components/PlanLimit";
 import {
   type AirspaceClass,
   type Draft,
@@ -112,6 +113,11 @@ export function Wizard({ operationId }: { operationId: string | null }) {
   const [extractError, setExtractError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
+  // A plan refusal is held as the error object, not its message: the upgrade panel is
+  // rendered from the limit and the usage.
+  const [runLimit, setRunLimit] = useState<ApiError | null>(null);
+  const [extractLimit, setExtractLimit] = useState<ApiError | null>(null);
+  const [startLimit, setStartLimit] = useState<ApiError | null>(null);
   const [extrudeKey, setExtrudeKey] = useState(0);
   const [localGeometry, setLocalGeometry] = useState<GeoJSONPolygon | null>(null);
 
@@ -158,12 +164,30 @@ export function Wizard({ operationId }: { operationId: string | null }) {
   // ---------------------------------------------------------------- no operation yet
 
   if (!operationId) {
-    return <StartPanel busy={createOperation.isPending} onStart={(name, site) =>
-      createOperation.mutate({ name, site }, {
-        onSuccess: (op) => router.replace(`/app/new/?id=${encodeURIComponent(op.id)}`),
-        onError: (e) => push({ tone: "fail", text: e instanceof Error ? e.message : "Could not start" }),
-      })
-    } />;
+    return (
+      <StartPanel
+        busy={createOperation.isPending}
+        limit={startLimit}
+        onStart={(name, site) => {
+          setStartLimit(null);
+          createOperation.mutate(
+            { name, site },
+            {
+              onSuccess: (op) => router.replace(`/app/new/?id=${encodeURIComponent(op.id)}`),
+              onError: (e) => {
+                // The free plan caps operations. Shown here rather than as a toast,
+                // because a toast that disappears is no use when the answer is "buy".
+                if (isPlanLimit(e)) {
+                  setStartLimit(e);
+                  return;
+                }
+                push({ tone: "fail", text: e instanceof Error ? e.message : "Could not start" });
+              },
+            },
+          );
+        }}
+      />
+    );
   }
 
   // ---------------------------------------------------------------- the run
@@ -173,6 +197,7 @@ export function Wizard({ operationId }: { operationId: string | null }) {
 
   const run = () => {
     setRunError(null);
+    setRunLimit(null);
     setRunning(true);
     runDetermination.mutate(false, {
       onSuccess: () => {
@@ -181,6 +206,10 @@ export function Wizard({ operationId }: { operationId: string | null }) {
       },
       onError: (e) => {
         setRunning(false);
+        if (isPlanLimit(e)) {
+          setRunLimit(e);
+          return;
+        }
         if (e instanceof ApiError) {
           const problem = e.problem;
           setRunError(
@@ -317,6 +346,7 @@ export function Wizard({ operationId }: { operationId: string | null }) {
                   running={running}
                   staged={staged}
                   error={runError}
+                  limit={runLimit}
                   canRun={canRun && missingList.length === 0}
                   onRun={run}
                   onGo={advance}
@@ -351,13 +381,20 @@ export function Wizard({ operationId }: { operationId: string | null }) {
             extractor={extractor}
             busy={chat.isPending}
             error={extractError}
+            limit={extractLimit}
             onHide={() => setPanelOpen(false)}
             onSend={(text) => {
               setExtractError(null);
+              setExtractLimit(null);
               chat.mutate(text, {
                 onSuccess: (r) => setExtractor(r.extractor),
-                onError: (e) =>
-                  setExtractError(e instanceof Error ? e.message : "Extraction failed."),
+                onError: (e) => {
+                  if (isPlanLimit(e)) {
+                    setExtractLimit(e);
+                    return;
+                  }
+                  setExtractError(e instanceof Error ? e.message : "Extraction failed.");
+                },
               });
             }}
             onConfirm={(id) => confirmFact.mutate(id)}
@@ -398,7 +435,15 @@ function missingFields(mission: Mission): string[] {
 
 // ------------------------------------------------------------------ steps
 
-function StartPanel({ busy, onStart }: { busy: boolean; onStart: (name: string, site: string) => void }) {
+function StartPanel({
+  busy,
+  limit,
+  onStart,
+}: {
+  busy: boolean;
+  limit: ApiError | null;
+  onStart: (name: string, site: string) => void;
+}) {
   const [name, setName] = useState("");
   const [site, setSite] = useState("");
   return (
@@ -429,6 +474,7 @@ function StartPanel({ busy, onStart }: { busy: boolean; onStart: (name: string, 
         <FieldLabel label="Site">
           <Input value={site} onChange={(e) => setSite(e.target.value)} placeholder="Graz Süd, AT" />
         </FieldLabel>
+        {limit && <PlanLimit error={limit} />}
         <Button type="submit" size="lg" disabled={busy || !name.trim()}>
           {busy ? "Starting" : "Start the wizard"}
         </Button>
@@ -814,6 +860,7 @@ function ReviewStep({
   running,
   staged,
   error,
+  limit,
   canRun,
   onRun,
   onGo,
@@ -826,6 +873,7 @@ function ReviewStep({
   running: boolean;
   staged: ReturnType<typeof useStagedRun>;
   error: string | null;
+  limit: ApiError | null;
   canRun: boolean;
   onRun: () => void;
   onGo: (s: StepKey) => void;
@@ -907,6 +955,8 @@ function ReviewStep({
           </p>
         </div>
       )}
+
+      {limit && <PlanLimit error={limit} />}
 
       {error && (
         <div role="alert" className="p-3 bg-sheet-well border-l-[3px] border-sail-6 rounded-sm">

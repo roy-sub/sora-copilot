@@ -1,0 +1,44 @@
+{
+  "country": "DE",
+  "country_name": "Germany",
+  "authority": "Luftfahrt-Bundesamt (LBA)",
+  "authority_url": "https://www.lba.de/",
+  "summary": "Germany's competent authority for unmanned aircraft under EU 2019/947 is the Luftfahrt-Bundesamt, with the Länder aviation authorities involved for some operations and for geographical zones. This pack is a stub: only the authority and the shape of the file are recorded. The German process has not been transcribed, so SORA Copilot states nothing about forms, fees or lead times for Germany. Phase 7 of the build spec names Germany as optional.",
+  "complete": false,
+  "items": [
+    {
+      "id": "de.process.register_operator",
+      "kind": "process",
+      "title": "Register as a UAS operator",
+      "detail": "Registration is with the state of residence or principal place of business.",
+      "url": "https://www.lba.de/",
+      "provenance": "seed",
+      "source": "Verify against the LBA's operator-registration pages."
+    },
+    {
+      "id": "de.process.apply",
+      "kind": "process",
+      "title": "Submit the operational-authorisation application",
+      "detail": "For specific-category operations that are not covered by a standard scenario or a predefined risk assessment.",
+      "url": "https://www.lba.de/",
+      "provenance": "seed",
+      "source": "UNKNOWN — the submission channel and form have not been transcribed."
+    },
+    {
+      "id": "de.attachment.dossier",
+      "kind": "attachment",
+      "title": "SORA dossier — the risk assessment and its derivation",
+      "detail": "Exported from SORA Copilot as DOCX.",
+      "provenance": "seed",
+      "source": "Verify the LBA's expected structure for the risk assessment annex."
+    },
+    {
+      "id": "de.contact.authority",
+      "kind": "contact",
+      "title": "Luftfahrt-Bundesamt — unmanned aviation",
+      "url": "https://www.lba.de/",
+      "provenance": "seed",
+      "source": "Verify the current contact route for specific-category applications."
+    }
+  ]
+}

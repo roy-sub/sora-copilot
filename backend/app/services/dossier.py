@@ -30,12 +30,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
+from app.domain.common import DISCLAIMER
+from app.national import PackError, load_pack, tailor
 from app.services import mapimage
-
-DISCLAIMER = (
-    "SORA Copilot prepares and verifies your risk assessment. Your national aviation "
-    "authority grants the authorisation."
-)
 
 UNVERIFIED_BANNER = (
     "UNVERIFIED RULEBASE — the regulatory tables behind this assessment have not been "
@@ -463,6 +460,8 @@ def build(data: DossierInput) -> bytes:
         for warning in d.get("warnings", []):
             document.add_paragraph(str(warning), style="List Bullet")
 
+    _submission_checklist(document, data)
+
     _header(document, unverified, stamp)
 
     buffer = BytesIO()
@@ -554,8 +553,75 @@ def _containment_text(determination: dict[str, Any]) -> str:
 
 
 def _authority(organisation: dict[str, Any]) -> str:
-    return {
-        "AT": "Austro Control (AT)",
-        "DE": "Luftfahrt-Bundesamt (DE)",
-        "EU": "the competent authority of the state of registration",
-    }.get(str(organisation.get("country", "AT")), "—")
+    """Named by the country pack, so the document and the app never disagree."""
+    try:
+        pack = load_pack(str(organisation.get("country") or "EU"))
+    except PackError:
+        return "the competent authority of the state of registration"
+    return f"{pack.authority} ({pack.country})" if pack.country != "EU" else pack.authority
+
+
+def _submission_checklist(document: Document, data: DossierInput) -> None:
+    """Appendix C — what travels with this document, in the operator's own country.
+
+    Cut to the SAIL the engine produced and the OSOs it required, so the list is this
+    operation's rather than a generic one. Every line carries its verification state:
+    this project has transcribed no authority publication yet, so every line currently
+    reads UNVERIFIED and says where to check it. A compliance appendix that quietly
+    presented our reading as the authority's requirement would be the worst kind of
+    plausible.
+    """
+    country = str(data.organisation.get("country") or "EU")
+    d = data.determination
+    required = frozenset(
+        str(o.get("oso_id")) for o in d.get("osos", []) if isinstance(o, dict) and o.get("is_required")
+    )
+    try:
+        pack = load_pack(country)
+        due, pending = tailor(country, sail=d.get("sail"), required_osos=required)
+    except PackError:
+        return
+
+    _h(document, f"Appendix C — Submission checklist: {pack.country_name}", 1)
+    document.add_paragraph(pack.summary)
+    if (warning := pack.warning()) is not None:
+        _note(document, warning)
+
+    for kind, heading in (
+        ("process", "Process"),
+        ("form", "The authority's forms"),
+        ("attachment", "Attachments to this file"),
+        ("note", "Open questions"),
+        ("contact", "Where it goes"),
+    ):
+        rows = [i for i in due if i.kind == kind]
+        if not rows:
+            continue
+        _h(document, heading, 2)
+        for item in rows:
+            paragraph = document.add_paragraph(style="List Bullet")
+            paragraph.add_run(item.title).bold = True
+            if item.detail:
+                paragraph.add_run(f" — {item.detail}")
+            flag = paragraph.add_run(
+                f"  [UNVERIFIED: {item.source}]" if not item.verified else f"  [{item.source}]"
+            )
+            flag.italic = True
+            flag.font.size = Pt(8)
+
+    if pending:
+        _h(document, "Not due at this SAIL", 2)
+        document.add_paragraph(
+            "Listed because raising the SAIL would add them to the file, so the cost of a "
+            "less favourable determination is visible before it is incurred."
+        )
+        for item in pending:
+            at = f" (from SAIL {item.min_sail})" if item.min_sail else ""
+            document.add_paragraph(f"{item.title}{at}", style="List Bullet")
+
+    evidence_count = len(data.evidence)
+    _note(
+        document,
+        f"{len(due)} items due · {len(pending)} not due at SAIL {_sail_text(d)} · "
+        f"{evidence_count} evidence file(s) already attached in SORA Copilot.",
+    )

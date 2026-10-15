@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/components/app/Shell";
+import { BillingPanel } from "@/components/app/BillingPanel";
 import { Disclaimer, RulebaseStamp } from "@/components/Brand";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { FieldLabel, Input, Segmented, Select } from "@/components/ui/Field";
@@ -101,6 +102,9 @@ export default function Settings() {
             </span>
           </section>
 
+          {/* ---------------------------------------------------------- plan */}
+          <BillingPanel />
+
           {/* ---------------------------------------------------------- members */}
           <section className="bg-sheet-well p-5 flex flex-col gap-3.5">
             <span className="t-micro text-ink-low">
@@ -118,7 +122,8 @@ export default function Settings() {
             <p className="m-0 t-cap text-ink-mid pretty">
               Inviting colleagues is not built yet. Each person who signs up gets their
               own organisation, so share an operation by exporting the dossier until it
-              is.
+              is. Seat limits are already enforced, so a Team plan is not yet worth
+              buying for the seats alone.
             </p>
             <Button variant="secondary" onClick={() => void signOut()}>
               Sign out

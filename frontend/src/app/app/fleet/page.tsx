@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel, Input } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Dialog";
 import { useToast } from "@/components/Toast";
+import { PlanLimit, isPlanLimit } from "@/components/PlanLimit";
+import type { ApiError } from "@/lib/api";
 import type { DroneIn, FittedMitigation } from "@/lib/api-client";
 import { useCreateDrone, useDeleteDrone, useDrones } from "@/lib/hooks";
 import { cn } from "@/lib/cn";
@@ -25,6 +27,7 @@ const FITTED: { value: FittedMitigation; label: string }[] = [
 export default function Fleet() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [limit, setLimit] = useState<ApiError | null>(null);
   const [fitted, setFitted] = useState<FittedMitigation[]>([]);
   const { push } = useToast();
 
@@ -46,13 +49,22 @@ export default function Fleet() {
       max_speed_ms: num("max_speed_ms"),
       fitted_mitigations: fitted,
     };
+    setLimit(null);
     createDrone.mutate(body, {
       onSuccess: (drone) => {
         setOpen(false);
         setFitted([]);
         push({ tone: "ok", text: `${drone.name} added to the fleet` });
       },
-      onError: (err) => setError(err instanceof Error ? err.message : "Could not save the aircraft"),
+      onError: (err) => {
+        // The free plan caps the fleet. The upgrade panel replaces the error line,
+        // because "could not save" is not what happened.
+        if (isPlanLimit(err)) {
+          setLimit(err);
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Could not save the aircraft");
+      },
     });
   };
 
@@ -214,6 +226,7 @@ export default function Fleet() {
               impact-reduction claim without a parachute is refused by the engine.
             </span>
           </div>
+          {limit && <PlanLimit error={limit} compact />}
           {error && (
             <p className="m-0 t-cap text-ink-mid">
               <span className="text-sail-6" aria-hidden>

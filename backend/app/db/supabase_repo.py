@@ -16,6 +16,25 @@ from app.db.client import get_client
 from app.db.repo import Id, NotFound, Row
 
 
+def _month_start() -> datetime:
+    """The boundary a monthly allowance is measured from. UTC, first of the month."""
+    return datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+
+def _is_duplicate_key(exc: Exception) -> bool:
+    """Whether a Supabase/PostgREST error is a unique-violation rather than a real fault.
+
+    Matched on Postgres' own SQLSTATE where the client exposes it, falling back to the
+    message. A misread here would either drop a legitimate event or apply a duplicate
+    one, so both the code and the text are checked.
+    """
+    code = getattr(exc, "code", None)
+    if str(code) == "23505":
+        return True
+    message = f"{getattr(exc, 'message', '')} {exc}".lower()
+    return "duplicate key" in message or "23505" in message
+
+
 def _one(rows: list[Row] | None, what: str) -> Row:
     if not rows:
         raise NotFound(what)
@@ -327,6 +346,146 @@ class SupabaseRepo:
     def log_llm_call(self, org_id: Id, data: Row) -> Row:
         res = self._db.table("llm_calls").insert({**data, "org_id": str(org_id)}).execute()
         return _one(res.data, "llm_calls insert returned nothing")
+
+    # -------------------------------------------------------------- plan accounting
+
+    def _operation_ids(self, org_id: Id) -> list[str]:
+        res = self._db.table("operations").select("id").eq("org_id", str(org_id)).execute()
+        return [str(row["id"]) for row in (res.data or [])]
+
+    def _count(self, table: str, org_id: Id) -> int:
+        res = self._db.table(table).select("id", count="exact").eq("org_id", str(org_id)).execute()
+        return int(res.count or 0)
+
+    def count_drones(self, org_id: Id) -> int:
+        return self._count("drones", org_id)
+
+    def count_operations(self, org_id: Id) -> int:
+        return self._count("operations", org_id)
+
+    def count_evidence(self, org_id: Id) -> int:
+        ids = self._operation_ids(org_id)
+        if not ids:
+            return 0
+        res = (
+            self._db.table("evidence_files")
+            .select("id", count="exact")
+            .in_("operation_id", ids)
+            .execute()
+        )
+        return int(res.count or 0)
+
+    def _count_since_month_start(self, table: str, column: str, org_id: Id) -> int:
+        ids = self._operation_ids(org_id)
+        if not ids:
+            return 0
+        res = (
+            self._db.table(table)
+            .select("id", count="exact")
+            .in_("operation_id", ids)
+            .gte(column, _month_start().isoformat())
+            .execute()
+        )
+        return int(res.count or 0)
+
+    def count_determinations_this_month(self, org_id: Id) -> int:
+        return self._count_since_month_start("determinations", "computed_at", org_id)
+
+    def count_dossiers_this_month(self, org_id: Id) -> int:
+        return self._count_since_month_start("dossiers", "generated_at", org_id)
+
+    # -------------------------------------------------------------- billing
+
+    def spend_dossier_credit(self, org_id: Id) -> bool:
+        """Decrement one credit, atomically, or report that there was none.
+
+        ``dossier_credits`` carries a ``>= 0`` check constraint (migration 002), so a
+        conditional update that would go negative is rejected by the database rather
+        than by a read-then-write in this process. Two concurrent exports cannot both
+        spend the last credit.
+        """
+        current = int(self.get_org(org_id).get("dossier_credits") or 0)
+        if current <= 0:
+            return False
+        res = (
+            self._db.table("orgs")
+            .update({"dossier_credits": current - 1})
+            .eq("id", str(org_id))
+            .eq("dossier_credits", current)  # optimistic: fails if another export won
+            .execute()
+        )
+        return bool(res.data)
+
+    def grant_dossier_credits(self, org_id: Id, credits: int) -> int:
+        current = int(self.get_org(org_id).get("dossier_credits") or 0)
+        res = (
+            self._db.table("orgs")
+            .update({"dossier_credits": current + int(credits)})
+            .eq("id", str(org_id))
+            .execute()
+        )
+        return int(_one(res.data, "orgs update returned nothing")["dossier_credits"])
+
+    def org_for_stripe_customer(self, customer_id: str) -> Row | None:
+        res = (
+            self._db.table("orgs")
+            .select("*")
+            .eq("stripe_customer_id", customer_id)
+            .limit(1)
+            .execute()
+        )
+        return res.data[0] if res.data else None
+
+    def upsert_subscription(self, org_id: Id, data: Row) -> Row:
+        res = (
+            self._db.table("subscriptions")
+            .upsert({**data, "org_id": str(org_id)}, on_conflict="stripe_subscription_id")
+            .execute()
+        )
+        return _one(res.data, "subscriptions upsert returned nothing")
+
+    def list_subscriptions(self, org_id: Id) -> list[Row]:
+        res = (
+            self._db.table("subscriptions")
+            .select("*")
+            .eq("org_id", str(org_id))
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return list(res.data or [])
+
+    def record_purchase(self, org_id: Id, data: Row) -> Row:
+        res = (
+            self._db.table("dossier_purchases")
+            .upsert({**data, "org_id": str(org_id)}, on_conflict="stripe_session_id")
+            .execute()
+        )
+        return _one(res.data, "dossier_purchases upsert returned nothing")
+
+    def list_purchases(self, org_id: Id) -> list[Row]:
+        res = (
+            self._db.table("dossier_purchases")
+            .select("*")
+            .eq("org_id", str(org_id))
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return list(res.data or [])
+
+    def remember_stripe_event(self, event_id: str, data: Row) -> bool:
+        """Insert the event id. False means Stripe has sent this one before.
+
+        A plain insert, not an upsert: the primary key is what makes the second delivery
+        fail, and that failure is the answer. Catching the conflict is how this stays
+        correct without a transaction the REST client cannot open.
+        """
+        try:
+            self._db.table("stripe_events").insert({**data, "id": event_id}).execute()
+        except Exception as exc:  # the client raises its own error types, not one we can name
+            if _is_duplicate_key(exc):
+                return False
+            raise
+        return True
 
     # -------------------------------------------------------------- rulebase
 

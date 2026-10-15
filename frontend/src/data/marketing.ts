@@ -1,8 +1,8 @@
 export const TIERS = [
   { name: "Free", price: "€0", unit: "category checker only", cta: "START", href: "/checker", feats: ["Open / specific / certified determination", "Estimated SAIL, no dossier", "No account required"] },
-  { name: "Per dossier", price: "€149", unit: "one authority-ready dossier", cta: "BUY ONE", href: "/signin", feats: ["Full derivation trace", "DOCX export", "Rulebase pinning for 12 months"] },
-  { name: "Pro", price: "€89", unit: "per month, one operator", cta: "START PRO", href: "/signin", feats: ["Unlimited determinations", "Unlimited dossiers", "Fleet records and evidence vault", "Counterfactual advisor"] },
-  { name: "Team", price: "€249", unit: "per month, five seats", cta: "START TEAM", href: "/signin", feats: ["Everything in Pro", "Shared fleet and evidence", "Review and approval states", "Audit log export"] },
+  { name: "Per dossier", price: "€149", unit: "one authority-ready dossier", cta: "BUY ONE", href: "/app/settings/", feats: ["Full derivation trace", "DOCX export", "Rulebase pinning for 12 months"] },
+  { name: "Pro", price: "€89", unit: "per month, one operator", cta: "START PRO", href: "/app/settings/", feats: ["Unlimited determinations", "Unlimited dossiers", "Fleet records and evidence vault", "Counterfactual advisor"] },
+  { name: "Team", price: "€249", unit: "per month, five seats", cta: "START TEAM", href: "/app/settings/", feats: ["Everything in Pro", "Shared fleet and evidence", "Review and approval states", "Audit log export"] },
   { name: "Consultancy", price: "Contact", unit: "per client workspace", cta: "TALK TO US", href: "mailto:sales@soracopilot.eu", feats: ["Unlimited client workspaces", "White-label dossier cover", "National annex requests", "Data region selection"] },
 ];
 

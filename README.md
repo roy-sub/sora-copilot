@@ -52,9 +52,10 @@ themselves as unconfigured rather than crashing, so you can see the whole thing 
 creating a Supabase project.
 
 To sign in and persist anything, copy `.env.example` to `backend/.env` and
-`frontend/.env.local`, fill in the Supabase keys, and apply
-`backend/app/db/migrations/001_init.sql`. Full walkthrough in
-[docs/DEPLOY.md](docs/DEPLOY.md).
+`frontend/.env.local`, fill in the Supabase keys, and apply the migrations in
+`backend/app/db/migrations/` in order. Which dashboard each credential comes from is in
+[Third Party Setup Guide](docs/Third%20Party%20Setup%20Guide.md); how the pieces are
+deployed is in [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ### Checks
 
@@ -63,6 +64,9 @@ cd backend  && make test      # pytest
 cd backend  && make lint      # ruff + mypy --strict
 cd backend  && make rulebase  # which regulatory tables are still unverified
 cd frontend && npm run build  # static export to out/; also type-checks
+
+# the whole product, against a running backend
+BASE=http://127.0.0.1:8000 SUPABASE_JWT_SECRET=... backend/scripts/smoke.sh
 ```
 
 ## ⚠ No regulatory table is verified yet
@@ -76,9 +80,11 @@ visible gap.
 SORA 2.5 main body, Annexes B, C and D, and the Austrian national annex. See
 [docs/RULEBASE.md](docs/RULEBASE.md) and [PLAN.md](PLAN.md) §8.
 
-The checker and verdict screens also still compute in the browser, in TypeScript, while
-the clingo engine is being built. Both are labelled *preliminary estimate — not a
-determination* wherever they appear, and both cut over to the engine in phases 3 and 7.
+The same applies to the **country packs**. `backend/app/national/packs/at.json` is this
+project's reading of the Austrian process, not a transcription of anything Austro Control
+published. Every item is marked UNVERIFIED in the app and in the dossier's Appendix C,
+and none of them quotes a fee, a lead time or a sum insured — a plausible number in a
+compliance product is worse than an honest gap.
 
 ## Stack
 
@@ -86,13 +92,14 @@ determination* wherever they appear, and both cut over to the engine in phases 3
 |---|---|
 | Backend | Python 3.12, FastAPI, Pydantic v2 |
 | Rules engine | clingo (Answer Set Programming) |
-| Counterfactuals | bounded enumeration, then z3 |
+| Counterfactuals | bounded enumeration over the real engine |
 | Geospatial | shapely, pyproj, PostGIS |
 | Documents | python-docx, WeasyPrint |
 | Language model | Anthropic, for intake and prose only |
 | Database | Supabase Postgres (EU) + PostGIS + RLS |
 | Auth | Supabase Auth — email and magic link |
 | Frontend | Next.js 15 App Router, static export, TypeScript, Tailwind v4, Framer Motion |
+| Payments | Stripe Checkout + a signature-verified, idempotent webhook |
 | Hosting | Render (backend) · Cloudflare Pages (frontend) · Supabase (database) |
 
 Free tiers throughout.
@@ -103,11 +110,14 @@ Free tiers throughout.
 backend/    FastAPI, the clingo rulebase, services, API
 frontend/   Next.js static export
 design/     the approved design system and screens — READ ONLY
-docs/       ARCHITECTURE · RULEBASE · DEPLOY · the build spec
+docs/       ARCHITECTURE · RULEBASE · DEPLOY · Third Party Setup Guide · the build spec
 PLAN.md     the plan, the open decisions, and what is still blocked
 ```
 
 ## Where the build is
 
-Phase 1 of 8 (skeleton). [PLAN.md](PLAN.md) has the phase plan, the decisions taken, the
-conflicts between the build spec and the design, and the things still blocked on input.
+All eight phases of the build spec are implemented. What remains is not code: no
+regulatory table has been verified against its published source, and no national annex
+has been transcribed. [PLAN.md](PLAN.md) has the phase-by-phase state, the decisions
+taken, the conflicts between the build spec and the design, and exactly which files need
+filling in.

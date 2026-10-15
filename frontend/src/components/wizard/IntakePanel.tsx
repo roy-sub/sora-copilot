@@ -18,6 +18,8 @@ import { useState } from "react";
 import { FactChip } from "@/components/wizard/FactChip";
 import type { StepKey } from "@/components/wizard/WizardStepper";
 import type { Drone, Extractor, ProposedFact } from "@/lib/api-client";
+import type { ApiError } from "@/lib/api";
+import { PlanLimit } from "@/components/PlanLimit";
 import { cn } from "@/lib/cn";
 
 const SEED =
@@ -29,6 +31,7 @@ export function IntakePanel({
   extractor,
   busy,
   error,
+  limit,
   onSend,
   onConfirm,
   onReject,
@@ -41,6 +44,8 @@ export function IntakePanel({
   extractor: Extractor | null;
   busy: boolean;
   error: string | null;
+  /** A plan refusal, shown as an upgrade panel rather than as an error. */
+  limit: ApiError | null;
   onSend: (text: string) => void;
   onConfirm: (factId: string) => void;
   onReject: (factId: string) => void;
@@ -100,6 +105,8 @@ export function IntakePanel({
         </p>
       </div>
 
+      {limit && <PlanLimit error={limit} compact />}
+
       {error && (
         <div role="alert" className="p-3 bg-sheet-well border-l-[3px] border-sail-6 rounded-sm">
           <span className="t-micro-10 text-sail-6">Extraction failed</span>
@@ -107,7 +114,7 @@ export function IntakePanel({
         </div>
       )}
 
-      {facts.length === 0 && !error && (
+      {facts.length === 0 && !error && !limit && (
         <p className="m-0 t-cap text-ink-low pretty">
           Nothing extracted yet. You can also fill the steps in directly — the panel is a
           shortcut, not a requirement.

@@ -22,6 +22,7 @@ import {
   type OperationIn,
   type OperationPatch,
   type OrgPatch,
+  type PlanName,
   type Sail,
 } from "@/lib/api-client";
 import { ApiError } from "@/lib/api";
@@ -41,6 +42,10 @@ export const keys = {
   osos: (id: string) => ["operations", id, "osos"] as const,
   evidence: (id: string) => ["operations", id, "evidence"] as const,
   dossier: (id: string) => ["operations", id, "dossier"] as const,
+  billing: ["billing"] as const,
+  countries: ["national"] as const,
+  pack: (code: string) => ["national", code] as const,
+  checklist: (id: string) => ["operations", id, "checklist"] as const,
 };
 
 /** True once there is a session to authenticate with, or auth is not configured. */
@@ -361,4 +366,58 @@ export function useGenerateDossier(id: string) {
 
 export function useCategoryCheck() {
   return useMutation({ mutationFn: (body: CategoryCheckIn) => api.categoryCheck(body) });
+}
+
+// ------------------------------------------------------------------ billing
+
+export function useBilling() {
+  const ready = useReady();
+  return useQuery({ queryKey: keys.billing, queryFn: api.billing, enabled: ready });
+}
+
+/**
+ * Open Stripe Checkout. On success the browser leaves this origin, so there is no
+ * success state to render — only a failure to show if Stripe refuses.
+ */
+export function useCheckout() {
+  return useMutation({
+    mutationFn: (plan: PlanName) => api.checkout(plan as "pro" | "team" | "per_dossier"),
+    onSuccess: ({ url }) => {
+      window.location.assign(url);
+    },
+  });
+}
+
+export function useBillingPortal() {
+  return useMutation({
+    mutationFn: () => api.billingPortal(),
+    onSuccess: ({ url }) => {
+      window.location.assign(url);
+    },
+  });
+}
+
+// ------------------------------------------------------------------ national packs
+
+export function useCountries() {
+  return useQuery({ queryKey: keys.countries, queryFn: api.countries, staleTime: Infinity });
+}
+
+export function useNationalPack(code: string | null | undefined) {
+  return useQuery({
+    queryKey: keys.pack(code ?? ""),
+    queryFn: () => api.nationalPack(code!),
+    enabled: Boolean(code),
+    staleTime: Infinity,
+  });
+}
+
+/** The submission checklist, cut to one operation's SAIL and required OSOs. */
+export function useSubmissionChecklist(id: string | null) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: keys.checklist(id ?? ""),
+    queryFn: () => api.submissionChecklist(id!),
+    enabled: ready && Boolean(id),
+  });
 }

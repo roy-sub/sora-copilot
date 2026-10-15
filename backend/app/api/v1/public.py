@@ -19,18 +19,19 @@ from fastapi import APIRouter, Request
 
 from app.api.v1.schemas import CategoryCheckIn, CategoryCheckOut
 from app.domain import GeoJSONPolygon, Mission, OperationalVolume
-from app.domain.common import AirspaceClass, Country, GroundEnvironment, OperationType
+from app.domain.common import (
+    DISCLAIMER,
+    AirspaceClass,
+    Country,
+    GroundEnvironment,
+    OperationType,
+)
 from app.engine.counterfactual import Aircraft, suggest
 from app.engine.rulebase.loader import load_rulebase, rulebase_version
 from app.engine.runner import UnsatisfiableMission, determine
 from app.problem import ProblemError
 
 router = APIRouter(prefix="/public", tags=["public"])
-
-DISCLAIMER = (
-    "SORA Copilot prepares and verifies your risk assessment. Your national aviation "
-    "authority grants the authorisation."
-)
 
 #: A typical aircraft per mass band. Stated in the response, never hidden, because the
 #: whole answer depends on them.

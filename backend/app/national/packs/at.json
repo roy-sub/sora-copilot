@@ -1,0 +1,134 @@
+{
+  "country": "AT",
+  "country_name": "Austria",
+  "authority": "Austro Control GmbH",
+  "authority_url": "https://www.dronespace.at/",
+  "summary": "Austria's competent authority for unmanned aircraft is Austro Control GmbH, which runs the Dronespace portal for operator registration and for specific-category applications. EU 2019/947 sets the frame: the operational authorisation is granted by the authority of the state of registration, on the strength of a risk assessment the operator supplies. Everything below is this project's reading of that process and has not been transcribed from an Austro Control publication. Treat it as a checklist to verify, not as instructions to follow.",
+  "complete": false,
+  "items": [
+    {
+      "id": "at.process.register_operator",
+      "kind": "process",
+      "title": "Register as a UAS operator and carry the registration number",
+      "detail": "Registration is with the state of residence or principal place of business, not with the state you fly in. The number is displayed on the aircraft and quoted on the application.",
+      "url": "https://www.dronespace.at/",
+      "provenance": "seed",
+      "source": "Verify against EU 2019/947 operator-registration article and the Dronespace registration page."
+    },
+    {
+      "id": "at.process.check_zones",
+      "kind": "process",
+      "title": "Check the geographical zones over the operational volume",
+      "detail": "Austria publishes UAS geographical zones; a zone can prohibit the operation outright or attach conditions that change the volume you apply for. Check before the volume is fixed, not after.",
+      "url": "https://www.dronespace.at/",
+      "provenance": "seed",
+      "source": "Verify against the Austrian UAS geographical zone publication and the EU 2019/947 geographical-zones article."
+    },
+    {
+      "id": "at.process.sora",
+      "kind": "process",
+      "title": "Complete the SORA and fix the SAIL",
+      "detail": "This is the part SORA Copilot produces. The determination, its derivation trace and the rulebase version travel with the application.",
+      "provenance": "seed",
+      "source": "Verify the accepted SORA version and edition with Austro Control before submitting."
+    },
+    {
+      "id": "at.process.apply",
+      "kind": "process",
+      "title": "Submit the operational-authorisation application",
+      "detail": "Submitted to Austro Control for operations in the specific category that are not covered by a standard scenario or a predefined risk assessment.",
+      "url": "https://www.dronespace.at/",
+      "provenance": "seed",
+      "source": "Verify the submission channel, the application form identifier and the fee schedule with Austro Control."
+    },
+    {
+      "id": "at.process.lead_time",
+      "kind": "note",
+      "title": "Allow for the authority's processing time",
+      "detail": "SORA Copilot does not state a statutory clock, because none has been transcribed for this pack. Ask Austro Control what lead time to plan for and record it here.",
+      "provenance": "seed",
+      "source": "UNKNOWN — ask the authority. Do not quote a duration until it is filled in."
+    },
+    {
+      "id": "at.form.application",
+      "kind": "form",
+      "title": "Operational authorisation application form",
+      "detail": "The authority's own form. SORA Copilot does not reproduce it: the dossier is the technical annex that accompanies it.",
+      "url": "https://www.dronespace.at/",
+      "provenance": "seed",
+      "source": "UNKNOWN — the exact form name and version has not been transcribed."
+    },
+    {
+      "id": "at.attachment.dossier",
+      "kind": "attachment",
+      "title": "SORA dossier — the risk assessment and its derivation",
+      "detail": "Exported from SORA Copilot as DOCX. Contains the operation description, the chain from iGRC to SAIL, the OSO matrix and the full justification appendix.",
+      "provenance": "seed",
+      "source": "Verify the authority's expected structure for the risk assessment annex."
+    },
+    {
+      "id": "at.attachment.conops",
+      "kind": "attachment",
+      "title": "Concept of operations (ConOps)",
+      "detail": "Drafted in SORA Copilot and edited by you. Describes the operation, the aircraft, the crew and the volume in the authority's terms.",
+      "osos": ["OSO#01", "OSO#08"],
+      "provenance": "seed",
+      "source": "Verify the required ConOps contents against the SORA annex the authority accepts."
+    },
+    {
+      "id": "at.attachment.erp",
+      "kind": "attachment",
+      "title": "Emergency response plan",
+      "detail": "Required from the point the containment and ground-risk mitigations are claimed.",
+      "osos": ["OSO#08"],
+      "provenance": "seed",
+      "source": "Verify against the SORA annex covering the emergency response plan."
+    },
+    {
+      "id": "at.attachment.insurance",
+      "kind": "attachment",
+      "title": "Third-party liability insurance",
+      "detail": "Aviation third-party liability cover for the aircraft and the operation. The required sum depends on the aircraft's mass.",
+      "provenance": "seed",
+      "source": "UNKNOWN — the minimum sum insured has not been transcribed. Ask the authority or the insurer; do not quote a figure until it is filled in."
+    },
+    {
+      "id": "at.attachment.manual",
+      "kind": "attachment",
+      "title": "Operations manual",
+      "detail": "From SAIL III upward the operations manual is normally part of the file rather than held on request.",
+      "min_sail": "III",
+      "osos": ["OSO#08", "OSO#11", "OSO#14"],
+      "provenance": "seed",
+      "source": "Verify at which SAIL the authority expects the manual with the application."
+    },
+    {
+      "id": "at.attachment.crew_training",
+      "kind": "attachment",
+      "title": "Remote crew competence records",
+      "detail": "Training records and the theoretical-knowledge evidence for each remote pilot named in the application.",
+      "osos": ["OSO#09", "OSO#15", "OSO#22"],
+      "provenance": "seed",
+      "source": "Verify the accepted competence evidence with Austro Control."
+    },
+    {
+      "id": "at.attachment.design_evidence",
+      "kind": "attachment",
+      "title": "Design and maintenance evidence for the aircraft",
+      "detail": "From the higher SAILs the authority looks for evidence about the aircraft itself, not only the operation — design verification, maintenance programme and configuration control.",
+      "min_sail": "IV",
+      "osos": ["OSO#02", "OSO#03", "OSO#04", "OSO#05", "OSO#06", "OSO#10", "OSO#12"],
+      "provenance": "seed",
+      "source": "Verify which OSOs the authority expects documentary evidence for at SAIL IV and above."
+    },
+    {
+      "id": "at.contact.authority",
+      "kind": "contact",
+      "title": "Austro Control GmbH — unmanned aviation",
+      "detail": "The Dronespace portal is the public front door for registration and specific-category applications.",
+      "url": "https://www.dronespace.at/",
+      "provenance": "seed",
+      "source": "Verify the current contact route and address for specific-category applications."
+    }
+  ]
+}

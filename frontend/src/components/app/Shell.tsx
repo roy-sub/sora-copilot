@@ -14,6 +14,7 @@ export const NAV = [
   { href: "/app/new/", label: "New operation", short: "New", d: "M10 3v14M3 10h14", match: (p: string) => p.startsWith("/app/new") },
   { href: "/app/", label: "Determinations", short: "Verdict", d: "M3 15l4-6 3 4 3-7 4 9", match: (p: string) => p.startsWith("/app/operations") },
   { href: "/app/dossiers/", label: "Dossiers", short: "Dossiers", d: "M5 3h7l3 3v11H5z", match: (p: string) => p.startsWith("/app/dossiers") || p.endsWith("/dossier") },
+  { href: "/app/authority/", label: "Authority", short: "Authority", d: "M10 3l6 3v5c0 3.3-2.5 5.6-6 6.6-3.5-1-6-3.3-6-6.6V6z", match: (p: string) => p.startsWith("/app/authority") },
   { href: "/app/settings/", label: "Settings", short: "Settings", d: "M10 7a3 3 0 100 6 3 3 0 000-6z", match: (p: string) => p.startsWith("/app/settings") },
 ];
 
@@ -51,7 +52,7 @@ function Rail() {
             const on = n.match(path);
             return (
               <Link
-                key={n.href}
+                key={n.label}
                 href={n.href}
                 aria-current={on ? "page" : undefined}
                 title={n.label}
@@ -106,7 +107,7 @@ function TabBar() {
       {items.map((n) => {
         const on = n.match(path);
         return (
-          <Link key={n.href} href={n.href} aria-label={n.label} aria-current={on ? "page" : undefined}
+          <Link key={n.label} href={n.href} aria-label={n.label} aria-current={on ? "page" : undefined}
             className={cn("no-underline flex flex-col items-center justify-center gap-1 min-h-14 tr-ui", on ? "text-ink-hi bg-sheet-raised shadow-[inset_0_2px_0_var(--accent)]" : "text-ink-mid")}>
             <Icon d={n.d} />
             <span className="text-[10px] font-semibold leading-none tracking-[.04em]">{n.short}</span>

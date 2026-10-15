@@ -80,6 +80,14 @@ MitigationKind = Literal["m1_strategic", "m1_ers", "m2_impact", "strategic_air",
 TraceNodeKind = Literal["fact", "rule", "override", "default"]
 
 
+#: The one sentence that must appear on every verdict, every export and the free
+#: checker. Defined here so there is a single wording rather than one per surface.
+DISCLAIMER = (
+    "SORA Copilot prepares and verifies your risk assessment. Your national aviation "
+    "authority grants the authorisation."
+)
+
+
 class Citation(BaseModel):
     """Where a value came from. A conclusion without one is a bug, not a degraded result."""
 

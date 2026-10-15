@@ -73,6 +73,20 @@ def signed_in(client: TestClient, auth: dict[str, str]) -> dict[str, Any]:
     return res.json()
 
 
+@pytest.fixture
+def pro(signed_in: dict[str, Any]) -> dict[str, Any]:
+    """The organisation on the Pro plan, as a paying customer would be.
+
+    Written straight through the repository because no API endpoint may change a plan —
+    only a verified Stripe webhook does. A test that needs a paid feature asks for this
+    fixture; a test that does not gets the free plan, which is what a new sign-up gets.
+    """
+    from app.db import get_repo
+
+    get_repo().update_org(signed_in["id"], {"plan": "pro"})
+    return signed_in
+
+
 SQUARE = {
     "type": "Polygon",
     "coordinates": [[[15.40, 47.10], [15.44, 47.10], [15.44, 47.12], [15.40, 47.12], [15.40, 47.10]]],

@@ -12,6 +12,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.deps_api import RepoDep, not_found
+from app.api.v1.gate import GateDep
 from app.api.v1.schemas import (
     DraftOut,
     MissionDraftPatch,
@@ -89,7 +90,10 @@ def list_operations(ctx: OrgContextDep, repo: RepoDep) -> list[OperationOut]:
 
 
 @router.post("", response_model=OperationOut, status_code=status.HTTP_201_CREATED)
-def create_operation(body: OperationIn, ctx: OrgContextDep, repo: RepoDep) -> OperationOut:
+def create_operation(
+    body: OperationIn, ctx: OrgContextDep, repo: RepoDep, gate: GateDep
+) -> OperationOut:
+    gate.require_count("operations")
     mission: dict[str, object] = {}
     if body.drone_id is not None:
         try:

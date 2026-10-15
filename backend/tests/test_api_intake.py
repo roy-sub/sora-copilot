@@ -10,7 +10,20 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
+
+
+@pytest.fixture(autouse=True)
+def _paid(pro: dict[str, Any]) -> None:
+    """Every test in this module exercises a paid feature.
+
+    Plan gating is the subject of tests/test_api_plans.py, which runs these same
+    endpoints on the free plan and asserts the 402. Here the plan is not the point, so
+    it is set once rather than repeated in twenty signatures.
+    """
+    return None
+
 
 PROSE = (
     "Alta X along the 110 kV line south of Gratkorn, about 14 km, BVLOS below 120 metres, "

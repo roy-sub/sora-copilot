@@ -87,11 +87,28 @@ fails on any import outside the allowed set. It also asserts that:
   `app.services.determination`
 - `app/services/llm.py` contains no executable reference to the `determinations` table
 - `anthropic` is imported by exactly one module in the whole application
+- `stripe` is imported by exactly one module, `app/services/billing.py`, which in turn
+  can reach neither the engine nor the determination service
+- `app/services/plans.py` imports nothing from `app` at all, so plan limits stay readable
+  on a deployment with no payment provider configured
+- nothing under `app/engine/` can reach `app/national/` — a country *pack* is
+  administrative, and only the rulebase's `90_national_*.lp` files may change a
+  determination for a country
 
 AST inspection rather than a runtime check matters: it fails on an import that is merely
-*present*, long before anybody calls it. A further test proves the suite is not vacuous —
-the engine package must contain files, and the docstring filter in the table check is
-itself tested against a literal it must catch.
+*present*, long before anybody calls it.
+
+Reachability is checked **transitively**, not one file at a time: the spec says "no
+import path", and a module two hops from the database is still a module that can reach
+it. This is worth labouring because an earlier version of the test recorded only the
+package named in a `from X import Y` and therefore *passed* with a real two-hop path from
+`llm.py` to the database in place. It was rewritten to record `X.Y` as well, and then
+verified the only way such a test can be: by inserting the violation and watching it
+fail.
+
+Several tests exist to prove the suite is not vacuous — the engine package must contain
+files, the docstring filter is tested against a literal it must catch, and the transitive
+check is run against a graph that is known to contain a violation.
 
 ## Mechanism 3 — the data-flow gate
 
@@ -148,11 +165,41 @@ So:
 
 Do not mistake the second for the first.
 
+## Plan gating
+
+Commercial limits are the one place a request is refused for a reason that is not
+regulatory, so they are kept somewhere obvious and shaped identically everywhere:
+
+- `app/services/plans.py` says what a plan *means*. Pure data and pure functions, no
+  Stripe, no database — it is read on every gated request including on a deployment with
+  no payment provider at all.
+- `app/services/billing.py` says how a plan is *bought*. The only module that imports
+  `stripe`.
+- `app/api/v1/gate.py` turns a limit into a **402** carrying `feature`, `plan`, `limit`,
+  `used` and `upgrade_to`, so the frontend renders the upgrade panel from the fields
+  rather than parsing prose.
+
+Two ordering rules carry weight:
+
+- **Ownership is checked before the gate** on every operation-scoped endpoint. A 402 on
+  somebody else's operation would confirm that it exists, so those answer 404.
+- **A dossier credit is checked before generation and spent after it.** A credit must not
+  be burned by an export that then fails in the renderer or the object store.
+
+The webhook is the only unauthenticated write endpoint in the product. Its payload is
+verified against the endpoint secret before any field is read; the event id is claimed in
+the database *before* the handler runs, so a redelivery is a no-op rather than a second
+month of credits; the organisation comes from `client_reference_id` or `metadata.org_id`,
+values this product set itself, never from an email; and a plan is derived from a
+configured price id, so renaming a product in the Stripe dashboard cannot change what a
+customer is entitled to.
+
 ## Errors
 
 Every error is RFC 7807 `application/problem+json` with a machine-readable `code`, so
 the frontend branches on the code and never on prose. Field-level validation adds
-`errors[]`; the 409 from `/determine` adds `unconfirmed_fields[]`.
+`errors[]`; the 409 from `/determine` adds `unconfirmed_fields[]`; the 402 from a plan
+limit adds `feature`, `plan`, `limit`, `used` and `upgrade_to`.
 
 ## Free-tier shape
 

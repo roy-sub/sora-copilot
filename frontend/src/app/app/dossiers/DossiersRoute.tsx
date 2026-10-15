@@ -17,6 +17,7 @@ import { MediaSlot } from "@/components/MediaSlot";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Field";
 import { useToast } from "@/components/Toast";
+import { PlanLimit, isPlanLimit } from "@/components/PlanLimit";
 import { ApiError } from "@/lib/api";
 import { api, type DossierSection, type DossierStatus } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
@@ -102,9 +103,13 @@ function Builder({ operationId }: { operationId: string }) {
   const generate = useGenerateDossier(operationId);
   const [ticked, setTicked] = useState<number>(-1);
   const [error, setError] = useState<string | null>(null);
+  // A plan refusal is kept as the error object rather than its message, because the
+  // upgrade panel renders the limit, the usage and the plan, not the prose.
+  const [limit, setLimit] = useState<ApiError | null>(null);
 
   const run = () => {
     setError(null);
+    setLimit(null);
     setTicked(0);
     generate.mutate(undefined, {
       onSuccess: (dossier) => {
@@ -124,6 +129,10 @@ function Builder({ operationId }: { operationId: string }) {
       },
       onError: (e) => {
         setTicked(-1);
+        if (isPlanLimit(e)) {
+          setLimit(e);
+          return;
+        }
         setError(
           e instanceof ApiError ? (e.problem.detail ?? e.problem.title) : "Generation failed.",
         );
@@ -192,6 +201,8 @@ function Builder({ operationId }: { operationId: string }) {
             <p className="m-0 mt-1.5 t-cap text-ink-mid pretty">{status.blocker}</p>
           </div>
         )}
+
+        {limit && <PlanLimit error={limit} />}
 
         {error && (
           <div role="alert" className="p-3 bg-sheet-well border-l-[3px] border-sail-6 rounded-sm">

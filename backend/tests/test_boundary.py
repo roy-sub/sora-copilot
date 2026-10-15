@@ -312,3 +312,66 @@ def test_submodule_imports_are_recorded_not_just_their_package() -> None:
     assert "app.services.determination" in targets or "app.services" in targets
     graph = _internal_graph()
     assert "app.services.determination" in graph["app.api.v1.determine"]
+
+
+# ------------------------------------------------------------------ the payment boundary
+
+BILLING = APP / "services" / "billing.py"
+
+
+def test_stripe_is_imported_in_exactly_one_module() -> None:
+    """Only services/billing.py may import the Stripe SDK, anywhere in the app.
+
+    Same rule as the Anthropic SDK and for the same reason: everything a third party
+    controls enters through one file, and that file is the one that gets read carefully.
+    """
+    importers = [
+        path.relative_to(APP)
+        for path in _python_files(APP)
+        if any(module.split(".")[0] == "stripe" for module, _ in _imports(path))
+    ]
+    assert importers in ([], [BILLING.relative_to(APP)]), (
+        f"stripe may only be imported by services/billing.py; found: {importers}"
+    )
+
+
+def test_billing_has_no_import_path_to_the_engine_or_the_determination_service() -> None:
+    """A payment provider must not be able to reach the thing that decides a SAIL.
+
+    Transitive, like the LLM check: billing reads plan definitions and configuration,
+    and nothing else.
+    """
+    graph = _internal_graph()
+    reachable = _reachable("app.services.billing", graph)
+    forbidden = sorted(
+        m
+        for m in reachable
+        if m.startswith("app.engine") or m == "app.services.determination"
+    )
+    assert not forbidden, (
+        "services/billing.py can reach these transitively:\n  " + "\n  ".join(forbidden)
+    )
+
+
+def test_the_plan_table_depends_on_nothing_at_all() -> None:
+    """``plans.py`` is read on every gated request, including where Stripe is absent.
+
+    It must therefore import nothing from ``app`` — a dependency on billing would make
+    plan limits unreadable on a deployment with no payment provider configured.
+    """
+    offenders = [
+        f"line {lineno}: {module!r}"
+        for module, lineno in _imports(APP / "services" / "plans.py")
+        if module.startswith("app")
+    ]
+    assert not offenders, "services/plans.py must stay free of app imports:\n" + "\n".join(offenders)
+
+
+def test_the_country_packs_are_not_reachable_from_the_engine() -> None:
+    """A national *pack* is administrative. Only the ``.lp`` national files may decide."""
+    graph = _internal_graph()
+    for module in [m for m in graph if m.startswith("app.engine")]:
+        assert "app.national" not in _reachable(module, graph), (
+            f"{module} can reach app.national; only the rulebase's 90_national_*.lp files "
+            "may change a determination for a country"
+        )
