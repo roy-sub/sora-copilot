@@ -32,15 +32,19 @@ function usePrefersReducedMotion(): boolean {
  * Reserves the exact aspect ratio from the manifest, so the real asset lands with zero
  * layout shift, and renders the designed placeholder until it does.
  *
- * Asset presence is probed rather than configured: `onError` flips back to the
- * placeholder, so a missing file looks deliberate instead of broken. Drop the file into
- * `public/media/` with the manifest filename and it appears — no code change.
+ * Asset presence is probed rather than configured, and the probe defaults to *absent*:
+ * the placeholder is what shows until the file has actually loaded, rather than until
+ * it has failed. That ordering matters — a `<video>` whose source 404s does not reliably
+ * fire `error` in every browser, and the earlier version of this component left a black
+ * rectangle where the design calls for a labelled slot. Drop the file into
+ * `public/media/` with the manifest filename and it appears, with no code change.
  */
 export function MediaSlot({ id, lazy = true, className }: MediaSlotProps) {
   const { slots } = usePrefs();
   const reduce = usePrefersReducedMotion();
   const entry = mediaEntry(id);
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const ratio = `${entry.w} / ${entry.h}`;
   const size = `${entry.w}×${entry.h}`;
@@ -62,7 +66,10 @@ export function MediaSlot({ id, lazy = true, className }: MediaSlotProps) {
           // next/image is unavailable under static export with images.unoptimized.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            className="absolute inset-0 size-full object-cover"
+            className={cn(
+              "absolute inset-0 size-full object-cover tr-ui",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
             style={{ filter: "saturate(.95) contrast(1.02)" }}
             src={src}
             alt={entry.alt}
@@ -70,23 +77,34 @@ export function MediaSlot({ id, lazy = true, className }: MediaSlotProps) {
             height={entry.h}
             loading={lazy ? "lazy" : "eager"}
             decoding="async"
+            onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
           />
         ) : (
           <video
-            className="absolute inset-0 size-full object-cover"
+            className={cn(
+              "absolute inset-0 size-full object-cover tr-ui",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
             src={entry.src}
             poster={entry.poster}
             muted
             autoPlay
             loop
             playsInline
-            preload={lazy ? "none" : "metadata"}
+            // `none` would never load, so `onLoadedData` would never fire and the slot
+            // would sit on its placeholder for ever. Metadata is enough to know the
+            // file is really there.
+            preload={lazy ? "metadata" : "auto"}
             aria-label={entry.alt}
+            onLoadedData={() => setLoaded(true)}
             onError={() => setFailed(true)}
           />
         )
-      ) : (
+      ) : null}
+
+      {/* Underneath the asset, and visible until it has loaded. */}
+      {!loaded && (
         <>
           <div
             aria-hidden
