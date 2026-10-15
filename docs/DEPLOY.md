@@ -2,8 +2,9 @@
 
 Where each piece goes and how it is wired. For *where to get the credentials* — which
 dashboard, which button, which line of `.env` — read
-[Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) instead; this page assumes
-you already have them.
+[Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) instead, and for what each
+variable does, [ENV Example](./ENV%20Example.md). This page assumes you already have
+them.
 
 Everything runs on free tiers. No Redis, no Celery, no always-on worker, no paid service
 beyond the Anthropic API key.

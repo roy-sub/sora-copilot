@@ -16,7 +16,9 @@ working deployment, just a smaller one.
 | 6 | A map style URL | The basemap under the volume editor | Free options exist | ~5 min |
 | 7 | [UptimeRobot](https://uptimerobot.com) *(optional)* | Keeping the free backend awake | Free tier | ~3 min |
 
-Copy `.env.example` to `backend/.env` and `frontend/.env.local` before you start.
+Copy `.env.example` to `backend/.env` and `frontend/.env.local` before you start. What
+each variable does, and what you lose by leaving it blank, is in
+[ENV Example](./ENV%20Example.md) — this page is about where the values come from.
 
 > **The one rule.** `SUPABASE_SERVICE_ROLE_KEY` and `STRIPE_SECRET_KEY` bypass every
 > security control they touch. They belong in the backend's environment and nowhere
