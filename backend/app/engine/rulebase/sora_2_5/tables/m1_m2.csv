@@ -10,6 +10,14 @@
 #       disabled rather than hiding it, so the path to it stays visible.
 # note: The final GRC is floored at the controlled-ground-area value for the aircraft's
 #       column; that floor is a rule in 20_mitigations.lp, not a row here.
+# note: OPEN QUESTION FOR THE OWNER. SORA 2.5's ground mitigations are M1(A)
+#       sheltering, M1(B) operational restrictions, M1(C) ground observation and M2
+#       impact reduction. The build spec's MitigationClaim.kind enumerates only
+#       m1_strategic, m1_ers, m2_impact, strategic_air and tactical_air — there is no
+#       slot for M1(B). An operator therefore cannot claim a mitigation the
+#       regulation offers, which lowers the GRC they can reach. Adding it means
+#       extending the spec's domain model, so it is flagged rather than done. See
+#       PLAN.md section 6.
 kind,robustness,grc_delta,precondition,evidence_required
 m1_strategic,low,-1,,Sheltering analysis of the ground risk buffer
 m1_strategic,medium,-2,,Sheltering analysis plus a signed operational procedure

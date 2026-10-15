@@ -1,0 +1,73 @@
+{
+  "name": "small-ua-provision",
+  "description": "Under 250 g and under 25 m/s: the small-UA provision pins iGRC to 1 whatever is underneath.",
+  "rulebase_version": "2.5.0-rc1",
+  "verified_against_official_text": false,
+  "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
+  "mission": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "org_id": "00000000-0000-0000-0000-000000000002",
+    "drone_id": "00000000-0000-0000-0000-000000000003",
+    "operation_type": "bvlos",
+    "volume": {
+      "flight_geography": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              15.4,
+              47.1
+            ],
+            [
+              15.5,
+              47.1
+            ],
+            [
+              15.5,
+              47.2
+            ],
+            [
+              15.4,
+              47.2
+            ],
+            [
+              15.4,
+              47.1
+            ]
+          ]
+        ]
+      },
+      "max_altitude_agl_m": 118
+    },
+    "ground_environment": "populated",
+    "population_density_per_km2": 2000,
+    "airspace_class": "g",
+    "near_aerodrome": false,
+    "altitude_band": "below_500ft",
+    "controlled_airspace": false,
+    "atypical_airspace": false,
+    "mitigations": [],
+    "country": "AT"
+  },
+  "aircraft": {
+    "max_dimension_m": 0.2,
+    "mtom_kg": 0.2,
+    "max_speed_ms": 15,
+    "fitted": []
+  },
+  "adjacent_area_populated": false,
+  "expect": {
+    "igrc": 1,
+    "final_grc": 1,
+    "initial_arc": "c",
+    "residual_arc": "c",
+    "sail": "IV",
+    "tmpr": "medium",
+    "osos_required": 17,
+    "osos_total": 17,
+    "containment_assessment_required": true,
+    "containment_level": null,
+    "trace_node_count": 60,
+    "root_rule_id": "sora25.sail.lookup"
+  }
+}

@@ -1,0 +1,20 @@
+# table: igrc_columns
+# document: JARUS SORA 2.5 main body
+# version: 2.5
+# section: Intrinsic ground risk class table — column definitions
+# page: UNKNOWN
+# url:
+# verified: false
+# note: SORA 2.5's iGRC columns are dimension AND max-speed pairs. An aircraft falls in
+#       the FIRST column where both limits hold, which is why the columns are ordered and
+#       carry an index. The build spec described rows by dimension alone; PLAN.md section
+#       6.1 records the decision to keep the speed limit, because dropping it changes the
+#       determination for a small, fast aircraft.
+# note: Limits are in centimetres and centimetres per second, matching
+#       app/engine/scale.py, because the solver reasons over integers only.
+col,max_dimension_cm,max_speed_cms,label
+1,100,2500,1 m / 25 m/s
+2,300,3500,3 m / 35 m/s
+3,800,7500,8 m / 75 m/s
+4,2000,12000,20 m / 120 m/s
+5,4000,20000,40 m / 200 m/s

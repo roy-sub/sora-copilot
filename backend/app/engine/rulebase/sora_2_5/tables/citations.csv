@@ -39,3 +39,11 @@ sora25.tmpr.arc_a,JARUS SORA 2.5 Annex D,Tactical mitigation performance require
 sora25.tmpr.arc_b,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false
 sora25.tmpr.arc_c,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false
 sora25.tmpr.arc_d,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false
+sora25.igrc.column,JARUS SORA 2.5 main body,Intrinsic ground risk class table — column selection,,,false
+sora25.igrc.controlled_area,JARUS SORA 2.5 main body,Intrinsic ground risk class — controlled ground area,,,false
+sora25.igrc.density_band,JARUS SORA 2.5 main body,Intrinsic ground risk class — population density bands,,,false
+sora25.arc.altitude_band,JARUS SORA 2.5 Annex C,Air risk altitude band boundary,,,false
+sora25.arc.environment,JARUS SORA 2.5 Annex C,Initial ARC — operational environment,,,false
+sora25.arc.tree,JARUS SORA 2.5 Annex C,Initial ARC decision tree,,,false
+at.baseline,EU 2019/947,National annex not transcribed — EU baseline applies,,,false
+de.baseline,EU 2019/947,National annex not transcribed — EU baseline applies,,,false

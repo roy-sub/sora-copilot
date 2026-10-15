@@ -8,23 +8,30 @@ import pytest
 
 from app.domain import ALTITUDE_BAND_THRESHOLD_M, Drone, GeoJSONPolygon, OperationalVolume
 
-SQUARE = GeoJSONPolygon(
-    coordinates=[[[15.4, 47.1], [15.5, 47.1], [15.5, 47.2], [15.4, 47.2], [15.4, 47.1]]]
-)
+SQUARE = GeoJSONPolygon(coordinates=[[[15.4, 47.1], [15.5, 47.1], [15.5, 47.2], [15.4, 47.2], [15.4, 47.1]]])
 
 
 def test_kinetic_energy_is_computed_not_entered() -> None:
     d = Drone(
-        id=uuid4(), name="Alta X", max_dimension_m=1.32, mtom_kg=15.9,
-        cruise_speed_ms=18, max_speed_ms=22,
+        id=uuid4(),
+        name="Alta X",
+        max_dimension_m=1.32,
+        mtom_kg=15.9,
+        cruise_speed_ms=18,
+        max_speed_ms=22,
     )
     assert d.kinetic_energy_j == pytest.approx(0.5 * 15.9 * 22**2)
 
 
 def test_explicit_kinetic_energy_is_respected() -> None:
     d = Drone(
-        id=uuid4(), name="measured", max_dimension_m=1.0, mtom_kg=10.0,
-        cruise_speed_ms=10, max_speed_ms=20, kinetic_energy_j=1234.0,
+        id=uuid4(),
+        name="measured",
+        max_dimension_m=1.0,
+        mtom_kg=10.0,
+        cruise_speed_ms=10,
+        max_speed_ms=20,
+        kinetic_energy_j=1234.0,
     )
     assert d.kinetic_energy_j == 1234.0
 
@@ -33,8 +40,8 @@ def test_explicit_kinetic_energy_is_respected() -> None:
     ("altitude", "expected"),
     [
         (118.0, "below_500ft"),
-        (150.0, "below_500ft"),      # the design's old round number is still below the band
-        (152.4, "below_500ft"),      # exactly 500 ft is not "above"
+        (150.0, "below_500ft"),  # the design's old round number is still below the band
+        (152.4, "below_500ft"),  # exactly 500 ft is not "above"
         (152.5, "above_500ft"),
         (200.0, "above_500ft"),
     ],

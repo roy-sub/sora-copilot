@@ -150,8 +150,11 @@ create table if not exists public.determinations (
   operation_id   uuid not null references public.operations(id) on delete cascade,
   rulebase_version text not null references public.rulebase_versions(version),
   mission_hash   text not null,
-  igrc           integer not null,
-  final_grc      integer not null,
+  -- Nullable, and null ONLY for the certified category: an operation outside SORA has
+  -- no intrinsic ground risk class, and 0 is not one. The check below enforces that the
+  -- absence cannot appear on a specific-category determination.
+  igrc           integer,
+  final_grc      integer,
   initial_arc    text not null check (initial_arc in ('a','b','c','d')),
   residual_arc   text not null check (residual_arc in ('a','b','c','d')),
   sail           text not null
@@ -163,7 +166,10 @@ create table if not exists public.determinations (
   trace          jsonb not null,
   warnings       jsonb not null default '[]'::jsonb,
   computed_at    timestamptz not null default now(),
-  constraint determinations_trace_is_present check (jsonb_array_length(trace) > 0)
+  constraint determinations_trace_is_present check (jsonb_array_length(trace) > 0),
+  constraint determinations_risk_classes_present check (
+    (sail = 'certified_category') or (igrc is not null and final_grc is not null)
+  )
 );
 -- Idempotency: the same mission against the same rulebase is the same determination.
 create unique index if not exists determinations_idempotent

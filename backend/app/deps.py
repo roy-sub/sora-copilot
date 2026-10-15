@@ -39,14 +39,10 @@ class OrgContext:
 
 
 def _unauthenticated(detail: str) -> ProblemError:
-    return ProblemError(
-        code="unauthenticated", title="Not signed in", status_code=401, detail=detail
-    )
+    return ProblemError(code="unauthenticated", title="Not signed in", status_code=401, detail=detail)
 
 
-def get_current_user(
-    request: Request, settings: Annotated[Settings, Depends(get_settings)]
-) -> CurrentUser:
+def get_current_user(request: Request, settings: Annotated[Settings, Depends(get_settings)]) -> CurrentUser:
     header = request.headers.get("authorization", "")
     scheme, _, token = header.partition(" ")
     if scheme.lower() != _BEARER or not token:

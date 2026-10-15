@@ -1,0 +1,71 @@
+{
+  "name": "m2-at-low-is-not-claimable",
+  "description": "M2 has no low level in the table, so claiming it is refused rather than ignored.",
+  "rulebase_version": "2.5.0-rc1",
+  "verified_against_official_text": false,
+  "note": "An input the rulebase must REFUSE. A silent acceptance here would be a determination built on an unclaimable mitigation.",
+  "mission": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "org_id": "00000000-0000-0000-0000-000000000002",
+    "drone_id": "00000000-0000-0000-0000-000000000003",
+    "operation_type": "bvlos",
+    "volume": {
+      "flight_geography": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              15.4,
+              47.1
+            ],
+            [
+              15.5,
+              47.1
+            ],
+            [
+              15.5,
+              47.2
+            ],
+            [
+              15.4,
+              47.2
+            ],
+            [
+              15.4,
+              47.1
+            ]
+          ]
+        ]
+      },
+      "max_altitude_agl_m": 118
+    },
+    "ground_environment": "sparsely_populated",
+    "population_density_per_km2": 84,
+    "airspace_class": "g",
+    "near_aerodrome": false,
+    "altitude_band": "below_500ft",
+    "controlled_airspace": false,
+    "atypical_airspace": false,
+    "mitigations": [
+      {
+        "kind": "m2_impact",
+        "robustness": "low"
+      }
+    ],
+    "country": "AT"
+  },
+  "aircraft": {
+    "max_dimension_m": 1.32,
+    "mtom_kg": 15.9,
+    "max_speed_ms": 22,
+    "fitted": [
+      "parachute",
+      "fts"
+    ]
+  },
+  "adjacent_area_populated": false,
+  "expect_unsatisfiable": true,
+  "expect_reasons": [
+    "m2_impact cannot be claimed at low robustness \u2014 the table does not offer that level"
+  ]
+}

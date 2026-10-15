@@ -27,9 +27,11 @@ EXPECTED_TABLES = {
     "citations",
     "containment",
     "igrc",
+    "igrc_columns",
     "m1_m2",
     "oso",
     "sail",
+    "thresholds",
     "tmpr",
 }
 
@@ -78,22 +80,61 @@ def test_sail_matrix_matches_the_spec_seed_shape() -> None:
 
 
 def test_igrc_columns_keep_the_speed_limit() -> None:
-    """SORA 2.5's iGRC columns are dimension AND speed pairs (PLAN.md §6.1)."""
-    cols = load_rulebase()["igrc"].fieldnames
-    assert [c for c in cols if c.startswith("dim_")] == [
-        "dim_1m_speed_25ms",
-        "dim_3m_speed_35ms",
-        "dim_8m_speed_75ms",
-        "dim_20m_speed_120ms",
-        "dim_40m_speed_200ms",
-    ]
+    """SORA 2.5's iGRC columns are dimension AND speed pairs (PLAN.md §6.1).
+
+    Dropping the speed limit would put a small, fast aircraft in the wrong column and
+    therefore give it the wrong intrinsic ground risk.
+    """
+    rows = load_rulebase()["igrc_columns"].rows
+    assert [int(r["col"]) for r in rows] == [1, 2, 3, 4, 5]
+    assert [int(r["max_dimension_cm"]) for r in rows] == [100, 300, 800, 2000, 4000]
+    assert [int(r["max_speed_cms"]) for r in rows] == [2500, 3500, 7500, 12000, 20000]
+
+
+def test_igrc_columns_are_monotone() -> None:
+    """Both limits must rise together, or "the first column where both hold" is wrong."""
+    rows = load_rulebase()["igrc_columns"].rows
+    dims = [int(r["max_dimension_cm"]) for r in rows]
+    speeds = [int(r["max_speed_cms"]) for r in rows]
+    assert dims == sorted(dims)
+    assert speeds == sorted(speeds)
+
+
+def test_igrc_band_indices_are_contiguous_and_ordered() -> None:
+    rows = load_rulebase()["igrc"].rows
+    assert [int(r["band_index"]) for r in rows] == list(range(len(rows)))
+
+
+def test_exactly_one_igrc_band_is_unbounded() -> None:
+    """The top band has no ceiling; every other band must have one."""
+    rows = load_rulebase()["igrc"].rows
+    unbounded = [r for r in rows if r["max_density"] == ""]
+    assert len(unbounded) == 1
+    assert unbounded[0]["density_band"] == "over_50000"
+
+
+def test_thresholds_use_the_regulation_not_a_round_number() -> None:
+    """500 ft is 152.4 m, which is 15240 cm. The design copy's 150 m is not the rule."""
+    rows = {r["key"]: r for r in load_rulebase()["thresholds"].rows}
+    assert int(rows["altitude_band_500ft"]["value"]) == 15240
+    assert rows["altitude_band_500ft"]["unit"] == "cm"
+    assert int(rows["small_ua_mtom"]["value"]) == 250
+    assert int(rows["grc_certified_ceiling"]["value"]) == 7
 
 
 def test_igrc_out_of_scope_cells_are_empty_not_zero() -> None:
     """An empty cell means 'not part of SORA', and must never be read as iGRC 0."""
     top = next(r for r in load_rulebase()["igrc"].rows if r["density_band"] == "over_50000")
-    assert top["dim_8m_speed_75ms"] == ""
-    assert top["dim_1m_speed_25ms"] == "7"
+    assert top["col_3"] == ""
+    assert top["col_1"] == "7"
+
+
+def test_no_igrc_cell_is_zero() -> None:
+    """iGRC starts at 1. A 0 anywhere would mean a transcription slip read as a value."""
+    for row in load_rulebase()["igrc"].rows:
+        for col in range(1, 6):
+            cell = row[f"col_{col}"]
+            assert cell == "" or int(cell) >= 1, f"{row['density_band']} col_{col} = {cell!r}"
 
 
 def test_assembly_is_not_a_density_band() -> None:

@@ -1,0 +1,76 @@
+{
+  "name": "above-500ft-controlled",
+  "description": "Above the 500 ft band in controlled airspace, which is the worst air risk the tree offers.",
+  "rulebase_version": "2.5.0-rc1",
+  "verified_against_official_text": false,
+  "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
+  "mission": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "org_id": "00000000-0000-0000-0000-000000000002",
+    "drone_id": "00000000-0000-0000-0000-000000000003",
+    "operation_type": "bvlos",
+    "volume": {
+      "flight_geography": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              15.4,
+              47.1
+            ],
+            [
+              15.5,
+              47.1
+            ],
+            [
+              15.5,
+              47.2
+            ],
+            [
+              15.4,
+              47.2
+            ],
+            [
+              15.4,
+              47.1
+            ]
+          ]
+        ]
+      },
+      "max_altitude_agl_m": 300
+    },
+    "ground_environment": "sparsely_populated",
+    "population_density_per_km2": 84,
+    "airspace_class": "d",
+    "near_aerodrome": false,
+    "altitude_band": "below_500ft",
+    "controlled_airspace": true,
+    "atypical_airspace": false,
+    "mitigations": [],
+    "country": "AT"
+  },
+  "aircraft": {
+    "max_dimension_m": 1.32,
+    "mtom_kg": 15.9,
+    "max_speed_ms": 22,
+    "fitted": [
+      "parachute",
+      "fts"
+    ]
+  },
+  "adjacent_area_populated": false,
+  "expect": {
+    "igrc": 5,
+    "final_grc": 5,
+    "initial_arc": "d",
+    "residual_arc": "d",
+    "sail": "VI",
+    "tmpr": "high",
+    "osos_required": 17,
+    "osos_total": 17,
+    "containment_assessment_required": true,
+    "containment_level": null,
+    "trace_node_count": 59,
+    "root_rule_id": "sora25.sail.lookup"
+  }
+}

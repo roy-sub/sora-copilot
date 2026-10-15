@@ -1,0 +1,77 @@
+{
+  "name": "assembly-of-people",
+  "description": "Over an assembly of people, which pins the top density band and leaves SORA for the certified category.",
+  "rulebase_version": "2.5.0-rc1",
+  "verified_against_official_text": false,
+  "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
+  "mission": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "org_id": "00000000-0000-0000-0000-000000000002",
+    "drone_id": "00000000-0000-0000-0000-000000000003",
+    "operation_type": "bvlos",
+    "volume": {
+      "flight_geography": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              15.4,
+              47.1
+            ],
+            [
+              15.5,
+              47.1
+            ],
+            [
+              15.5,
+              47.2
+            ],
+            [
+              15.4,
+              47.2
+            ],
+            [
+              15.4,
+              47.1
+            ]
+          ]
+        ]
+      },
+      "max_altitude_agl_m": 118
+    },
+    "ground_environment": "assembly_of_people",
+    "population_density_per_km2": 60000,
+    "airspace_class": "g",
+    "near_aerodrome": false,
+    "altitude_band": "below_500ft",
+    "controlled_airspace": false,
+    "atypical_airspace": false,
+    "mitigations": [],
+    "country": "AT"
+  },
+  "aircraft": {
+    "max_dimension_m": 1.98,
+    "mtom_kg": 24.0,
+    "max_speed_ms": 36,
+    "fitted": [
+      "parachute",
+      "daa",
+      "fts"
+    ]
+  },
+  "adjacent_area_populated": true,
+  "expect": {
+    "igrc": null,
+    "final_grc": null,
+    "initial_arc": "c",
+    "residual_arc": "c",
+    "sail": "certified_category",
+    "tmpr": "medium",
+    "osos_required": 0,
+    "osos_total": 0,
+    "containment_assessment_required": false,
+    "containment_level": null,
+    "trace_node_count": 20,
+    "root_rule_id": "sora25.igrc.out_of_scope"
+  }
+}

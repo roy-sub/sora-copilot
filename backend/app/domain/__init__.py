@@ -21,7 +21,12 @@ from app.domain.common import (
     Robustness,
     TraceNodeKind,
 )
-from app.domain.determination import CounterfactualSuggestion, Determination, Tmpr
+from app.domain.determination import (
+    CounterfactualChange,
+    CounterfactualSuggestion,
+    Determination,
+    Tmpr,
+)
 from app.domain.mission import Drone, Mission, MitigationClaim, OperationalVolume, ProposedFact
 from app.domain.oso import ContainmentRequirement, OsoRequirement, OsoStatus
 from app.domain.trace import Trace, TraceNode
@@ -35,6 +40,7 @@ __all__ = [
     "AltitudeBand",
     "Citation",
     "ContainmentRequirement",
+    "CounterfactualChange",
     "CounterfactualSuggestion",
     "Country",
     "Determination",

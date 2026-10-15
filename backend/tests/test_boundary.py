@@ -93,9 +93,8 @@ def test_engine_imports_are_pure(path: Path) -> None:
         for module, lineno in _imports(path)
         if not _is_allowed_for_engine(module)
     ]
-    assert not offenders, (
-        "The rules engine must stay pure — no network, no LLM, no database.\n"
-        + "\n".join(offenders)
+    assert not offenders, "The rules engine must stay pure — no network, no LLM, no database.\n" + "\n".join(
+        offenders
     )
 
 
@@ -153,9 +152,7 @@ def test_llm_module_does_not_write_determinations() -> None:
         and id(node) not in docstrings
         and "determinations" in node.value
     ]
-    assert not offenders, (
-        f"services/llm.py references the determinations table in code: {offenders}"
-    )
+    assert not offenders, f"services/llm.py references the determinations table in code: {offenders}"
 
 
 def test_the_docstring_filter_does_not_make_the_check_vacuous() -> None:

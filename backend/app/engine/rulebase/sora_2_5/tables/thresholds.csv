@@ -1,0 +1,20 @@
+# table: thresholds
+# document: JARUS SORA 2.5 main body and Annex C
+# version: 2.5
+# section: Scope thresholds and band boundaries
+# page: UNKNOWN
+# url:
+# verified: false
+# note: Regulatory numbers that are thresholds rather than table cells. They live here
+#       rather than in code so that the trace can cite them and a reviewer checks them in
+#       the same place as everything else.
+# note: altitude_band_500ft is 500 ft expressed in centimetres: 15240. The build spec
+#       keys the ARC tree on 500 ft, which is 152.4 m, not the round 150 m the design
+#       copy used. PLAN.md section 0 records that decision.
+# note: Units are centimetres, centimetres per second and grams, matching
+#       app/engine/scale.py. The solver reasons over integers only.
+key,value,unit,rule_id,description
+altitude_band_500ft,15240,cm,sora25.arc.altitude_band,Boundary between the below-500ft and above-500ft air risk bands
+small_ua_mtom,250,g,sora25.igrc.small_ua,Maximum take-off mass for the fixed iGRC 1 provision
+small_ua_speed,2500,cms,sora25.igrc.small_ua,Maximum speed for the fixed iGRC 1 provision
+grc_certified_ceiling,7,grc,sora25.sail.certified,Final GRC above this value leaves SORA for the certified category

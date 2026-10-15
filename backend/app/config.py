@@ -20,9 +20,7 @@ Env = Literal["development", "test", "production"]
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=(".env", "../.env"), env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=(".env", "../.env"), env_file_encoding="utf-8", extra="ignore")
 
     env: Env = "development"
     git_sha: str = Field(default="unknown", description="Injected at deploy time for /healthz.")
@@ -79,9 +77,7 @@ class Settings(BaseSettings):
         if not missing:
             return []
         if self.env == "production":
-            raise RuntimeError(
-                "Refusing to start in production without: " + ", ".join(missing)
-            )
+            raise RuntimeError("Refusing to start in production without: " + ", ".join(missing))
         return missing
 
 

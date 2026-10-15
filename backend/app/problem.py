@@ -85,9 +85,9 @@ async def http_handler(request: Request, exc: Exception) -> JSONResponse:
     }.get(exc.status_code, "http_error")
     detail = exc.detail if isinstance(exc.detail, str) else None
     return _json(
-        ProblemError(
-            code=code, title=detail or "Request failed", status_code=exc.status_code
-        ).body(request.url.path),
+        ProblemError(code=code, title=detail or "Request failed", status_code=exc.status_code).body(
+            request.url.path
+        ),
         exc.status_code,
     )
 

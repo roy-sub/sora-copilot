@@ -5,19 +5,20 @@
 # page: UNKNOWN
 # url:
 # verified: false
-# note: SORA 2.5 columns are dimension AND max-speed pairs: an aircraft falls in the
-#       first column where BOTH limits hold. The build spec §6.2 described rows by
-#       dimension alone; PLAN.md §6.1 records the decision to keep the speed limit,
-#       because dropping it changes the determination for a small, fast aircraft.
-# note: "assembly_of_people" is not a density band. It is modelled as a precondition
-#       that pins the top row (PLAN.md §6.2), so it is absent from the columns here.
-# note: An empty cell means the combination is not part of SORA — the operation needs
-#       the certified category. It is never read as zero.
-density_band,max_density_per_km2,dim_1m_speed_25ms,dim_3m_speed_35ms,dim_8m_speed_75ms,dim_20m_speed_120ms,dim_40m_speed_200ms
-controlled_ground_area,-1,1,1,2,3,3
-under_5,5,2,3,4,5,6
-under_50,50,3,4,5,6,7
-under_500,500,4,5,6,7,8
-under_5000,5000,5,6,7,8,9
-under_50000,50000,6,7,8,9,10
-over_50000,,7,8,,,
+# note: Rows are population density bands, ordered; columns are the dimension/speed pairs
+#       defined in igrc_columns.csv. band_index fixes the row order so the band can be
+#       selected as the first one whose max_density is not yet exceeded.
+# note: max_density empty means unbounded — the top band. band_index 0 is the controlled
+#       ground area, which is selected by the ground environment rather than by density.
+# note: "assembly_of_people" is not a density band. It is a precondition that pins the
+#       top band (PLAN.md section 6.2), so it does not appear as a row here.
+# note: An EMPTY CELL means the combination is not part of SORA and the operation needs
+#       the certified category. It is never read as iGRC 0.
+band_index,density_band,max_density,col_1,col_2,col_3,col_4,col_5
+0,controlled_ground_area,-1,1,1,2,3,3
+1,under_5,5,2,3,4,5,6
+2,under_50,50,3,4,5,6,7
+3,under_500,500,4,5,6,7,8
+4,under_5000,5000,5,6,7,8,9
+5,under_50000,50000,6,7,8,9,10
+6,over_50000,,7,8,,,
