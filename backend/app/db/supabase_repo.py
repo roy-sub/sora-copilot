@@ -67,11 +67,30 @@ class SupabaseRepo:
         existing = self.org_for_user(user_id)
         if existing:
             return existing
+
+        # A new user joins the organisation that invited them, matched on the email in
+        # the verified JWT. See migration 003 for why there is no token link.
+        if email and (invite := self.pending_invite_for(email)) is not None:
+            member = (
+                self._db.table("org_members")
+                .insert(
+                    {
+                        "org_id": str(invite["org_id"]),
+                        "user_id": str(user_id),
+                        "role": str(invite.get("role") or "member"),
+                        "email": email,
+                    }
+                )
+                .execute()
+            )
+            self.accept_invite(invite["id"], user_id)
+            return _one(member.data, "org_members insert returned nothing")
+
         org = self._db.table("orgs").insert({"name": "My organisation", "country": "AT"}).execute()
         org_id = org.data[0]["id"]
         member = (
             self._db.table("org_members")
-            .insert({"org_id": org_id, "user_id": str(user_id), "role": "owner"})
+            .insert({"org_id": org_id, "user_id": str(user_id), "role": "owner", "email": email})
             .execute()
         )
         return _one(member.data, "org_members insert returned nothing")
@@ -90,6 +109,80 @@ class SupabaseRepo:
     def members(self, org_id: Id) -> list[Row]:
         res = self._db.table("org_members").select("*").eq("org_id", str(org_id)).execute()
         return list(res.data or [])
+
+    def set_member_role(self, org_id: Id, user_id: Id, role: str) -> Row:
+        res = (
+            self._db.table("org_members")
+            .update({"role": role})
+            .eq("org_id", str(org_id))
+            .eq("user_id", str(user_id))
+            .execute()
+        )
+        return _one(res.data, f"member {user_id}")
+
+    def remove_member(self, org_id: Id, user_id: Id) -> None:
+        res = (
+            self._db.table("org_members")
+            .delete()
+            .eq("org_id", str(org_id))
+            .eq("user_id", str(user_id))
+            .execute()
+        )
+        _one(res.data, f"member {user_id}")
+
+    # -------------------------------------------------------------- invitations
+
+    def list_invites(self, org_id: Id) -> list[Row]:
+        res = (
+            self._db.table("org_invites")
+            .select("*")
+            .eq("org_id", str(org_id))
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return list(res.data or [])
+
+    def create_invite(self, org_id: Id, data: Row) -> Row:
+        """Invite an address, or update the pending invitation it already has.
+
+        An upsert on (org_id, email): migration 003's partial unique index makes a second
+        invitation to the same address the same invitation, not a duplicate row.
+        """
+        payload = {**data, "org_id": str(org_id), "email": str(data["email"]).strip().lower()}
+        res = self._db.table("org_invites").upsert(payload, on_conflict="org_id,email").execute()
+        return _one(res.data, "org_invites upsert returned nothing")
+
+    def delete_invite(self, org_id: Id, invite_id: Id) -> None:
+        res = (
+            self._db.table("org_invites")
+            .delete()
+            .eq("org_id", str(org_id))
+            .eq("id", str(invite_id))
+            .execute()
+        )
+        _one(res.data, f"invite {invite_id}")
+
+    def pending_invite_for(self, email: str) -> Row | None:
+        res = (
+            self._db.table("org_invites")
+            .select("*")
+            .eq("email", email.strip().lower())
+            .is_("accepted_at", "null")
+            .gt("expires_at", datetime.now(UTC).isoformat())
+            .order("created_at")
+            .limit(1)
+            .execute()
+        )
+        return res.data[0] if res.data else None
+
+    def accept_invite(self, invite_id: Id, user_id: Id) -> Row:
+        res = (
+            self._db.table("org_invites")
+            .update({"accepted_at": datetime.now(UTC).isoformat(), "accepted_by": str(user_id)})
+            .eq("id", str(invite_id))
+            .execute()
+        )
+        return _one(res.data, f"invite {invite_id}")
 
     # -------------------------------------------------------------- drones
 

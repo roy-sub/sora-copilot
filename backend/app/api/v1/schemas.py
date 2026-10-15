@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.domain import (
     ARC,
@@ -45,6 +45,54 @@ class OrgOut(BaseModel):
     role: str = Field(description="The signed-in user's role in this organisation.")
     seats_used: int
     created_at: datetime
+
+
+class MemberOut(BaseModel):
+    user_id: UUID
+    #: Copied from the verified JWT when they joined. Null for memberships created before
+    #: migration 003, which the UI shows as "—" rather than inventing one.
+    email: str | None = None
+    role: Literal["owner", "admin", "member"]
+    created_at: datetime
+    #: True for the signed-in caller, so the UI can refuse to let them remove themselves.
+    is_you: bool = False
+
+
+class MemberPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role: Literal["owner", "admin", "member"]
+
+
+class InviteIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: EmailStr
+    #: An invitation can never grant ownership. Transferring an organisation is a
+    #: different act and is not built.
+    role: Literal["admin", "member"] = "member"
+
+
+class InviteOut(BaseModel):
+    id: UUID
+    email: str
+    role: Literal["admin", "member"]
+    created_at: datetime
+    expires_at: datetime
+    accepted_at: datetime | None = None
+    status: Literal["pending", "accepted", "expired"]
+
+
+class SeatsOut(BaseModel):
+    """Who is in the organisation, who has been invited, and how many seats remain."""
+
+    members: list[MemberOut]
+    invites: list[InviteOut]
+    seats_used: int
+    seats_limit: int
+    #: Members plus pending invitations. A pending invitation holds a seat, or two
+    #: people accepting at once would put the organisation over its plan.
+    seats_committed: int
+    can_invite: bool
+    plan: str
 
 
 class OrgPatch(BaseModel):

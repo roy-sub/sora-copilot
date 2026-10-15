@@ -57,6 +57,15 @@ class Repo(Protocol):
     def get_org(self, org_id: Id) -> Row: ...
     def update_org(self, org_id: Id, patch: Row) -> Row: ...
     def members(self, org_id: Id) -> list[Row]: ...
+    def set_member_role(self, org_id: Id, user_id: Id, role: str) -> Row: ...
+    def remove_member(self, org_id: Id, user_id: Id) -> None: ...
+
+    # -------------------------------------------------------------- invitations
+    def list_invites(self, org_id: Id) -> list[Row]: ...
+    def create_invite(self, org_id: Id, data: Row) -> Row: ...
+    def delete_invite(self, org_id: Id, invite_id: Id) -> None: ...
+    def pending_invite_for(self, email: str) -> Row | None: ...
+    def accept_invite(self, invite_id: Id, user_id: Id) -> Row: ...
     def ensure_org_for_user(self, user_id: Id, email: str | None) -> Row: ...
 
     # -------------------------------------------------------------- drones
@@ -147,6 +156,7 @@ class MemoryRepo:
         # neither store can disagree with the other about what an id is.
         self.orgs: dict[str, Row] = {}
         self.org_members: list[Row] = []
+        self.invites: dict[str, Row] = {}
         self.drones: dict[str, Row] = {}
         self.operations: dict[str, Row] = {}
         self.facts: dict[str, Row] = {}
@@ -185,11 +195,30 @@ class MemoryRepo:
         return None
 
     def ensure_org_for_user(self, user_id: Id, email: str | None) -> Row:
-        """Mirrors the database trigger: a new user gets an org and an owner membership."""
+        """A new user joins the organisation that invited them, or gets their own.
+
+        The invitation is matched on the email in the **verified** JWT, so it can only be
+        claimed by someone who has proved control of that address to Supabase Auth. See
+        migration 003 for why there is no token link.
+        """
         with self._lock:
             existing = self.org_for_user(user_id)
             if existing:
                 return existing
+
+            invite = self.pending_invite_for(email) if email else None
+            if invite is not None:
+                member = {
+                    "org_id": str(invite["org_id"]),
+                    "user_id": str(user_id),
+                    "role": str(invite.get("role") or "member"),
+                    "email": email,
+                    "created_at": _now(),
+                }
+                self.org_members.append(member)
+                self.accept_invite(invite["id"], user_id)
+                return deepcopy(member)
+
             org_id = uuid4()
             self.orgs[str(org_id)] = {
                 "id": str(org_id),
@@ -207,7 +236,13 @@ class MemoryRepo:
                 "created_at": _now(),
                 "updated_at": _now(),
             }
-            member = {"org_id": str(org_id), "user_id": str(user_id), "role": "owner", "created_at": _now()}
+            member = {
+                "org_id": str(org_id),
+                "user_id": str(user_id),
+                "role": "owner",
+                "email": email,
+                "created_at": _now(),
+            }
             self.org_members.append(member)
             return deepcopy(member)
 
@@ -225,6 +260,96 @@ class MemoryRepo:
                 raise NotFound(f"org {org_id}")
             row.update({k: v for k, v in patch.items() if v is not None})
             row["updated_at"] = _now()
+            return deepcopy(row)
+
+    def set_member_role(self, org_id: Id, user_id: Id, role: str) -> Row:
+        with self._lock:
+            for m in self.org_members:
+                if m["org_id"] == str(org_id) and m["user_id"] == str(user_id):
+                    m["role"] = role
+                    return deepcopy(m)
+        raise NotFound(f"member {user_id}")
+
+    def remove_member(self, org_id: Id, user_id: Id) -> None:
+        with self._lock:
+            before = len(self.org_members)
+            self.org_members = [
+                m
+                for m in self.org_members
+                if not (m["org_id"] == str(org_id) and m["user_id"] == str(user_id))
+            ]
+            if len(self.org_members) == before:
+                raise NotFound(f"member {user_id}")
+
+    # -------------------------------------------------------------- invitations
+
+    def list_invites(self, org_id: Id) -> list[Row]:
+        with self._lock:
+            rows = [i for i in self.invites.values() if i["org_id"] == str(org_id)]
+            return [
+                deepcopy(i) for i in sorted(rows, key=lambda i: str(i["created_at"]), reverse=True)
+            ]
+
+    def create_invite(self, org_id: Id, data: Row) -> Row:
+        """Invite an address, or update the pending invitation it already has.
+
+        Mirrors the partial unique index in migration 003: a second invitation to the
+        same address is the same invitation with a new role, not a duplicate row.
+        """
+        email = str(data["email"]).strip().lower()
+        with self._lock:
+            for existing in self.invites.values():
+                if (
+                    existing["org_id"] == str(org_id)
+                    and existing["email"] == email
+                    and existing.get("accepted_at") is None
+                ):
+                    existing.update({k: v for k, v in data.items() if k != "email"})
+                    return deepcopy(existing)
+            invite_id = uuid4()
+            row = {
+                **data,
+                "id": str(invite_id),
+                "org_id": str(org_id),
+                "email": email,
+                "created_at": _now(),
+                "accepted_at": None,
+                "accepted_by": None,
+            }
+            self.invites[str(invite_id)] = row
+            return deepcopy(row)
+
+    def delete_invite(self, org_id: Id, invite_id: Id) -> None:
+        with self._lock:
+            row = self.invites.get(str(invite_id))
+            if row is None or row["org_id"] != str(org_id):
+                raise NotFound(f"invite {invite_id}")
+            del self.invites[str(invite_id)]
+
+    def pending_invite_for(self, email: str) -> Row | None:
+        """The oldest unclaimed, unexpired invitation for an address, if any."""
+        wanted = email.strip().lower()
+        now = _now()
+        with self._lock:
+            candidates = [
+                i
+                for i in self.invites.values()
+                if i["email"] == wanted
+                and i.get("accepted_at") is None
+                and str(i.get("expires_at") or "9999") > now
+            ]
+            if not candidates:
+                return None
+            return deepcopy(min(candidates, key=lambda i: str(i["created_at"])))
+
+    def accept_invite(self, invite_id: Id, user_id: Id) -> Row:
+        """Mark an invitation claimed. Kept, not deleted: who let this person in, and when."""
+        with self._lock:
+            row = self.invites.get(str(invite_id))
+            if row is None:
+                raise NotFound(f"invite {invite_id}")
+            row["accepted_at"] = _now()
+            row["accepted_by"] = str(user_id)
             return deepcopy(row)
 
     def members(self, org_id: Id) -> list[Row]:

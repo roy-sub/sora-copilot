@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/app/Shell";
 import { BillingPanel } from "@/components/app/BillingPanel";
+import { MembersPanel } from "@/components/app/MembersPanel";
 import { Disclaimer, RulebaseStamp } from "@/components/Brand";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { FieldLabel, Input, Segmented, Select } from "@/components/ui/Field";
@@ -19,7 +20,6 @@ import { Modal } from "@/components/ui/Dialog";
 import { useToast } from "@/components/Toast";
 import { ApiError } from "@/lib/api";
 import { usePrefs } from "@/lib/prefs";
-import { useAuth } from "@/lib/auth";
 import { useHealth, useOperations, useOrg, useRulebase, useUpdateOrg } from "@/lib/hooks";
 import type { Country } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
@@ -33,7 +33,6 @@ const AUTHORITIES: { value: Country; label: string }[] = [
 export default function Settings() {
   const { push } = useToast();
   const { theme, setTheme } = usePrefs();
-  const { user, signOut } = useAuth();
   const { data: org } = useOrg();
   const { data: rulebase } = useRulebase();
   const { data: health } = useHealth();
@@ -106,29 +105,7 @@ export default function Settings() {
           <BillingPanel />
 
           {/* ---------------------------------------------------------- members */}
-          <section className="bg-sheet-well p-5 flex flex-col gap-3.5">
-            <span className="t-micro text-ink-low">
-              Members · {org?.seats_used ?? 1} {org?.seats_used === 1 ? "seat" : "seats"}
-            </span>
-            <div className="flex items-center gap-3 min-h-12">
-              <div className="size-8 rounded-pill bg-sheet-alt grid place-items-center t-micro-10 text-ink-hi">
-                {(user?.email ?? "?").slice(0, 2).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="block t-data-13 text-ink-hi truncate">{user?.email ?? "—"}</span>
-                <span className="block t-cap text-ink-low">{org?.role ?? "member"}</span>
-              </div>
-            </div>
-            <p className="m-0 t-cap text-ink-mid pretty">
-              Inviting colleagues is not built yet. Each person who signs up gets their
-              own organisation, so share an operation by exporting the dossier until it
-              is. Seat limits are already enforced, so a Team plan is not yet worth
-              buying for the seats alone.
-            </p>
-            <Button variant="secondary" onClick={() => void signOut()}>
-              Sign out
-            </Button>
-          </section>
+          <MembersPanel />
 
           {/* ---------------------------------------------------------- data region */}
           <section className="bg-sheet-well p-5 flex flex-col gap-3.5">

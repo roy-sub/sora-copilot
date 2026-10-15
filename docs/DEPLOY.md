@@ -25,6 +25,8 @@ EU regions throughout: data residency is a stated selling point, not an aftertho
      creates every table with RLS enabled and forced, and seeds rulebase `2.5.0-rc1`.
    - `backend/app/db/migrations/002_billing.sql` — subscriptions, dossier credits and
      the webhook's idempotency log.
+   - `backend/app/db/migrations/003_invites.sql` — organisation invitations, so a Team
+     plan's seats can be used.
 3. Authentication → Providers → Email: enable email, and enable magic links.
 4. Authentication → URL Configuration → Redirect URLs: add
    `http://localhost:3000/app/` and `https://<your-pages-domain>/app/`. Magic links

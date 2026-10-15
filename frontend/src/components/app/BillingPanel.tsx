@@ -26,7 +26,8 @@ const METERS: { key: string; label: string; limit: (p: PlanSummary["limits"]) =>
   },
   { key: "dossiers_this_month", label: "Dossiers this month", limit: (l) => l.dossiers_per_month },
   { key: "evidence", label: "Evidence files", limit: (l) => l.evidence_files },
-  { key: "seats", label: "Seats", limit: (l) => l.seats },
+  // Seats are not metered here: the members panel owns them, and it counts pending
+  // invitations as committed. Two counts of the same thing read as a bug.
 ];
 
 function Meter({ label, used, limit }: { label: string; used: number; limit: number | null | undefined }) {

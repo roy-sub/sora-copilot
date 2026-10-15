@@ -183,6 +183,23 @@ LibreOffice, which does not fit on a free tier. A test renders both formats from
 determination and asserts every risk value, the disclaimer, the UNVERIFIED banner and the
 trace appear in each; another asserts the running header is on every page of the PDF.
 
+## Invitations have no link
+
+Inviting a colleague stores an **address**, not a token, and sends nothing. The
+invitation is claimed on first sign-in, matched against the `email` claim of a Supabase
+JWT the backend has already verified. So an invitation can only ever be taken by someone
+who has proved control of that address to Supabase Auth — there is no secret to forward,
+leak or replay, and the product needs no email sender.
+
+The cost is that an invitation typed to the wrong address is claimable by whoever owns
+it, which is why invitations expire after 14 days and why withdrawing one takes effect
+immediately.
+
+Seats are the one plan limit that cannot be checked only at the moment of use: two people
+accepting at the same instant would put a five-seat organisation at six. So a **pending
+invitation holds a seat** — members plus pending invitations is what is measured against
+the plan.
+
 ## Plan gating
 
 Commercial limits are the one place a request is refused for a reason that is not

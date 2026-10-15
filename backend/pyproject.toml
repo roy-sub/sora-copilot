@@ -8,6 +8,9 @@ dependencies = [
   "fastapi>=0.120,<0.122",
   "uvicorn[standard]>=0.38,<0.40",
   "pydantic>=2.12,<3",
+  # EmailStr on the invitation schema; an invitation is claimed by address, so the
+  # address has to be valid before it is stored.
+  "email-validator>=2.2,<3",
   "pydantic-settings>=2.12,<3",
   "python-multipart>=0.0.20,<0.1",
   "pyjwt[crypto]>=2.10,<3",

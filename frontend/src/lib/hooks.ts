@@ -19,11 +19,14 @@ import {
   type DraftPatch,
   type DossierFormat,
   type DroneIn,
+  type InviteRole,
+  type MemberRole,
   type DronePatch,
   type OperationIn,
   type OperationPatch,
   type OrgPatch,
   type PlanName,
+  type Seats,
   type Sail,
 } from "@/lib/api-client";
 import { ApiError } from "@/lib/api";
@@ -44,6 +47,7 @@ export const keys = {
   evidence: (id: string) => ["operations", id, "evidence"] as const,
   dossier: (id: string) => ["operations", id, "dossier"] as const,
   billing: ["billing"] as const,
+  seats: ["seats"] as const,
   countries: ["national"] as const,
   pack: (code: string) => ["national", code] as const,
   checklist: (id: string) => ["operations", id, "checklist"] as const,
@@ -369,6 +373,41 @@ export function useGenerateDossier(id: string) {
 export function useCategoryCheck() {
   return useMutation({ mutationFn: (body: CategoryCheckIn) => api.categoryCheck(body) });
 }
+
+// ------------------------------------------------------------------ seats
+
+export function useSeats() {
+  const ready = useReady();
+  return useQuery({ queryKey: keys.seats, queryFn: api.seats, enabled: ready });
+}
+
+/**
+ * Every seat mutation returns the whole seats payload, so the cache is replaced rather
+ * than invalidated: the panel never shows a stale seat count between the write and the
+ * refetch, which is exactly when somebody would click twice.
+ */
+function useSeatMutation<TArgs>(fn: (args: TArgs) => Promise<Seats>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: (next) => {
+      qc.setQueryData(keys.seats, next);
+      // The plan panel shows a seat meter from its own count.
+      qc.invalidateQueries({ queryKey: keys.billing });
+    },
+  });
+}
+
+export const useInvite = () =>
+  useSeatMutation(({ email, role }: { email: string; role?: InviteRole }) =>
+    api.invite(email, role),
+  );
+export const useRevokeInvite = () => useSeatMutation((id: string) => api.revokeInvite(id));
+export const useRemoveMember = () => useSeatMutation((id: string) => api.removeMember(id));
+export const useSetMemberRole = () =>
+  useSeatMutation(({ userId, role }: { userId: string; role: MemberRole }) =>
+    api.setMemberRole(userId, role),
+  );
 
 // ------------------------------------------------------------------ billing
 

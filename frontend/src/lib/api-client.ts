@@ -58,6 +58,11 @@ export type Country = Org["country"];
 export type DataRegion = Org["data_region"];
 export type GeoJSONPolygon = S["GeoJSONPolygon"];
 export type BillingState = S["BillingStateOut"];
+export type Seats = S["SeatsOut"];
+export type Member = S["MemberOut"];
+export type Invite = S["InviteOut"];
+export type MemberRole = Member["role"];
+export type InviteRole = S["InviteIn"]["role"];
 export type PlanSummary = S["PlanOut"];
 export type PlanLimits = S["PlanLimitsOut"];
 export type PlanName = PlanSummary["name"];
@@ -158,6 +163,16 @@ export const api = {
     }),
 
   rulebase: () => request<Rulebase>(`${V1}/rulebase/current`, { anonymous: true }),
+
+  seats: () => request<Seats>(`${V1}/orgs/me/seats`),
+  invite: (email: string, role: InviteRole = "member") =>
+    request<Seats>(`${V1}/orgs/me/invites`, { method: "POST", body: { email, role } }),
+  revokeInvite: (id: string) =>
+    request<Seats>(`${V1}/orgs/me/invites/${id}`, { method: "DELETE" }),
+  removeMember: (userId: string) =>
+    request<Seats>(`${V1}/orgs/me/members/${userId}`, { method: "DELETE" }),
+  setMemberRole: (userId: string, role: MemberRole) =>
+    request<Seats>(`${V1}/orgs/me/members/${userId}`, { method: "PATCH", body: { role } }),
 
   billing: () => request<BillingState>(`${V1}/billing`),
   checkout: (plan: "pro" | "team" | "per_dossier") =>

@@ -51,11 +51,13 @@ the browser never does.
 1. **Run the migrations.** SQL Editor → New query → paste and run, in this order:
    - `backend/app/db/migrations/001_init.sql`
    - `backend/app/db/migrations/002_billing.sql`
+   - `backend/app/db/migrations/003_invites.sql`
 
    001 creates every table with RLS enabled and forced, the storage buckets, and the
    trigger that gives each new user an organisation. 002 adds subscriptions, dossier
-   credits and the webhook's idempotency log. Never edit a migration that has been
-   applied; corrections land as 003.
+   credits and the webhook's idempotency log. 003 adds invitations, so a Team plan's
+   seats can be used. Never edit a migration that has been applied; corrections land as
+   the next number.
 
 2. **Enable email auth.** Authentication → Sign In / Providers → Email. Turn on email,
    and turn on magic links if you want passwordless sign-in (the sign-in form offers
@@ -68,7 +70,13 @@ the browser never does.
    ```
    Magic links fail *silently* without this. It is the single most common setup mistake.
 
-4. **Check the buckets exist.** Storage should list `evidence`, `dossiers` and
+4. **No email sender is needed.** Inviting a colleague does not send a message: the
+   invitation is claimed on first sign-in by the address in their verified Supabase
+   token. The owner invites an address and tells their colleague to sign up with it.
+   That is deliberate — there is no link to forward, leak or replay, and no sixth
+   third-party service to configure.
+
+5. **Check the buckets exist.** Storage should list `evidence`, `dossiers` and
    `public-assets`. The first two are private; the backend mints 15-minute signed URLs
    for them and the browser never gets a durable link.
 
