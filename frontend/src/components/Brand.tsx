@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { RULEBASE } from "@/engine/rulebase";
+
+/**
+ * The rulebase the build shipped against.
+ *
+ * A fallback only: `GET /rulebase/current` is the authority, and the rail shows that.
+ * This exists so a server-rendered stamp has something to print before any request has
+ * been made, and it is kept in step with backend/app/engine/rulebase/sora_2_5/VERSION.
+ */
+export const RULEBASE = { version: "2.5.0-rc1", date: "unreleased" } as const;
 
 export const DISCLAIMER = "SORA Copilot prepares and verifies your risk assessment. Your national aviation authority grants the authorisation.";
 export const STAMP = `Rulebase ${RULEBASE.version} · ${RULEBASE.date}`;

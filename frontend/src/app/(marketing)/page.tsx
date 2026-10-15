@@ -6,9 +6,11 @@ import { ButtonLink } from "@/components/ui/Button";
 import { MarketingFooter, MarketingHeader } from "@/components/marketing/Chrome";
 import { Faq } from "@/components/marketing/Faq";
 import { Tiers } from "@/components/marketing/Tiers";
-import { OSO_TABLE } from "@/engine/rulebase";
 
-const N_OSO = OSO_TABLE.length;
+// SORA 2.5 defines 17 operational safety objectives (#01–09, 13, 16–20, 23, 24).
+// The engine derives the count from its own table; this is the landing page's copy,
+// kept in step with backend/app/engine/rulebase/sora_2_5/tables/oso.csv.
+const N_OSO = 17;
 
 const CHAIN = [
   ["Step 01", "iGRC", "Characteristic dimension, speed and the population under the flight geography. Class 1–10."],

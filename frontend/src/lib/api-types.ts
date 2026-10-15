@@ -214,6 +214,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/operations/{operation_id}/dossier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dossier Status
+         * @description What each section contains, and whether a dossier can be generated at all.
+         */
+        get: operations["dossier_status_api_v1_operations__operation_id__dossier_get"];
+        put?: never;
+        /** Generate */
+        post: operations["generate_api_v1_operations__operation_id__dossier_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/{operation_id}/dossier/{dossier_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_v1_operations__operation_id__dossier__dossier_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/operations/{operation_id}/draft": {
         parameters: {
             query?: never;
@@ -233,6 +271,64 @@ export interface paths {
          * @description Save one wizard step. Nothing here reaches the engine.
          */
         patch: operations["patch_draft_api_v1_operations__operation_id__draft_patch"];
+        trace?: never;
+    };
+    "/api/v1/operations/{operation_id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Evidence */
+        get: operations["list_evidence_api_v1_operations__operation_id__evidence_get"];
+        put?: never;
+        /**
+         * Upload Evidence
+         * @description Attach a file to an OSO, or to the operation as a whole.
+         *
+         *     The file is validated before it is stored — size and type — so the operator learns
+         *     immediately rather than when someone tries to read it.
+         */
+        post: operations["upload_evidence_api_v1_operations__operation_id__evidence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/{operation_id}/evidence/{evidence_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Evidence */
+        delete: operations["delete_evidence_api_v1_operations__operation_id__evidence__evidence_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/{operation_id}/evidence/{evidence_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Evidence */
+        get: operations["download_evidence_api_v1_operations__operation_id__evidence__evidence_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/operations/{operation_id}/facts": {
@@ -345,6 +441,26 @@ export interface paths {
         put?: never;
         /** Turn prose into candidate facts — never into a conclusion */
         post: operations["chat_api_v1_operations__operation_id__intake_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/{operation_id}/osos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Osos
+         * @description The OSO set from the stored determination, with whatever evidence is attached.
+         */
+        get: operations["list_osos_api_v1_operations__operation_id__osos_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -613,6 +729,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/operations/{operation_id}/dossier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dossier Status
+         * @description What each section contains, and whether a dossier can be generated at all.
+         */
+        get: operations["dossier_status_operations__operation_id__dossier_get"];
+        put?: never;
+        /** Generate */
+        post: operations["generate_operations__operation_id__dossier_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/{operation_id}/dossier/{dossier_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_operations__operation_id__dossier__dossier_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/operations/{operation_id}/draft": {
         parameters: {
             query?: never;
@@ -632,6 +786,64 @@ export interface paths {
          * @description Save one wizard step. Nothing here reaches the engine.
          */
         patch: operations["patch_draft_operations__operation_id__draft_patch"];
+        trace?: never;
+    };
+    "/operations/{operation_id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Evidence */
+        get: operations["list_evidence_operations__operation_id__evidence_get"];
+        put?: never;
+        /**
+         * Upload Evidence
+         * @description Attach a file to an OSO, or to the operation as a whole.
+         *
+         *     The file is validated before it is stored — size and type — so the operator learns
+         *     immediately rather than when someone tries to read it.
+         */
+        post: operations["upload_evidence_operations__operation_id__evidence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/{operation_id}/evidence/{evidence_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Evidence */
+        delete: operations["delete_evidence_operations__operation_id__evidence__evidence_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/{operation_id}/evidence/{evidence_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Evidence */
+        get: operations["download_evidence_operations__operation_id__evidence__evidence_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/operations/{operation_id}/facts": {
@@ -750,6 +962,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/operations/{operation_id}/osos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Osos
+         * @description The OSO set from the stored determination, with whatever evidence is attached.
+         */
+        get: operations["list_osos_operations__operation_id__osos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orgs/me": {
         parameters: {
             query?: never;
@@ -820,6 +1052,26 @@ export interface components {
         ApplyCounterfactualIn: {
             /** Suggestion Id */
             suggestion_id: string;
+        };
+        /** Body_upload_evidence_api_v1_operations__operation_id__evidence_post */
+        Body_upload_evidence_api_v1_operations__operation_id__evidence_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+            /** Oso Id */
+            oso_id?: string | null;
+        };
+        /** Body_upload_evidence_operations__operation_id__evidence_post */
+        Body_upload_evidence_operations__operation_id__evidence_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+            /** Oso Id */
+            oso_id?: string | null;
         };
         /** CategoryCheckIn */
         CategoryCheckIn: {
@@ -1111,6 +1363,85 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /** DossierIn */
+        DossierIn: {
+            /**
+             * Format
+             * @default docx
+             * @constant
+             */
+            format: "docx";
+            /** Note */
+            note?: string | null;
+        };
+        /** DossierOut */
+        DossierOut: {
+            /** Determination Id */
+            determination_id?: string | null;
+            /**
+             * Download Url
+             * @description Signed, short-lived. Absent when storage is not configured.
+             */
+            download_url?: string | null;
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "docx" | "pdf";
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Note */
+            note?: string | null;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Storage Path */
+            storage_path: string;
+            /** Version */
+            version: number;
+        };
+        /** DossierSectionOut */
+        DossierSectionOut: {
+            /** Key */
+            key: string;
+            /** Meta */
+            meta: string;
+            /** Name */
+            name: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "complete" | "partial" | "not_started";
+        };
+        /** DossierStatusOut */
+        DossierStatusOut: {
+            /** Blocker */
+            blocker?: string | null;
+            /** Can Generate */
+            can_generate: boolean;
+            /** Next Version */
+            next_version: number;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Sections */
+            sections: components["schemas"]["DossierSectionOut"][];
+            /** Versions */
+            versions: components["schemas"]["DossierOut"][];
+        };
         /** DraftOut */
         DraftOut: {
             /**
@@ -1203,6 +1534,29 @@ export interface components {
             name?: string | null;
             /** Registration */
             registration?: string | null;
+        };
+        /** EvidenceOut */
+        EvidenceOut: {
+            /** Bytes */
+            bytes?: number | null;
+            /** Content Type */
+            content_type?: string | null;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Oso Id */
+            oso_id?: string | null;
+            /** Storage Path */
+            storage_path: string;
+            /**
+             * Uploaded At
+             * Format: date-time
+             */
+            uploaded_at: string;
         };
         /** GeoDeriveOut */
         GeoDeriveOut: {
@@ -1458,6 +1812,26 @@ export interface components {
             operator_registration?: string | null;
             /** Rulebase Pin */
             rulebase_pin?: string | null;
+        };
+        /** OsoOut */
+        OsoOut: {
+            /** Checklist */
+            checklist: string[];
+            citation: components["schemas"]["Citation"];
+            /** Evidence */
+            evidence?: components["schemas"]["EvidenceOut"][];
+            /** Oso Id */
+            oso_id: string;
+            required_robustness: components["schemas"]["Robustness"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "unmet" | "claimed" | "documented" | "verified";
+            /** Title */
+            title: string;
+            /** What It Requires */
+            what_it_requires: string;
         };
         /** OsoRequirement */
         OsoRequirement: {
@@ -2087,6 +2461,104 @@ export interface operations {
             };
         };
     };
+    dossier_status_api_v1_operations__operation_id__dossier_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DossierStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_v1_operations__operation_id__dossier_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DossierIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DossierOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_api_v1_operations__operation_id__dossier__dossier_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+                dossier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_draft_api_v1_operations__operation_id__draft_get: {
         parameters: {
             query?: never;
@@ -2140,6 +2612,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_evidence_api_v1_operations__operation_id__evidence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_evidence_api_v1_operations__operation_id__evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_evidence_api_v1_operations__operation_id__evidence_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidence_api_v1_operations__operation_id__evidence__evidence_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+                evidence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_evidence_api_v1_operations__operation_id__evidence__evidence_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+                evidence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2336,6 +2936,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IntakeChatOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_osos_api_v1_operations__operation_id__osos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OsoOut"][];
                 };
             };
             /** @description Validation Error */
@@ -2945,6 +3576,104 @@ export interface operations {
             };
         };
     };
+    dossier_status_operations__operation_id__dossier_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DossierStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_operations__operation_id__dossier_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DossierIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DossierOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_operations__operation_id__dossier__dossier_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+                dossier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_draft_operations__operation_id__draft_get: {
         parameters: {
             query?: never;
@@ -2998,6 +3727,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_evidence_operations__operation_id__evidence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_evidence_operations__operation_id__evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_evidence_operations__operation_id__evidence_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidence_operations__operation_id__evidence__evidence_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+                evidence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_evidence_operations__operation_id__evidence__evidence_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+                evidence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -3194,6 +4051,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IntakeChatOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_osos_operations__operation_id__osos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OsoOut"][];
                 };
             };
             /** @description Validation Error */

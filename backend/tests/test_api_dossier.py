@@ -14,7 +14,10 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.conftest import SQUARE as SQUARE_FOR_DOSSIER
+
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
 
 
 @pytest.fixture
@@ -339,3 +342,50 @@ def test_another_organisation_cannot_download_a_dossier(
         f"/api/v1/operations/{operation['id']}/dossier/{dossier['id']}/download", headers=other
     )
     assert res.status_code == 404
+
+
+def test_the_document_embeds_a_chart_of_the_volumes(
+    client: TestClient, auth: dict[str, Any], operation: dict[str, Any], determined: dict[str, Any]
+) -> None:
+    """The build spec asks for a static map render; this is it.
+
+    Not a basemap: a dossier is printed and archived, and a third-party tile would be a
+    dead reference in a year. The chart shows the relationship between the volumes and
+    their scale, drawn from the same geometry the engine read.
+    """
+    dossier = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={}, headers=auth
+    ).json()
+    data = client.get(
+        f"/api/v1/operations/{operation['id']}/dossier/{dossier['id']}/download", headers=auth
+    ).content
+
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        images = [n for n in archive.namelist() if n.startswith("word/media/")]
+        assert images, "the dossier carries no embedded image"
+        assert archive.read(images[0])[:8] == b"\x89PNG\r\n\x1a\n"
+
+    assert "Operational volumes" in _docx_text(data)
+
+
+def test_the_chart_is_skipped_when_nothing_has_been_drawn(
+    client: TestClient, auth: dict[str, Any], drone: dict[str, Any]
+) -> None:
+    """A dossier without geometry is still a dossier, not a failure."""
+    op = client.post(
+        "/api/v1/operations", json={"name": "No geography", "drone_id": drone["id"]}, headers=auth
+    ).json()
+    client.patch(
+        f"/api/v1/operations/{op['id']}/draft",
+        json={
+            "drone_id": drone["id"],
+            "operation_type": "vlos",
+            "volume": {"flight_geography": SQUARE_FOR_DOSSIER, "max_altitude_agl_m": 50},
+            "ground_environment": "controlled_ground_area",
+            "airspace_class": "g",
+        },
+        headers=auth,
+    )
+    assert client.post(f"/api/v1/operations/{op['id']}/determine", headers=auth).status_code == 200
+    res = client.post(f"/api/v1/operations/{op['id']}/dossier", json={}, headers=auth)
+    assert res.status_code == 201, res.text

@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import { roman } from "@/engine/engine";
+
+/** The regulation's own labels for SAIL I–VI. A numeral, not a computation. */
+const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
+const roman = (level: number): string => ROMAN[Math.min(5, Math.max(0, level - 1))];
 
 type Size = "sm" | "md" | "lg";
 const DIM = { sm: 40, md: 64, lg: 132 } as const;

@@ -30,6 +30,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
+from app.services import mapimage
+
 DISCLAIMER = (
     "SORA Copilot prepares and verifies your risk assessment. Your national aviation "
     "authority grants the authorisation."
@@ -76,6 +78,8 @@ class DossierInput:
     #: Optional LLM-written narrative. Absent when no key is configured, and the document
     #: states that rather than leaving a blank section.
     prose: dict[str, str] | None = None
+    #: The derived outlines, for the static chart. Absent when nothing has been drawn.
+    outlines: dict[str, Any] | None = None
 
 
 def _style(document: Document) -> None:
@@ -267,8 +271,10 @@ def build(data: DossierInput) -> bytes:
         ]
     _kv_table(document, rows)
 
+    _volume_chart(document, data)
+
     if data.geo and data.geo.get("derivations"):
-        _h(document, "2.1 How the volumes were derived", 2)
+        _h(document, "2.2 How the volumes were derived", 2)
         for derivation in data.geo["derivations"]:
             paragraph = document.add_paragraph(style="List Bullet")
             paragraph.add_run(f"{derivation.get('value_m')} m — ").bold = True
@@ -462,6 +468,34 @@ def build(data: DossierInput) -> bytes:
     buffer = BytesIO()
     document.save(buffer)
     return buffer.getvalue()
+
+
+def _volume_chart(document: Document, data: DossierInput) -> None:
+    """The volumes as a chart, drawn from the same geometry the engine read.
+
+    Not a basemap: a dossier is printed and archived, and a third-party tile would be a
+    dead reference in a year. What matters in the document is the relationship between
+    the volumes and their scale, which this shows exactly.
+    """
+    outlines = data.outlines or {}
+    flight_geography = (data.mission.get("volume") or {}).get("flight_geography")
+    if not flight_geography:
+        return
+    png = mapimage.render(
+        flight_geography=flight_geography,
+        contingency_volume=outlines.get("contingency_volume"),
+        ground_risk_buffer=outlines.get("ground_risk_buffer"),
+        adjacent_area=outlines.get("adjacent_area"),
+    )
+    if png is None:
+        return
+    _h(document, "2.1 Operational volumes", 2)
+    document.add_picture(BytesIO(png), width=Cm(16.0))
+    _note(
+        document,
+        "Drawn from the submitted flight geography and the volumes derived from it. "
+        "North is up; the scale bar matches the grid spacing.",
+    )
 
 
 def _conops_from_facts(document: Document, data: DossierInput) -> None:

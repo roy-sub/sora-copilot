@@ -1,121 +1,223 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CitationChip, EvidenceMark, RobustnessPill, type EvidenceState } from "@/components/Brand";
+/**
+ * One OSO: what it requires, what evidence satisfies it, and what is attached.
+ *
+ * The plain-language "what it requires" and the evidence checklist are **our wording**,
+ * not the regulation's — the normative text is the rulebase, and the drawer says so.
+ * Confusing a helpful summary for the clause is how a tool like this gets someone into
+ * trouble.
+ */
+
+import { useRef, useState } from "react";
+import { CitationChip, EvidenceMark, RobustnessPill } from "@/components/Brand";
+import { Drawer } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
-import { DialogClose, Drawer } from "@/components/ui/Dialog";
 import { useToast } from "@/components/Toast";
-import { ASSURANCE, OSO_TEXT } from "@/data/oso";
-import { CITE } from "@/engine/rulebase";
-import { roman } from "@/engine/engine";
-import type { Sail } from "@/engine/types";
-import type { EvidenceFile } from "@/lib/workspace";
+import { OSO_TEXT } from "@/data/oso";
+import type { Oso } from "@/lib/api-client";
+import { api } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
-import type { OsoRow } from "./GapAnalysis";
+import { evidenceStateOf } from "@/components/verdict/GapAnalysis";
+import { useDeleteEvidence, useUploadEvidence } from "@/lib/hooks";
+import { downloadFile } from "@/lib/upload";
 
-const ACCEPT = [".pdf", ".docx", ".xlsx"];
-const MAX = 40 * 1024 * 1024;
+const ACCEPT = ".pdf,.docx,.xlsx,.doc,.xls,.png,.jpg,.jpeg";
+const MAX_MB = 40;
 
-function EvidenceUploader({ files, onAdd, onRemove }: { files: EvidenceFile[]; onAdd: (f: EvidenceFile[]) => void; onRemove: (name: string) => void }) {
-  const [over, setOver] = useState(false);
-  const [rejected, setRejected] = useState<string | null>(null);
-  const input = useRef<HTMLInputElement>(null);
+const osoNumber = (osoId: string): number => Number(osoId.replace(/\D/g, ""));
+
+export function OsoDrawer({
+  operationId,
+  oso,
+  onClose,
+}: {
+  operationId: string;
+  oso: Oso | null;
+  onClose: () => void;
+}) {
   const { push } = useToast();
+  const upload = useUploadEvidence(operationId);
+  const remove = useDeleteEvidence(operationId);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const take = (list: FileList | null) => {
-    if (!list) return;
-    const ok: EvidenceFile[] = [];
-    for (const f of Array.from(list)) {
-      const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
-      if (!ACCEPT.includes(ext)) { setRejected(`${f.name}: format not accepted. Use PDF, DOCX or XLSX.`); continue; }
-      if (f.size > MAX) { setRejected(`${f.name}: over 40 MB.`); push({ tone: "fail", text: "Upload rejected — file over 40 MB", action: { label: "Dismiss" } }); continue; }
-      ok.push({ name: f.name, bytes: f.size });
+  const copy = oso ? OSO_TEXT[osoNumber(oso.oso_id)] : undefined;
+  const files = oso?.evidence ?? [];
+  const state = oso ? evidenceStateOf(oso) : "gap";
+
+  const send = (files: FileList | null) => {
+    if (!files?.length || !oso) return;
+    setError(null);
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_MB * 1024 * 1024) {
+        setError(`${file.name} is larger than ${MAX_MB} MB.`);
+        continue;
+      }
+      upload.mutate(
+        { file, osoId: oso.oso_id },
+        {
+          onSuccess: () => push({ tone: "ok", text: `${file.name} attached to ${oso.oso_id}` }),
+          onError: (e) => setError(e instanceof Error ? e.message : `${file.name} was not accepted.`),
+        },
+      );
     }
-    if (ok.length) { setRejected(null); onAdd(ok); }
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <div
-        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
-        onDragLeave={() => setOver(false)}
-        onDrop={(e) => { e.preventDefault(); setOver(false); take(e.dataTransfer.files); }}
-        className={cn("p-5 border border-dashed rounded-sm flex flex-col items-center gap-2.5 text-center tr-ui", over ? "border-accent" : "border-hairline-strong")}
-      >
-        <span className={cn("t-data-13", over ? "text-accent" : "text-ink-mid")}>{over ? "Release to attach" : "Drop evidence here, or"}</span>
-        <Button onClick={() => input.current?.click()}>Choose files</Button>
-        <input ref={input} type="file" multiple accept={ACCEPT.join(",")} className="sr-only" tabIndex={-1} onChange={(e) => { take(e.target.files); e.target.value = ""; }} />
-        <span className="text-[11px] leading-[1.4] text-ink-low">PDF, DOCX or XLSX · 40 MB maximum · this build keeps file names on this device only</span>
-      </div>
-      {rejected && <div role="alert" className="p-3 bg-sheet-well border-l-[3px] border-sail-6 t-cap text-ink-mid">{rejected}</div>}
-      {files.map((f) => (
-        <div key={f.name} className="flex items-center gap-2.5 px-3.5 py-2 bg-sheet t-data-sm text-ink-hi min-h-11">
-          <span aria-hidden>▣</span><span className="flex-1 truncate">{f.name}</span>
-          <span className="text-ink-low">{(f.bytes / 1024 / 1024).toFixed(1)} MB</span>
-          <button type="button" aria-label={`Remove ${f.name}`} onClick={() => onRemove(f.name)} className="size-9 bg-transparent border-0 text-ink-low hover:text-ink-hi">✕</button>
+    <Drawer open={Boolean(oso)} onOpenChange={(open) => !open && onClose()} label={oso?.oso_id ?? "OSO"}>
+      {oso && (
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
+            <h3 className="m-0 t-h3 text-ink-hi pretty">{oso.title}</h3>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <RobustnessPill level={oso.required_robustness} />
+              <EvidenceMark state={state} />
+            </div>
+            <CitationChip
+              reference={`${oso.citation.document.replace("JARUS ", "")} · ${oso.citation.section}`}
+              size="md"
+            />
+            {!oso.citation.verified && (
+              <span className="t-cap text-sail-3 pretty">
+                UNVERIFIED — the OSO matrix has not been checked against the official
+                text, so this robustness level must be confirmed before you rely on it.
+              </span>
+            )}
+          </div>
+
+          {copy && (
+            <div className="flex flex-col gap-2">
+              <span className="t-micro text-ink-low">What it requires</span>
+              <p className="m-0 t-body-sm text-ink-mid pretty">{copy.requires}</p>
+              <span className="t-cap text-ink-low pretty">
+                Our summary, to orient you. The normative wording is the clause cited
+                above.
+              </span>
+            </div>
+          )}
+
+          {copy && (
+            <div className="flex flex-col gap-2">
+              <span className="t-micro text-ink-low">Evidence that typically satisfies it</span>
+              <ul className="m-0 p-0 list-none flex flex-col gap-sheet bg-hairline border border-hairline">
+                {copy.evidence.map((item) => (
+                  <li key={item} className="bg-sheet-well px-3.5 py-3 t-body-sm text-ink-mid pretty">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2.5">
+            <span className="t-micro text-ink-low">
+              Attached evidence · {files.length}
+            </span>
+            {files.length === 0 && (
+              <p className="m-0 t-cap text-ink-low pretty">
+                Nothing attached yet. This objective counts as a gap in the dossier until
+                something is.
+              </p>
+            )}
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center justify-between gap-3 p-3 bg-sheet-well rounded-sm"
+              >
+                <span className="min-w-0 flex flex-col gap-0.5">
+                  <span className="t-data-13 text-ink-hi truncate">{file.filename}</span>
+                  <span className="t-cap text-ink-low tnum">
+                    {file.bytes ? `${Math.round(file.bytes / 1024).toLocaleString("en-GB")} kB` : "—"}
+                    {" · "}
+                    {new Date(file.uploaded_at).toLocaleDateString("en-GB")}
+                  </span>
+                </span>
+                <span className="flex gap-1.5 flex-none">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadFile(
+                        api.evidenceDownloadPath(operationId, file.id),
+                        file.filename,
+                      ).catch((e) =>
+                        push({
+                          tone: "fail",
+                          text: e instanceof Error ? e.message : "Download failed",
+                        }),
+                      )
+                    }
+                    className="min-h-11 px-2 bg-transparent border-0 t-micro-10 text-ink-mid hover:text-ink-hi tr-ui"
+                  >
+                    Get
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      remove.mutate(file.id, {
+                        onSuccess: () => push({ tone: "ok", text: `${file.filename} removed` }),
+                      })
+                    }
+                    className="min-h-11 px-2 bg-transparent border-0 t-micro-10 text-ink-low hover:text-sail-6 tr-ui"
+                  >
+                    Remove
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              send(e.dataTransfer.files);
+            }}
+            className={cn(
+              "p-5 rounded-sm border border-dashed flex flex-col items-center gap-2.5 text-center tr-ui",
+              dragging ? "border-accent bg-sheet-well" : "border-hairline-strong",
+            )}
+          >
+            <span className={cn("t-micro-10", dragging ? "text-accent" : "text-ink-low")}>
+              {upload.isPending ? "Uploading" : dragging ? "Drop to attach" : "Attach evidence"}
+            </span>
+            <p className="m-0 t-cap text-ink-mid pretty">
+              Drop a file here, or choose one. PDF, DOCX, XLSX or an image, up to {MAX_MB} MB.
+            </p>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept={ACCEPT}
+              className="sr-only"
+              onChange={(e) => send(e.target.files)}
+            />
+            <Button variant="secondary" onClick={() => inputRef.current?.click()} disabled={upload.isPending}>
+              Choose a file
+            </Button>
+            {error && (
+              <p className="m-0 t-cap text-ink-mid">
+                <span className="text-sail-6" aria-hidden>
+                  □{" "}
+                </span>
+                {error}
+              </p>
+            )}
+          </div>
+
+          <p className="m-0 t-cap text-ink-low pretty">
+            Attaching a file marks the objective <strong className="text-ink-hi">documented</strong>,
+            not verified. SORA Copilot does not review your evidence, and it will not
+            claim to have.
+          </p>
         </div>
-      ))}
-    </div>
-  );
-}
-
-export function OsoDrawer({ oso, sail, files, onClose, onSave }: {
-  oso: OsoRow | null; sail: Sail; files: EvidenceFile[];
-  onClose: () => void; onSave: (s: EvidenceState, files: EvidenceFile[]) => void;
-}) {
-  const text = oso ? OSO_TEXT[oso.num] : null;
-  const [checked, setChecked] = useState<boolean[]>([]);
-  const [list, setList] = useState<EvidenceFile[]>([]);
-
-  useEffect(() => {
-    if (!oso || !text) return;
-    const n = text.evidence.length;
-    setChecked(text.evidence.map((_, i) => oso.state === "evidenced" || (oso.state === "partial" && i < Math.ceil(n / 2))));
-    setList(files);
-    // Reset only when a different OSO opens; parent re-renders must not wipe edits.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oso?.num]);
-
-  if (!oso || !text) return <Drawer open={false} onOpenChange={() => {}} label="OSO">{null}</Drawer>;
-
-  const n = checked.filter(Boolean).length;
-  const next: EvidenceState = n === 0 && !list.length ? "gap" : n === checked.length ? "evidenced" : "partial";
-  const level = oso.level === "nr" ? "low" : oso.level;
-
-  return (
-    <Drawer open={!!oso} onOpenChange={(o) => !o && onClose()} label={`${oso.id} detail`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <span className="t-micro text-ink-low">{oso.id} · required at SAIL {roman(sail)}</span>
-          <h2 className="mt-2 mb-0 t-h2 text-ink-hi pretty">{oso.name}</h2>
-        </div>
-        <DialogClose aria-label="Close" className="size-11 flex-none bg-transparent border border-hairline rounded-sm text-ink-mid hover:text-ink-hi hover:border-hairline-strong text-base">✕</DialogClose>
-      </div>
-      <div className="flex gap-2.5 flex-wrap items-center">
-        <RobustnessPill level={`${level} robustness`} />
-        <EvidenceMark state={oso.state} />
-      </div>
-      <div className="p-4 bg-sheet-well rounded-sm flex flex-col gap-2">
-        <span className="t-micro text-ink-low">What it requires</span>
-        <p className="m-0 t-body-sm leading-[1.55] text-ink-mid pretty">{text.requires} {ASSURANCE[level]}</p>
-        <span className="self-start"><CitationChip reference={`${CITE.oso} · ${oso.id}`} size="md" /></span>
-      </div>
-      <fieldset className="m-0 p-0 border-0 flex flex-col gap-2.5">
-        <legend className="t-micro text-ink-low mb-2.5">Evidence that satisfies it</legend>
-        <div className="flex flex-col gap-sheet bg-hairline border border-hairline">
-          {text.evidence.map((e, i) => (
-            <label key={e} className="bg-sheet px-3.5 py-3 flex items-center gap-2.5 t-body-sm leading-[1.4] text-ink-mid min-h-11 cursor-pointer">
-              <input type="checkbox" className="size-[18px] flex-none" checked={!!checked[i]} onChange={() => setChecked((c) => c.map((x, j) => (j === i ? !x : x)))} />
-              <span className={checked[i] ? "text-ink-hi" : ""}>{e}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <EvidenceUploader files={list} onAdd={(f) => setList((l) => [...l, ...f.filter((x) => !l.some((y) => y.name === x.name))])} onRemove={(name) => setList((l) => l.filter((x) => x.name !== name))} />
-      <div className="mt-auto flex gap-2.5 pt-2">
-        <Button variant="secondary" className="flex-1" onClick={() => onSave("na", list)}>Mark not applicable</Button>
-        <Button className="flex-1" onClick={() => onSave(next, list)}>Save · {next === "gap" ? "gap" : next}</Button>
-      </div>
+      )}
     </Drawer>
   );
 }

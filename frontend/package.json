@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "npx serve out",
     "lint": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/engine/*.test.ts",
     "gen:api": "openapi-typescript ../backend/openapi.json -o src/lib/api-types.ts"
   },
   "dependencies": {

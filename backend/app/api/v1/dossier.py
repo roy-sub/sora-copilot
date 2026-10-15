@@ -341,6 +341,7 @@ def generate(
 
     prose = _prose(repo, ctx.org_id, determination, mission, settings)
     version = repo.next_dossier_version(operation_id)
+    geo = _geo_summary(repo, ctx.org_id, operation_id)
 
     data = builder.DossierInput(
         operation=operation,
@@ -349,9 +350,10 @@ def generate(
         mission=mission,
         determination=determination,
         evidence=repo.list_evidence(operation_id),
-        geo=_geo_summary(repo, ctx.org_id, operation_id),
+        geo=geo,
         version=version,
         prose=prose,
+        outlines=geo,
     )
     document = builder.build(data)
 

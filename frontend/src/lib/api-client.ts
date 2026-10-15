@@ -38,6 +38,11 @@ export type CategoryCheckIn = S["CategoryCheckIn"];
 export type CategoryCheck = S["CategoryCheckOut"];
 export type Health = S["Health"];
 export type IntakeChat = S["IntakeChatOut"];
+export type Oso = S["OsoOut"];
+export type Evidence = S["EvidenceOut"];
+export type Dossier = S["DossierOut"];
+export type DossierStatus = S["DossierStatusOut"];
+export type DossierSection = S["DossierSectionOut"];
 export type Extractor = IntakeChat["extractor"];
 export type Sail = S["SAIL"];
 export type Arc = S["ARC"];
@@ -48,6 +53,8 @@ export type OperationType = S["OperationType"];
 // Not a named schema: FastAPI inlines the Literal, so take it from where it is used.
 export type FittedMitigation = Drone["fitted_mitigations"][number];
 export type OperationStatus = Operation["status"];
+export type Country = Org["country"];
+export type DataRegion = Org["data_region"];
 export type GeoJSONPolygon = S["GeoJSONPolygon"];
 
 export type { Problem };
@@ -128,6 +135,18 @@ export const api = {
   intakeChat: (id: string, text: string) =>
     request<IntakeChat>(`${V1}/operations/${id}/intake/chat`, { method: "POST", body: { text } }),
 
+  osos: (id: string) => request<Oso[]>(`${V1}/operations/${id}/osos`),
+  evidence: (id: string) => request<Evidence[]>(`${V1}/operations/${id}/evidence`),
+  deleteEvidence: (id: string, evidenceId: string) =>
+    request<void>(`${V1}/operations/${id}/evidence/${evidenceId}`, { method: "DELETE" }),
+
+  dossierStatus: (id: string) => request<DossierStatus>(`${V1}/operations/${id}/dossier`),
+  generateDossier: (id: string, note?: string) =>
+    request<Dossier>(`${V1}/operations/${id}/dossier`, {
+      method: "POST",
+      body: { format: "docx", note: note ?? null },
+    }),
+
   rulebase: () => request<Rulebase>(`${V1}/rulebase/current`, { anonymous: true }),
 
   categoryCheck: (body: CategoryCheckIn) =>
@@ -136,4 +155,10 @@ export const api = {
       body,
       anonymous: true,
     }),
+  /** Download URLs. The browser follows these itself, with the token appended by the
+   *  caller via `withToken`, because a <a download> cannot carry a header. */
+  evidenceDownloadPath: (id: string, evidenceId: string) =>
+    `${V1}/operations/${id}/evidence/${evidenceId}/download`,
+  dossierDownloadPath: (id: string, dossierId: string) =>
+    `${V1}/operations/${id}/dossier/${dossierId}/download`,
 } as const;

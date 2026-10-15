@@ -38,6 +38,9 @@ export const keys = {
   facts: (id: string) => ["operations", id, "facts"] as const,
   determination: (id: string) => ["operations", id, "determination"] as const,
   counterfactuals: (id: string) => ["operations", id, "counterfactuals"] as const,
+  osos: (id: string) => ["operations", id, "osos"] as const,
+  evidence: (id: string) => ["operations", id, "evidence"] as const,
+  dossier: (id: string) => ["operations", id, "dossier"] as const,
 };
 
 /** True once there is a session to authenticate with, or auth is not configured. */
@@ -281,6 +284,77 @@ export function useIntakeChat(id: string) {
       qc.invalidateQueries({ queryKey: keys.facts(id) });
       qc.invalidateQueries({ queryKey: keys.draft(id) });
       qc.invalidateQueries({ queryKey: keys.operation(id) });
+    },
+  });
+}
+
+export function useOsos(id: string | null) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: keys.osos(id ?? ""),
+    queryFn: () => api.osos(id!),
+    enabled: ready && Boolean(id),
+    retry: (_n, error) => !(error instanceof ApiError),
+  });
+}
+
+export function useEvidence(id: string | null) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: keys.evidence(id ?? ""),
+    queryFn: () => api.evidence(id!),
+    enabled: ready && Boolean(id),
+  });
+}
+
+/**
+ * Evidence upload goes through fetch directly rather than the JSON client: it is
+ * multipart, and the client sets a JSON content type.
+ */
+export function useUploadEvidence(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ file, osoId }: { file: File; osoId?: string }) => {
+      const { uploadEvidence } = await import("@/lib/upload");
+      return uploadEvidence(id, file, osoId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.evidence(id) });
+      qc.invalidateQueries({ queryKey: keys.osos(id) });
+      qc.invalidateQueries({ queryKey: keys.dossier(id) });
+    },
+  });
+}
+
+export function useDeleteEvidence(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (evidenceId: string) => api.deleteEvidence(id, evidenceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.evidence(id) });
+      qc.invalidateQueries({ queryKey: keys.osos(id) });
+      qc.invalidateQueries({ queryKey: keys.dossier(id) });
+    },
+  });
+}
+
+export function useDossierStatus(id: string | null) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: keys.dossier(id ?? ""),
+    queryFn: () => api.dossierStatus(id!),
+    enabled: ready && Boolean(id),
+  });
+}
+
+export function useGenerateDossier(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (note?: string) => api.generateDossier(id, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.dossier(id) });
+      qc.invalidateQueries({ queryKey: keys.operation(id) });
+      qc.invalidateQueries({ queryKey: keys.operations });
     },
   });
 }

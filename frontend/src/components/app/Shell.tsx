@@ -2,18 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ORG } from "@/data/fixtures";
-import { RULEBASE } from "@/engine/rulebase";
-import { Wordmark } from "@/components/Brand";
+import { Wordmark, RULEBASE } from "@/components/Brand";
 import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import { useWorkspace } from "@/lib/workspace";
+import { useAuth } from "@/lib/auth";
+import { useOrg, useRulebase } from "@/lib/hooks";
 
 export const NAV = [
   { href: "/app/", label: "Operations", short: "Ops", d: "M3 4h14M3 9h14M3 14h9", match: (p: string) => p === "/app" },
   { href: "/app/fleet/", label: "Drone fleet", short: "Fleet", d: "M4 10h12M10 4v12", match: (p: string) => p.startsWith("/app/fleet") },
   { href: "/app/new/", label: "New operation", short: "New", d: "M10 3v14M3 10h14", match: (p: string) => p.startsWith("/app/new") },
-  { href: "/app/operations/powerline-mur/", label: "Determinations", short: "Verdict", d: "M3 15l4-6 3 4 3-7 4 9", match: (p: string) => p.startsWith("/app/operations") && !p.endsWith("/dossier") },
+  { href: "/app/", label: "Determinations", short: "Verdict", d: "M3 15l4-6 3 4 3-7 4 9", match: (p: string) => p.startsWith("/app/operations") },
   { href: "/app/dossiers/", label: "Dossiers", short: "Dossiers", d: "M5 3h7l3 3v11H5z", match: (p: string) => p.startsWith("/app/dossiers") || p.endsWith("/dossier") },
   { href: "/app/settings/", label: "Settings", short: "Settings", d: "M10 7a3 3 0 100 6 3 3 0 000-6z", match: (p: string) => p.startsWith("/app/settings") },
 ];
@@ -25,9 +24,20 @@ const Icon = ({ d }: { d: string }) => (
   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden className="flex-none"><path d={d} /></svg>
 );
 
+/** Initials from a name or an email, for the rail's account chip. */
+function initials(name: string | null | undefined, email: string | null | undefined): string {
+  const source = (name || email || "").trim();
+  if (!source) return "—";
+  const parts = source.replace(/@.*/, "").split(/[\s._-]+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
+
 function Rail() {
   const path = usePath();
-  const { rulebasePin } = useWorkspace();
+  const { data: org } = useOrg();
+  const { data: rulebase } = useRulebase();
+  const { user } = useAuth();
   return (
     <aside className="hidden md:flex sticky top-0 h-screen flex-none flex-col justify-between bg-sheet w-16 rail:w-60 py-5 px-2 rail:px-3">
       <div className="flex flex-col gap-6">
@@ -60,14 +70,27 @@ function Rail() {
       <div className="hidden rail:flex flex-col gap-3 px-1.5">
         <div className="flex flex-col gap-1 p-3 bg-sheet-well rounded-sm">
           <span className="t-micro text-ink-low">Rulebase</span>
-          <span className="t-data-13 leading-[1.3] text-ink-hi">{RULEBASE.version} · {RULEBASE.date}</span>
-          <span className="text-[11px] leading-[1.3] text-ink-low">{rulebasePin === "pinned" ? "Pinned by organisation" : "Following latest"}</span>
+          <span className="t-data-13 leading-[1.3] text-ink-hi">{rulebase?.version ?? RULEBASE.version}</span>
+          <span className="text-[11px] leading-[1.3] text-ink-low">
+            {org?.rulebase_pin ? "Pinned by organisation" : "Following latest"}
+          </span>
+          {rulebase && !rulebase.verified && (
+            <span className="text-[11px] leading-[1.3] text-sail-3">
+              {rulebase.unverified_tables.length} tables unverified
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2.5 min-h-11">
-          <div className="size-7 rounded-pill bg-sheet-alt flex items-center justify-center t-micro-10 tracking-normal text-[11px] text-ink-hi">{ORG.user.initials}</div>
+          <div className="size-7 rounded-pill bg-sheet-alt flex items-center justify-center t-micro-10 tracking-normal text-[11px] text-ink-hi">
+            {initials(user?.user_metadata?.full_name as string | undefined, user?.email)}
+          </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-[13px] font-medium leading-[1.2] text-ink-hi truncate">{ORG.user.name}</span>
-            <span className="text-[11px] leading-[1.2] text-ink-low">{ORG.short}</span>
+            <span className="text-[13px] font-medium leading-[1.2] text-ink-hi truncate">
+              {user?.email ?? "Not signed in"}
+            </span>
+            <span className="text-[11px] leading-[1.2] text-ink-low truncate">
+              {org?.name ?? "—"}
+            </span>
           </div>
         </div>
       </div>
