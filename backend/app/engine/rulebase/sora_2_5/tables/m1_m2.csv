@@ -1,0 +1,22 @@
+# table: m1_m2
+# document: JARUS SORA 2.5 Annex B
+# version: 2.5
+# section: Ground risk mitigations M1 and M2
+# page: UNKNOWN
+# url:
+# verified: false
+# note: grc_delta is the change applied to the intrinsic GRC. An empty grc_delta means
+#       the mitigation cannot be claimed at that robustness — the UI shows the level
+#       disabled rather than hiding it, so the path to it stays visible.
+# note: The final GRC is floored at the controlled-ground-area value for the aircraft's
+#       column; that floor is a rule in 20_mitigations.lp, not a row here.
+kind,robustness,grc_delta,precondition,evidence_required
+m1_strategic,low,-1,,Sheltering analysis of the ground risk buffer
+m1_strategic,medium,-2,,Sheltering analysis plus a signed operational procedure
+m1_strategic,high,,not_claimable,
+m1_ers,low,-1,,Ground observation procedure
+m1_ers,medium,,not_claimable,
+m1_ers,high,,not_claimable,
+m2_impact,low,,not_claimable,
+m2_impact,medium,-1,impact_reduction_fitted,Deployment test report and maintenance log
+m2_impact,high,-2,impact_reduction_fitted,Qualified deployment test report to a recognised standard

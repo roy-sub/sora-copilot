@@ -1,6 +1,30 @@
 # SORA Copilot — Build Plan
 
-**Status:** Phase 1 planned, not started. Waiting on the answers in §7.
+**Status:** Phase 1 in progress. The four build-changing questions are answered (§0);
+the remaining items in §7 are either stated defaults or deferred to the phase that needs
+them, and none of them block Phase 1 work — only the Phase 1 DoD *demonstration*.
+
+---
+
+## 0. Decisions taken (answered 15 Oct 2026)
+
+| Question | Answer | Effect |
+|---|---|---|
+| §5.1 Map | **MapLibre GL, keep the SVG renderer for the dossier** | Wizard map becomes MapLibre with a keyless basemap and the designed layers as style layers. `MapVolumeEditor`'s SVG renderer is retained as the static map render for the DOCX. Needs `NEXT_PUBLIC_MAP_STYLE_URL`. Phase 4. |
+| §5.2 Derivation tree | **React Flow + dagre, rebuild the motion** | Custom node/edge components reproduce the design's node anatomy and the `edge-draw` / `node-settle` timings; the existing mobile outline stays as the `<480px` treatment. The hand-laid SVG tree is replaced. Phase 5. |
+| §6.3 Altitude threshold | **500 ft = 152.4 m, correct the UI copy** | Engine keys ARC on 500 ft AGL. Approved design text "above 150 m AGL" is relabelled "above 500 ft (152 m)" wherever it appears. Signed off as a deliberate edit to design copy. |
+| §6.5 Interim SAIL in the UI | **Keep the checker and verdict working, labelled** | Both keep computing client-side through phases 1–6, each carrying an explicit "preliminary estimate — computed in your browser, not a determination" label. Cut over to clingo at Phase 3 (verdict) and Phase 7 (checker), at which point the labels and the TypeScript engine are removed together. |
+
+Proceeding on my stated recommendations, reversible on request: **Tailwind v4 CSS-first**
+(§5.3), **`ANTHROPIC_MODEL=claude-sonnet-5-5`** as the env default (§7.3), **raw clingo
+API rather than clorm** (§4.1), **`frontend/src/`** rather than the spec's literal
+`frontend/app/` (§4.9).
+
+Still open, and deliberately not blocking Phase 1: Supabase keys (§7.1 — gates the DoD
+demo, not the code), `docker build` execution (§7.2), the official SORA 2.5 tables
+(§7.4 — gates Phase 2 verification), the density raster (§7.5 — Phase 4), the
+`igrc.csv` speed column and `assembly` modelling (§6.1, §6.2 — Phase 2), per-tier plan
+limits (§6.8 — Phase 8).
 
 Two governing documents:
 

@@ -1,0 +1,16 @@
+# table: sail
+# document: JARUS SORA 2.5 main body
+# version: 2.5
+# section: SAIL determination matrix
+# page: UNKNOWN
+# url:
+# verified: false
+# note: Seed values taken from the build spec §6.3 matrix. Final GRC above 7 leaves SORA
+#       and yields the certified category; that case is a rule, not a row.
+final_grc,arc_a,arc_b,arc_c,arc_d
+2,I,II,IV,VI
+3,II,II,IV,VI
+4,III,III,IV,VI
+5,IV,IV,IV,VI
+6,V,V,V,VI
+7,VI,VI,VI,VI

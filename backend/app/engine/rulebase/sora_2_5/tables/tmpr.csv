@@ -1,0 +1,14 @@
+# table: tmpr
+# document: JARUS SORA 2.5 Annex D
+# version: 2.5
+# section: Tactical mitigation performance requirements
+# page: UNKNOWN
+# url:
+# verified: false
+# note: Keyed on the residual ARC. The seed mapping is the obvious monotone one and is
+#       exactly the kind of plausible guess that must be replaced from Annex D.
+residual_arc,tmpr,rule_id
+a,none,sora25.tmpr.arc_a
+b,low,sora25.tmpr.arc_b
+c,medium,sora25.tmpr.arc_c
+d,high,sora25.tmpr.arc_d

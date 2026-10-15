@@ -1,0 +1,23 @@
+# table: cf_costs
+# document: SORA Copilot — not a regulatory source
+# version: 0.1
+# section: Counterfactual ranking weights
+# page:
+# url:
+# verified: false
+# note: These are OURS, not the regulation's. They only rank suggestions, and they never
+#       touch a determination. verified stays false until the owner reviews them, which
+#       is a judgement call about operator effort rather than a transcription.
+# note: Lower cost ranks higher. A change requiring new hardware should cost more than
+#       one requiring only a procedure.
+parameter,effort_cost,label,evidence_required
+mitigations.m1_strategic.low,2,Claim M1 sheltering at low robustness,Sheltering analysis of the ground risk buffer
+mitigations.m1_strategic.medium,4,Claim M1 sheltering at medium robustness,Sheltering analysis plus a signed operational procedure
+mitigations.m1_ers.low,3,Claim ground observation at low robustness,Ground observation procedure
+mitigations.m2_impact.medium,5,Claim impact reduction at medium robustness,Deployment test report and maintenance log
+mitigations.m2_impact.high,8,Claim impact reduction at high robustness,Qualified deployment test report to a recognised standard
+mitigations.strategic_air.claimed,3,Claim strategic air risk mitigation,Operational restriction procedure and NOTAM
+volume.max_altitude_agl_m,1,Lower the maximum altitude,No equipment change; confirm corridor coverage at the lower height
+near_aerodrome.false,6,Route outside the aerodrome environment,Re-run the map step to confirm the new corridor
+ground_environment.sparsely_populated,7,Move to a less populated ground environment,New site survey and population evidence
+operation_type.vlos,9,Reduce the operation to VLOS,Loses the beyond-line-of-sight capability the mission needs

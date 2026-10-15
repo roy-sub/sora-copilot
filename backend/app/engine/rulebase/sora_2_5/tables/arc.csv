@@ -1,0 +1,22 @@
+# table: arc
+# document: JARUS SORA 2.5 Annex C
+# version: 2.5
+# section: Initial air risk class decision tree
+# page: UNKNOWN
+# url:
+# verified: false
+# note: Rows are ordered; 30_arc.lp applies the first whose conditions all hold, which
+#       is how the decision tree's precedence is preserved. "*" is a wildcard.
+# note: altitude_band splits on 500 ft AGL = 152.4 m (PLAN.md §0), not the round 150 m
+#       the design copy used.
+priority,atypical,altitude_band,controlled_airspace,near_aerodrome,airspace_class,environment,arc,rule_id
+1,true,*,*,*,*,*,a,sora25.arc.atypical
+2,false,above_500ft,true,*,*,*,d,sora25.arc.above500.controlled
+3,false,above_500ft,false,*,*,*,c,sora25.arc.above500.uncontrolled
+4,false,below_500ft,*,true,b,*,d,sora25.arc.aerodrome.classb
+5,false,below_500ft,*,true,c,*,d,sora25.arc.aerodrome.classc
+6,false,below_500ft,*,true,d,*,d,sora25.arc.aerodrome.classd
+7,false,below_500ft,*,true,*,*,c,sora25.arc.aerodrome.uncontrolled
+8,false,below_500ft,true,false,*,*,c,sora25.arc.below500.controlled
+9,false,below_500ft,false,false,*,urban,c,sora25.arc.below500.urban
+10,false,below_500ft,false,false,*,rural,b,sora25.arc.below500.rural

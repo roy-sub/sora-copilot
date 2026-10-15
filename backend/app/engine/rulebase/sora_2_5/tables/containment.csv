@@ -1,0 +1,16 @@
+# table: containment
+# document: JARUS SORA 2.5 main body
+# version: 2.5
+# section: Containment requirements
+# page: UNKNOWN
+# url:
+# verified: false
+# note: The build spec wants containment computed from this table; the design phase
+#       deliberately returned "assessment required" and computed nothing, because
+#       containment depends on the adjacent area. PLAN.md §6.4 records the resolution:
+#       follow the spec, but while verified is false every row yields
+#       assessment_required and NO level, so the UI never shows a level we cannot source.
+# note: Fill in the real conditions and levels from the official text before flipping
+#       verified to true. Do not guess "basic" or "enhanced" from the SAIL alone.
+condition_id,min_sail,max_sail,adjacent_area_populated,level,assessment_required,rule_id
+seed.all,I,VI,*,,true,sora25.containment.assessment_required

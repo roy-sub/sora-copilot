@@ -1,0 +1,41 @@
+# table: citations
+# document: SORA Copilot — rule id to source mapping
+# version: 0.1
+# section: Citation index
+# page:
+# url:
+# verified: false
+# note: Every rule id the engine can emit maps to exactly one citation. The trace
+#       formatter refuses a rule id that is absent here, so a node can never render
+#       without a citation.
+# note: page is UNKNOWN until the official documents are supplied. verified mirrors the
+#       table the rule reads from.
+rule_id,document,section,page,url,verified
+sora25.igrc.lookup,JARUS SORA 2.5 main body,Intrinsic ground risk class table,,,false
+sora25.igrc.small_ua,JARUS SORA 2.5 main body,Intrinsic ground risk class — small UA provision,,,false
+sora25.igrc.assembly,JARUS SORA 2.5 main body,Intrinsic ground risk class — assembly of people,,,false
+sora25.igrc.out_of_scope,JARUS SORA 2.5 main body,Scope of the specific category,,,false
+sora25.grc.default,JARUS SORA 2.5 Annex B,Ground risk mitigations,,,false
+sora25.grc.mitigation,JARUS SORA 2.5 Annex B,Ground risk mitigations M1 and M2,,,false
+sora25.grc.floor,JARUS SORA 2.5 Annex B,Ground risk mitigation floor,,,false
+sora25.grc.certified,JARUS SORA 2.5 main body,Final GRC above 7,,,false
+sora25.arc.atypical,JARUS SORA 2.5 Annex C,Atypical airspace,,,false
+sora25.arc.above500.controlled,JARUS SORA 2.5 Annex C,Initial ARC decision tree,,,false
+sora25.arc.above500.uncontrolled,JARUS SORA 2.5 Annex C,Initial ARC decision tree,,,false
+sora25.arc.aerodrome.classb,JARUS SORA 2.5 Annex C,Initial ARC — aerodrome environment,,,false
+sora25.arc.aerodrome.classc,JARUS SORA 2.5 Annex C,Initial ARC — aerodrome environment,,,false
+sora25.arc.aerodrome.classd,JARUS SORA 2.5 Annex C,Initial ARC — aerodrome environment,,,false
+sora25.arc.aerodrome.uncontrolled,JARUS SORA 2.5 Annex C,Initial ARC — aerodrome environment,,,false
+sora25.arc.below500.controlled,JARUS SORA 2.5 Annex C,Initial ARC decision tree,,,false
+sora25.arc.below500.urban,JARUS SORA 2.5 Annex C,Initial ARC decision tree,,,false
+sora25.arc.below500.rural,JARUS SORA 2.5 Annex C,Initial ARC decision tree,,,false
+sora25.arc.residual.none,JARUS SORA 2.5 Annex C,Strategic air risk mitigation,,,false
+sora25.arc.residual.strategic,JARUS SORA 2.5 Annex C,Strategic air risk mitigation,,,false
+sora25.sail.lookup,JARUS SORA 2.5 main body,SAIL determination matrix,,,false
+sora25.sail.certified,JARUS SORA 2.5 main body,Operations outside the specific category,,,false
+sora25.oso.assignment,JARUS SORA 2.5 main body,OSO assignment matrix,,,false
+sora25.containment.assessment_required,JARUS SORA 2.5 main body,Containment requirements,,,false
+sora25.tmpr.arc_a,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false
+sora25.tmpr.arc_b,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false
+sora25.tmpr.arc_c,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false
+sora25.tmpr.arc_d,JARUS SORA 2.5 Annex D,Tactical mitigation performance requirements,,,false

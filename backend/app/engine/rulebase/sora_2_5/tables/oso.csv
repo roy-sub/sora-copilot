@@ -1,0 +1,30 @@
+# table: oso
+# document: JARUS SORA 2.5 main body
+# version: 2.5
+# section: OSO assignment matrix
+# page: UNKNOWN
+# url:
+# verified: false
+# note: SORA 2.5 defines 17 OSOs: #01-09, 13, 16-20, 23, 24. The design copy said
+#       "~24 OSOs", which is SORA 2.0. The count shown in the UI is always derived from
+#       the number of rows here, never written down.
+# note: robustness "none" means not required at that SAIL. It is rendered as
+#       "not applicable", never omitted, so the operator can see it was considered.
+oso_id,title,sail_i,sail_ii,sail_iii,sail_iv,sail_v,sail_vi
+OSO#01,Operator is competent and/or proven,none,low,medium,high,high,high
+OSO#02,UAS manufactured by a competent and/or proven entity,none,none,low,medium,high,high
+OSO#03,UAS maintained by a competent and/or proven entity,low,low,medium,medium,high,high
+OSO#04,UAS components essential to safe operations are designed to an airworthiness design standard,none,none,none,low,medium,high
+OSO#05,UAS is designed considering system safety and reliability,none,none,low,medium,high,high
+OSO#06,C3 link characteristics are appropriate for the operation,none,low,low,medium,high,high
+OSO#07,Conformity check of the UAS configuration,low,low,medium,medium,high,high
+OSO#08,Operational procedures are defined validated and adhered to,low,medium,high,high,high,high
+OSO#09,Remote crew is trained and current,low,low,medium,medium,high,high
+OSO#13,External services adequate to the operation,low,low,medium,high,high,high
+OSO#16,Multi-crew coordination,low,low,medium,medium,high,high
+OSO#17,Remote crew is fit to operate,low,low,medium,medium,high,high
+OSO#18,Automatic protection of the flight envelope from human error,none,none,low,medium,high,high
+OSO#19,Safe recovery from human error,none,none,low,medium,medium,high
+OSO#20,Human factors evaluation performed and HMI found appropriate,none,low,low,medium,medium,high
+OSO#23,Environmental conditions defined measurable and adhered to,low,low,medium,medium,high,high
+OSO#24,UAS designed and qualified for adverse environmental conditions,none,none,medium,high,high,high

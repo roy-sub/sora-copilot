@@ -1,0 +1,19 @@
+# table: arc_residual
+# document: JARUS SORA 2.5 Annex C
+# version: 2.5
+# section: Strategic air risk mitigation
+# page: UNKNOWN
+# url:
+# verified: false
+# note: A claimed strategic mitigation lowers the initial ARC by one class. Whether more
+#       than one class can ever be claimed is exactly the sort of thing that must come
+#       from the official text, so this table is one step only until verified.
+initial_arc,strategic_claimed,residual_arc,rule_id
+a,false,a,sora25.arc.residual.none
+b,false,b,sora25.arc.residual.none
+c,false,c,sora25.arc.residual.none
+d,false,d,sora25.arc.residual.none
+a,true,a,sora25.arc.residual.strategic
+b,true,a,sora25.arc.residual.strategic
+c,true,b,sora25.arc.residual.strategic
+d,true,c,sora25.arc.residual.strategic

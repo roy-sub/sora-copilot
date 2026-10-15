@@ -1,0 +1,21 @@
+# table: buffers
+# document: JARUS SORA 2.5 / Annex B — operational volume and ground risk buffer method
+# version: 2.5
+# section: Contingency volume and ground risk buffer parameters
+# page: UNKNOWN
+# url:
+# verified: false
+# note: Read by services/geo.py, not by the rulebase. The ground risk buffer seed is the
+#       1:1 rule (buffer = altitude), which is the conservative MVP default and is
+#       flagged as such in the UI rather than presented as the ballistic method.
+# note: Values are a method, not a lookup: each row is a named parameter the derivation
+#       uses, so the derivation can cite where each term came from.
+parameter,value,unit,applies_to,note
+reaction_time,1.0,s,contingency_volume,Pilot reaction time used for the lateral contingency margin
+bank_angle,30,deg,contingency_volume,Assumed bank angle for the turn radius term
+position_error,3.0,m,contingency_volume,GNSS position-keeping error
+vertical_contingency,10.0,m,contingency_volume,Vertical contingency margin above the flight geography
+grb_method,one_to_one,,ground_risk_buffer,1:1 rule — buffer equals the contingency volume height
+grb_multiplier,1.0,ratio,ground_risk_buffer,Multiplier applied to the contingency height under the 1:1 rule
+adjacent_area_method,fixed_ring,,adjacent_area,Adjacent area ring measured outward from the ground risk buffer
+adjacent_area_distance,1000.0,m,adjacent_area,Seed ring width; must be replaced with the method from the official text
