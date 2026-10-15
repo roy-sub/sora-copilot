@@ -180,3 +180,135 @@ def test_anthropic_is_imported_in_exactly_one_module() -> None:
     assert importers in ([], [LLM.relative_to(APP)]), (
         f"anthropic may only be imported by services/llm.py; found: {importers}"
     )
+
+# ------------------------------------------------------------------ transitive reachability
+
+
+def _module_name(path: Path) -> str:
+    """app/services/llm.py → app.services.llm"""
+    rel = path.relative_to(BACKEND).with_suffix("")
+    parts = list(rel.parts)
+    if parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
+def _import_targets(path: Path) -> set[str]:
+    """Every app.* module a file imports, resolving submodule imports correctly.
+
+    `from app.services import intake` names the PACKAGE in the AST, but it imports the
+    submodule — so both `app.services` and `app.services.intake` are edges. Recording
+    only the package is what made an earlier version of this test pass while a two-hop
+    path to the database existed.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    out: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("app"):
+                    out.add(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            if not node.module.startswith("app"):
+                continue
+            out.add(node.module)
+            # `from app.x import y` may import the submodule app.x.y or an attribute of
+            # app.x. Adding both is safe: a name that is not a module has no edges.
+            for alias in node.names:
+                out.add(f"{node.module}.{alias.name}")
+    return out
+
+
+def _internal_graph() -> dict[str, set[str]]:
+    """Every app.* module and the app.* modules it imports, directly."""
+    modules = {_module_name(p) for p in _python_files(APP)}
+    graph: dict[str, set[str]] = {}
+    for path in _python_files(APP):
+        # Keep only edges that are real modules in this codebase; an attribute import
+        # resolves to its package, which is already an edge.
+        graph[_module_name(path)] = {t for t in _import_targets(path) if t in modules}
+    return graph
+
+
+def _reachable(start: str, graph: dict[str, set[str]]) -> set[str]:
+    """Every app.* module reachable from `start`, following imports transitively."""
+    seen: set[str] = set()
+    stack = [start]
+    while stack:
+        current = stack.pop()
+        for target in graph.get(current, set()):
+            if target in seen:
+                continue
+            seen.add(target)
+            stack.append(target)
+    return seen
+
+
+def test_the_import_graph_is_not_empty() -> None:
+    graph = _internal_graph()
+    assert "app.services.llm" in graph
+    assert graph["app.services.llm"], "llm.py imports nothing from app, which is suspicious"
+
+
+def test_llm_has_no_import_path_to_the_engine_or_the_database() -> None:
+    """The build spec says "no import path", which is TRANSITIVE, not just direct.
+
+    A module two hops from the database is still a module that can reach it, so this
+    walks the whole graph rather than one file's import list.
+    """
+    graph = _internal_graph()
+    reachable = _reachable("app.services.llm", graph)
+    forbidden = sorted(
+        m
+        for m in reachable
+        if m.startswith(("app.engine", "app.db"))
+        or m == "app.services.determination"
+    )
+    assert not forbidden, (
+        "services/llm.py can reach these transitively:\n  "
+        + "\n  ".join(forbidden)
+        + "\nIt reads field metadata from app.domain.fields precisely so it cannot."
+    )
+
+
+def test_the_engine_has_no_import_path_out_of_itself_and_the_domain() -> None:
+    """Same check for the engine: purity is transitive too."""
+    graph = _internal_graph()
+    for module in [m for m in graph if m.startswith("app.engine")]:
+        reachable = _reachable(module, graph)
+        escaped = sorted(
+            m for m in reachable if not m.startswith(("app.engine", "app.domain")) and m != "app"
+        )
+        assert not escaped, f"{module} can reach {escaped} transitively"
+
+
+def test_the_transitive_check_would_catch_a_real_violation() -> None:
+    """Guard the guard, twice over.
+
+    First on a synthetic graph, then on the real one: a `from app.services import intake`
+    added to llm.py must be seen as reaching app.db, because intake imports it. An
+    earlier version of this test recorded only the package name and so passed with
+    exactly that violation in place.
+    """
+    synthetic = {
+        "app.services.llm": {"app.services.helper"},
+        "app.services.helper": {"app.db.repo"},
+        "app.db.repo": set(),
+    }
+    assert "app.db.repo" in _reachable("app.services.llm", synthetic)
+
+    real = _internal_graph()
+    assert "app.services.intake" in real, "expected intake to be a known module"
+    with_violation = {**real, "app.services.llm": real["app.services.llm"] | {"app.services.intake"}}
+    leaked = {
+        m for m in _reachable("app.services.llm", with_violation) if m.startswith("app.db")
+    }
+    assert leaked, "the real graph must expose a database path through app.services.intake"
+
+
+def test_submodule_imports_are_recorded_not_just_their_package() -> None:
+    """`from app.services import intake` must yield app.services.intake as an edge."""
+    targets = _import_targets(APP / "api" / "v1" / "determine.py")
+    assert "app.services.determination" in targets or "app.services" in targets
+    graph = _internal_graph()
+    assert "app.services.determination" in graph["app.api.v1.determine"]

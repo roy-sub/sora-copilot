@@ -1,56 +1,116 @@
 "use client";
 
-import { EvidenceMark, EVIDENCE_TONE, RobustnessPill, type EvidenceState } from "@/components/Brand";
-import { roman } from "@/engine/engine";
-import type { OsoRequirement, Sail } from "@/engine/types";
+/**
+ * OSOs required against OSOs evidenced, grouped by robustness.
+ *
+ * Not-required OSOs are **listed**, not omitted: an absent row reads as an oversight, and
+ * a compliance officer will take it as one. Evidence state uses a glyph plus the word,
+ * never colour alone.
+ */
 
-export type OsoRow = OsoRequirement & { state: EvidenceState };
+import { EvidenceMark, type EvidenceState } from "@/components/Brand";
+import type { OsoRequirement, Robustness } from "@/lib/api-client";
+import { cn } from "@/lib/cn";
 
-const GROUPS = ["high", "medium", "low"] as const;
+const GROUPS: { level: Robustness; label: string }[] = [
+  { level: "high", label: "High robustness" },
+  { level: "medium", label: "Medium robustness" },
+  { level: "low", label: "Low robustness" },
+];
 
-export function GapAnalysis({ rows, sail, onOpen }: { rows: OsoRow[]; sail: Sail; onOpen: (num: number) => void }) {
-  const req = rows.filter((r) => r.level !== "nr");
-  const count = (s: EvidenceState) => req.filter((r) => r.state === s).length;
-  const nr = rows.filter((r) => r.level === "nr");
+export const evidenceStateOf = (oso: OsoRequirement): EvidenceState => {
+  if (oso.required_robustness === "none") return "na";
+  if (oso.status === "verified" || oso.status === "documented") return "evidenced";
+  if (oso.status === "claimed") return "partial";
+  return "gap";
+};
+
+export function GapAnalysis({
+  osos,
+  onOpen,
+}: {
+  osos: OsoRequirement[];
+  onOpen: (osoId: string) => void;
+}) {
+  const required = osos.filter((o) => o.required_robustness !== "none");
+  const notRequired = osos.filter((o) => o.required_robustness === "none");
+  const gaps = required.filter((o) => evidenceStateOf(o) === "gap").length;
+
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-4 flex-wrap mb-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-baseline justify-between gap-4 flex-wrap">
         <div>
           <h3 className="m-0 t-h3 text-ink-hi">Gap analysis</h3>
-          <p className="mt-1 mb-0 t-body-sm text-ink-mid">
-            {req.length} OSOs required at SAIL {roman(sail)}. {count("evidenced")} evidenced, {count("partial")} partial, {count("gap")} gaps{count("na") ? `, ${count("na")} not applicable` : ""}.
+          <p className="mt-1 mb-0 t-body-sm text-ink-mid pretty">
+            {required.length} of {osos.length} operational safety objectives apply at this
+            SAIL. {gaps === 0 ? "Every one has evidence." : `${gaps} have no evidence yet.`}
           </p>
         </div>
-        <div className="flex gap-4 flex-wrap">
-          {(["evidenced", "partial", "gap"] as const).map((s) => <EvidenceMark key={s} state={s} />)}
+        <span className="t-data-sm text-ink-low tnum">
+          {required.length - gaps} / {required.length} evidenced
+        </span>
+      </div>
+
+      {GROUPS.map((group) => {
+        const rows = required.filter((o) => o.required_robustness === group.level);
+        if (!rows.length) return null;
+        return (
+          <div key={group.level} className="flex flex-col gap-2">
+            <span className="t-micro text-ink-low">
+              {group.label} · {rows.length}
+            </span>
+            <div className="grid gap-sheet bg-hairline border border-hairline grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+              {rows.map((oso) => (
+                <OsoRow key={oso.oso_id} oso={oso} onOpen={() => onOpen(oso.oso_id)} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {notRequired.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="t-micro text-ink-low">Not required at this SAIL · {notRequired.length}</span>
+          <div className="flex flex-wrap gap-2">
+            {notRequired.map((oso) => (
+              <span
+                key={oso.oso_id}
+                title={oso.title}
+                className="inline-flex items-center gap-2 min-h-8 px-2.5 rounded-sm bg-sheet-well t-data-sm text-ink-low"
+              >
+                <span aria-hidden>⊘</span>
+                {oso.oso_id}
+              </span>
+            ))}
+          </div>
+          <span className="t-cap text-ink-low pretty">
+            Listed rather than hidden, so it is clear they were considered and found not
+            to apply.
+          </span>
         </div>
-      </div>
-      <div className="flex flex-col gap-6">
-        {GROUPS.map((g) => {
-          const list = req.filter((r) => r.level === g);
-          if (!list.length) return null;
-          return (
-            <section key={g} aria-label={`${g} robustness`}>
-              <div className="flex items-center gap-3 mb-2"><RobustnessPill level={g} /><span className="t-data-sm text-ink-low">{list.length} OSO{list.length > 1 ? "s" : ""}</span></div>
-              <div className="grid gap-sheet bg-hairline border border-hairline grid-cols-[repeat(auto-fit,minmax(min(360px,100%),1fr))]">
-                {list.map((o) => (
-                  <button key={o.num} type="button" onClick={() => onOpen(o.num)}
-                    className="bg-sheet-well hover:bg-sheet-raised border-0 text-left px-4 py-3.5 flex items-center gap-3.5 min-h-14 tr-ui">
-                    <span className="text-[12px] font-semibold leading-none text-ink-mid min-w-[58px] tnum">{o.id}</span>
-                    <span className="flex-1 t-body-sm leading-[1.4] text-ink-hi pretty">{o.name}</span>
-                    <span className={`inline-flex items-center gap-1.5 min-w-[84px] t-data-sm leading-none ${EVIDENCE_TONE[o.state].ink}`}>
-                      <span aria-hidden>{EVIDENCE_TONE[o.state].glyph}</span>{EVIDENCE_TONE[o.state].label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          );
-        })}
-        {nr.length > 0 && (
-          <p className="m-0 t-cap text-ink-low pretty">Not required at SAIL {roman(sail)}: {nr.map((o) => o.id).join(", ")}.</p>
-        )}
-      </div>
+      )}
     </div>
+  );
+}
+
+function OsoRow({ oso, onOpen }: { oso: OsoRequirement; onOpen: () => void }) {
+  const state = evidenceStateOf(oso);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        "bg-sheet-well hover:bg-sheet-raised tr-ui p-3.5 min-h-11 flex items-start gap-3 border-0 text-left",
+        state === "gap" && "shadow-[inset_2px_0_0_var(--sail-6)]",
+      )}
+    >
+      <span className="t-data-sm text-ink-hi tnum w-[58px] flex-none">{oso.oso_id}</span>
+      <span className="flex-1 min-w-0">
+        <span className="block t-body-sm leading-[1.4] text-ink-hi pretty">{oso.title}</span>
+        <span className="block mt-1.5">
+          <EvidenceMark state={state} />
+        </span>
+      </span>
+    </button>
   );
 }

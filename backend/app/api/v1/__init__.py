@@ -8,9 +8,11 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     determine,
+    dossier,
     drones,
     geo,
     health,
+    intake_chat,
     operations,
     orgs,
     public,
@@ -23,7 +25,9 @@ router.include_router(orgs.router)
 router.include_router(drones.router)
 router.include_router(operations.router)
 router.include_router(determine.router)
+router.include_router(dossier.router)
 router.include_router(geo.router)
+router.include_router(intake_chat.router)
 router.include_router(rulebase.router)
 router.include_router(public.router)
 

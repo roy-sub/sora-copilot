@@ -44,9 +44,15 @@ def client() -> Iterator[TestClient]:
 
     get_settings.cache_clear()
     reset_repo()
+    from app.services.storage import reset_storage
+
+    reset_storage()
     with TestClient(create_app()) as c:
         yield c
     reset_repo()
+    from app.services.storage import reset_storage
+
+    reset_storage()
 
 
 @pytest.fixture

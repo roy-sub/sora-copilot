@@ -51,15 +51,38 @@ export function RobustnessPill({ level }: { level: string }) {
   );
 }
 
-export const STATUS_GLYPH = { draft: "□", determined: "■", "dossier ready": "◆", submitted: "◧", authorised: "▣" } as const;
-const STATUS_INK = { draft: "text-ink-low", determined: "text-ink-hi", "dossier ready": "text-ink-hi", submitted: "text-ink-mid", authorised: "text-ink-hi" } as const;
+// Keyed on the API's own status values, so a status can never be shown under a label
+// the backend does not use.
+export const STATUS_GLYPH = {
+  draft: "□",
+  determined: "■",
+  dossier_ready: "◆",
+  submitted: "◧",
+  authorised: "▣",
+} as const;
+const STATUS_INK = {
+  draft: "text-ink-low",
+  determined: "text-ink-hi",
+  dossier_ready: "text-ink-hi",
+  submitted: "text-ink-mid",
+  authorised: "text-ink-hi",
+} as const;
+const STATUS_LABEL = {
+  draft: "Draft",
+  determined: "Determined",
+  dossier_ready: "Dossier ready",
+  submitted: "Submitted",
+  authorised: "Authorised",
+} as const;
+
+export type Status = keyof typeof STATUS_GLYPH;
 
 /** Deliberately not on the risk ramp: one ink level, five glyph shapes. */
-export function StatusPill({ status }: { status: keyof typeof STATUS_GLYPH }) {
+export function StatusPill({ status }: { status: Status }) {
   return (
     <span className={cn("inline-flex items-center gap-[7px] t-data-sm leading-none", STATUS_INK[status])}>
       <span aria-hidden>{STATUS_GLYPH[status]}</span>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {STATUS_LABEL[status]}
     </span>
   );
 }

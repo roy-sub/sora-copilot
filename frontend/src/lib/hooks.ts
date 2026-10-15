@@ -272,6 +272,19 @@ export function useSampleDensity(id: string) {
   });
 }
 
+export function useIntakeChat(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (text: string) => api.intakeChat(id, text),
+    // New proposals are pending, which changes whether the determination can run.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.facts(id) });
+      qc.invalidateQueries({ queryKey: keys.draft(id) });
+      qc.invalidateQueries({ queryKey: keys.operation(id) });
+    },
+  });
+}
+
 export function useCategoryCheck() {
   return useMutation({ mutationFn: (body: CategoryCheckIn) => api.categoryCheck(body) });
 }

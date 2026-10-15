@@ -18,60 +18,11 @@ from pydantic import ValidationError
 from app.db.repo import Repo, Row
 from app.domain import GeoJSONPolygon, Mission, MitigationClaim, OperationalVolume
 from app.domain.common import MitigationKind, Robustness
-
-#: Fields a Mission cannot be built without. A draft may be missing any of them; a
-#: determination may not.
-REQUIRED_FIELDS: tuple[str, ...] = (
-    "drone_id",
-    "operation_type",
-    "volume.flight_geography",
-    "volume.max_altitude_agl_m",
-    "ground_environment",
-    "airspace_class",
+from app.domain.fields import (
+    PROPOSABLE_FIELDS,
+    REQUIRED_FIELDS,
+    label,
 )
-
-#: Fields the LLM is allowed to propose. Anything outside this set is rejected on the way
-#: in, so a model cannot invent a field name and have it land in the draft.
-PROPOSABLE_FIELDS: frozenset[str] = frozenset(
-    {
-        "drone_id",
-        "operation_type",
-        "volume.max_altitude_agl_m",
-        "volume.flight_geography",
-        "ground_environment",
-        "population_density_per_km2",
-        "airspace_class",
-        "near_aerodrome",
-        "controlled_airspace",
-        "atypical_airspace",
-        "country",
-        "mitigations.m1_strategic",
-        "mitigations.m1_ers",
-        "mitigations.m2_impact",
-        "mitigations.strategic_air",
-        "mitigations.tactical_air",
-    }
-)
-
-#: Human labels, so an unconfirmed-field list reads like the wizard rather than like JSON.
-FIELD_LABELS: dict[str, str] = {
-    "drone_id": "Aircraft",
-    "operation_type": "Operation type",
-    "volume.flight_geography": "Flight geography",
-    "volume.max_altitude_agl_m": "Maximum altitude",
-    "ground_environment": "Ground environment",
-    "population_density_per_km2": "Population density",
-    "airspace_class": "Airspace class",
-    "near_aerodrome": "Aerodrome environment",
-    "controlled_airspace": "Controlled airspace",
-    "atypical_airspace": "Atypical airspace",
-    "country": "Country",
-    "mitigations.m1_strategic": "M1 sheltering",
-    "mitigations.m1_ers": "M1 ground observation",
-    "mitigations.m2_impact": "M2 impact reduction",
-    "mitigations.strategic_air": "Strategic air risk mitigation",
-    "mitigations.tactical_air": "Tactical air risk mitigation",
-}
 
 
 class IntakeError(ValueError):
@@ -84,10 +35,6 @@ class UnconfirmedFacts(IntakeError):
     def __init__(self, fields: list[str]) -> None:
         super().__init__("facts are waiting for confirmation: " + ", ".join(fields))
         self.fields = fields
-
-
-def label(field: str) -> str:
-    return FIELD_LABELS.get(field, field)
 
 
 def _set_path(target: dict[str, Any], path: str, value: Any) -> None:

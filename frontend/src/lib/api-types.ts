@@ -334,6 +334,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/operations/{operation_id}/intake/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn prose into candidate facts — never into a conclusion */
+        post: operations["chat_api_v1_operations__operation_id__intake_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/me": {
         parameters: {
             query?: never;
@@ -710,6 +727,23 @@ export interface paths {
         put?: never;
         /** Derive the contingency volume, ground risk buffer and adjacent area */
         post: operations["derive_operations__operation_id__geo_derive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/{operation_id}/intake/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn prose into candidate facts — never into a conclusion */
+        post: operations["chat_operations__operation_id__intake_chat_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1246,6 +1280,29 @@ export interface components {
             status: "ok";
             /** Supabase Configured */
             supabase_configured: boolean;
+        };
+        /** IntakeChatIn */
+        IntakeChatIn: {
+            /** Text */
+            text: string;
+        };
+        /** IntakeChatOut */
+        IntakeChatOut: {
+            /**
+             * Extractor
+             * @description 'deterministic' when no language-model key is configured.
+             * @enum {string}
+             */
+            extractor: "llm" | "deterministic";
+            /** Facts */
+            facts: components["schemas"]["ProposedFactOut"][];
+            /** Model */
+            model: string;
+            /**
+             * Reply
+             * @description What was extracted, in prose. Never a conclusion.
+             */
+            reply: string;
         };
         /**
          * MissionDraftPatch
@@ -2257,6 +2314,41 @@ export interface operations {
             };
         };
     };
+    chat_api_v1_operations__operation_id__intake_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntakeChatIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeChatOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     me_api_v1_orgs_me_get: {
         parameters: {
             query?: never;
@@ -3067,6 +3159,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GeoDeriveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_operations__operation_id__intake_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntakeChatIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeChatOut"];
                 };
             };
             /** @description Validation Error */

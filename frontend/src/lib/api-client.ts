@@ -37,6 +37,8 @@ export type Rulebase = S["RulebaseOut"];
 export type CategoryCheckIn = S["CategoryCheckIn"];
 export type CategoryCheck = S["CategoryCheckOut"];
 export type Health = S["Health"];
+export type IntakeChat = S["IntakeChatOut"];
+export type Extractor = IntakeChat["extractor"];
 export type Sail = S["SAIL"];
 export type Arc = S["ARC"];
 export type Robustness = S["Robustness"];
@@ -122,6 +124,9 @@ export const api = {
     id: string,
     body: { density_per_km2: number; adjacent_area_populated?: boolean; source?: string },
   ) => request<DensitySample>(`${V1}/operations/${id}/geo/density`, { method: "POST", body }),
+
+  intakeChat: (id: string, text: string) =>
+    request<IntakeChat>(`${V1}/operations/${id}/intake/chat`, { method: "POST", body: { text } }),
 
   rulebase: () => request<Rulebase>(`${V1}/rulebase/current`, { anonymous: true }),
 

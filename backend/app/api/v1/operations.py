@@ -22,39 +22,23 @@ from app.api.v1.schemas import (
 )
 from app.db.repo import NotFound, Repo, Row
 from app.deps import CurrentUserDep, OrgContextDep
+from app.domain.fields import label, owning_step
 from app.problem import ProblemError  # noqa: F401  — re-exported for routers
 from app.services import intake
 
 router = APIRouter(prefix="/operations", tags=["operations"])
 
-#: Which wizard step owns each field, so rejecting a fact can send the operator there.
-OWNING_STEP: dict[str, str] = {
-    "drone_id": "aircraft",
-    "operation_type": "operation",
-    "volume.max_altitude_agl_m": "operation",
-    "volume.flight_geography": "map",
-    "ground_environment": "ground",
-    "population_density_per_km2": "ground",
-    "airspace_class": "airspace",
-    "near_aerodrome": "airspace",
-    "controlled_airspace": "airspace",
-    "atypical_airspace": "airspace",
-    "country": "airspace",
-}
-
-
 def _fact_out(row: Row) -> ProposedFactOut:
     field = str(row["field"])
-    step = OWNING_STEP.get(field, "mitigations" if field.startswith("mitigations.") else "review")
     return ProposedFactOut(
         id=row["id"],
         field=field,
-        label=intake.label(field),
+        label=label(field),
         value=row["value"],
         confidence=row["confidence"],
         source_span=row.get("source_span"),
         status=row["status"],
-        owning_step=step,
+        owning_step=owning_step(field),
     )
 
 
