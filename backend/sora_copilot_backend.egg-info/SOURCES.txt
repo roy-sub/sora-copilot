@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 app/__init__.py
 app/config.py
@@ -20,6 +21,8 @@ app/engine/counterfactual.py
 app/engine/facts.py
 app/engine/runner.py
 app/engine/trace.py
+app/engine/rulebase/__init__.py
+app/engine/rulebase/loader.py
 app/services/__init__.py
 app/services/llm.py
 sora_copilot_backend.egg-info/PKG-INFO
@@ -30,3 +33,4 @@ sora_copilot_backend.egg-info/top_level.txt
 tests/test_boundary.py
 tests/test_domain.py
 tests/test_health.py
+tests/test_rulebase_tables.py

@@ -11,6 +11,7 @@ Requires-Dist: python-multipart<0.1,>=0.0.20
 Requires-Dist: pyjwt[crypto]<3,>=2.10
 Requires-Dist: supabase<3,>=2.32
 Requires-Dist: clingo<6,>=5.8
+Requires-Dist: z3-solver<6,>=5.3
 Requires-Dist: shapely<3,>=2.1
 Requires-Dist: pyproj<4,>=3.7
 Requires-Dist: python-docx<2,>=1.2
