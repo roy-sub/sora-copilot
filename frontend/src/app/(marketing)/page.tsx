@@ -52,7 +52,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <ButtonLink href="/checker" shape="pill" size="lg" className="text-[13px] px-8">Run the category checker</ButtonLink>
-            <ButtonLink href="/app/operations/powerline-mur" variant="secondary" shape="pill" size="lg" className="text-[13px] px-8">See a worked example</ButtonLink>
+            <ButtonLink href="/#how" variant="secondary" shape="pill" size="lg" className="text-[13px] px-8">See a worked example</ButtonLink>
             <span className="t-data-sm text-ink-low">{STAMP}</span>
           </div>
         </div>

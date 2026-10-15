@@ -51,7 +51,7 @@ export function MarketingFooter({ compact }: { compact?: boolean }) {
           <Wordmark size={18} ink="text-paper" />
           <span className="t-data-sm text-paper/45">{STAMP}</span>
         </div>
-        {col("Product", [["Category checker", "/checker"], ["Pricing", "/pricing"], ["Worked example", "/app/operations/powerline-mur"]])}
+        {col("Product", [["Category checker", "/checker"], ["Pricing", "/pricing"], ["Worked example", "/#how"]])}
         {col("Legal", [["Terms", "/legal#terms"], ["Privacy", "/legal#privacy"], ["Rulebase changelog", "/legal#changelog"]])}
         <div className="flex flex-col gap-sheet">
           <span className="t-micro text-paper/45 mb-1.5">Data region</span>

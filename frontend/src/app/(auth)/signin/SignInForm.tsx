@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FieldLabel, Input } from "@/components/ui/Field";
@@ -23,6 +23,24 @@ function nextPath(raw: string | null): string {
   return raw;
 }
 
+/**
+ * Read it after mount rather than through `useSearchParams`.
+ *
+ * Under static export a component that reads the query string has to sit behind a
+ * Suspense boundary, and the boundary's fallback is what the server renders — so the
+ * server HTML and the first client render differ, which React reports as a hydration
+ * mismatch and recovers from by re-rendering the subtree. Reading it in an effect makes
+ * the two identical by construction, and the destination is only needed once a form has
+ * been submitted.
+ */
+function useNextPath(): string {
+  const [path, setPath] = useState("/app/");
+  useEffect(() => {
+    setPath(nextPath(new URLSearchParams(window.location.search).get("next")));
+  }, []);
+  return path;
+}
+
 function FieldError({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <span id={id} className="t-cap text-ink-mid">
@@ -36,7 +54,7 @@ function FieldError({ id, children }: { id: string; children: React.ReactNode })
 
 export function SignInForm() {
   const router = useRouter();
-  const destination = nextPath(useSearchParams().get("next"));
+  const destination = useNextPath();
   const { ready, session, configured, sendMagicLink, signInWithPassword, signUpWithPassword } = useAuth();
 
   const [email, setEmail] = useState("");
