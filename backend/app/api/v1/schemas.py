@@ -1,0 +1,398 @@
+"""Request and response shapes for the API.
+
+Separate from ``app/domain`` on purpose: the domain models are what the engine reasons
+over, and they must not grow fields because an HTTP client found them convenient.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Literal
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.domain import (
+    ARC,
+    SAIL,
+    AirspaceClass,
+    Citation,
+    ContainmentRequirement,
+    CounterfactualSuggestion,
+    Country,
+    FittedMitigation,
+    GeoJSONPolygon,
+    GroundEnvironment,
+    OperationType,
+    OsoRequirement,
+    Robustness,
+    TraceNode,
+)
+
+OperationStatus = Literal["draft", "determined", "dossier_ready", "submitted", "authorised"]
+
+
+# ------------------------------------------------------------------ org
+
+
+class OrgOut(BaseModel):
+    id: UUID
+    name: str
+    country: Country
+    plan: str
+    data_region: Literal["frankfurt", "dublin"]
+    rulebase_pin: str | None = None
+    role: str = Field(description="The signed-in user's role in this organisation.")
+    seats_used: int
+    created_at: datetime
+
+
+class OrgPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    country: Country | None = None
+    data_region: Literal["frankfurt", "dublin"] | None = None
+    rulebase_pin: str | None = None
+    operator_registration: str | None = None
+
+
+# ------------------------------------------------------------------ drones
+
+
+class DroneIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=120)
+    registration: str | None = Field(default=None, max_length=60)
+    max_dimension_m: float = Field(gt=0, le=100, description="Maximum characteristic dimension")
+    mtom_kg: float = Field(gt=0, le=10_000)
+    cruise_speed_ms: float = Field(ge=0, le=400)
+    max_speed_ms: float = Field(gt=0, le=400)
+    fitted_mitigations: list[FittedMitigation] = Field(default_factory=list)
+
+
+class DronePatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    registration: str | None = None
+    max_dimension_m: float | None = Field(default=None, gt=0, le=100)
+    mtom_kg: float | None = Field(default=None, gt=0, le=10_000)
+    cruise_speed_ms: float | None = Field(default=None, ge=0, le=400)
+    max_speed_ms: float | None = Field(default=None, gt=0, le=400)
+    fitted_mitigations: list[FittedMitigation] | None = None
+
+
+class DroneOut(BaseModel):
+    id: UUID
+    name: str
+    registration: str | None = None
+    max_dimension_m: float
+    mtom_kg: float
+    cruise_speed_ms: float
+    max_speed_ms: float
+    kinetic_energy_j: float = Field(description="½·m·v² at max speed. Computed, never entered.")
+    fitted_mitigations: list[FittedMitigation]
+    created_at: datetime
+
+
+# ------------------------------------------------------------------ operations
+
+
+class OperationIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=200)
+    site: str | None = Field(default=None, max_length=200)
+    drone_id: UUID | None = None
+
+
+class OperationPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    site: str | None = None
+    status: OperationStatus | None = None
+
+
+class OperationOut(BaseModel):
+    id: UUID
+    name: str
+    site: str | None = None
+    status: OperationStatus
+    drone_id: UUID | None = None
+    mission: dict[str, Any] = Field(description="The wizard draft. Not a confirmed Mission.")
+    created_at: datetime
+    updated_at: datetime
+    # Convenience so a dashboard row needs one request, not three.
+    sail: SAIL | Literal["certified_category"] | None = None
+    rulebase_version: str | None = None
+    determined_at: datetime | None = None
+    oso_gaps: int | None = None
+    unconfirmed_facts: int = 0
+
+
+# ------------------------------------------------------------------ wizard draft
+
+
+class MissionVolumePatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    flight_geography: GeoJSONPolygon | None = None
+    max_altitude_agl_m: float | None = Field(default=None, gt=0, le=10_000)
+    duration_min: int | None = Field(default=None, gt=0, le=1440)
+
+
+class MissionDraftPatch(BaseModel):
+    """One wizard step's worth of the draft. Every field optional; nothing is required."""
+
+    model_config = ConfigDict(extra="forbid")
+    drone_id: UUID | None = None
+    operation_type: OperationType | None = None
+    volume: MissionVolumePatch | None = None
+    ground_environment: GroundEnvironment | None = None
+    population_density_per_km2: float | None = Field(default=None, ge=0)
+    airspace_class: AirspaceClass | None = None
+    near_aerodrome: bool | None = None
+    controlled_airspace: bool | None = None
+    atypical_airspace: bool | None = None
+    country: Country | None = None
+    mitigations: dict[str, Robustness] | None = None
+    geo_zones: list[str] | None = None
+    aerodrome_icao: str | None = None
+    aerodrome_distance_km: float | None = Field(default=None, ge=0)
+
+
+class DraftOut(BaseModel):
+    operation_id: UUID
+    mission: dict[str, Any]
+    missing_fields: list[str] = Field(description="Required fields the draft does not carry yet.")
+    unconfirmed_fields: list[str] = Field(description="Facts still waiting for confirmation.")
+    ready_to_determine: bool
+
+
+# ------------------------------------------------------------------ proposed facts
+
+
+class ProposedFactOut(BaseModel):
+    id: UUID
+    field: str
+    label: str = Field(description="The field, in the wizard's words.")
+    value: Any
+    confidence: float
+    source_span: str | None = None
+    status: Literal["pending", "confirmed", "rejected"]
+    owning_step: str = Field(description="Which wizard step a rejection should return to.")
+
+
+class IntakeChatIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class IntakeChatOut(BaseModel):
+    facts: list[ProposedFactOut]
+    reply: str = Field(description="What was extracted, in prose. Never a conclusion.")
+    model: str
+    extractor: Literal["llm", "deterministic"] = Field(
+        description="'deterministic' when no language-model key is configured."
+    )
+
+
+# ------------------------------------------------------------------ geo
+
+
+class GeoDeriveOut(BaseModel):
+    contingency_volume: GeoJSONPolygon
+    ground_risk_buffer: GeoJSONPolygon
+    adjacent_area: GeoJSONPolygon
+    flight_geography_km2: float
+    contingency_volume_km2: float
+    ground_risk_buffer_km2: float
+    adjacent_area_km2: float
+    contingency_lateral_m: float
+    contingency_vertical_m: float
+    ground_risk_buffer_m: float
+    adjacent_area_m: float
+    derivations: list[dict[str, Any]] = Field(description="Each derived number and the rule behind it.")
+    unverified: bool
+
+
+class DensitySampleIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    density_per_km2: float = Field(ge=0, le=1_000_000)
+    adjacent_area_populated: bool = False
+    source: str = Field(default="operator", max_length=120)
+
+
+class DensitySampleOut(BaseModel):
+    density_per_km2: float
+    density_band: str
+    suggested_environment: GroundEnvironment
+    rationale: str
+    raster_version: str
+    adjacent_area_populated: bool
+    is_suggestion_only: Literal[True] = Field(
+        default=True,
+        description="The engine never sees this until the operator confirms it.",
+    )
+
+
+# ------------------------------------------------------------------ determinations
+
+
+class DeterminationOut(BaseModel):
+    id: UUID
+    operation_id: UUID
+    rulebase_version: str
+    mission_hash: str
+    igrc: int | None
+    final_grc: int | None
+    initial_arc: ARC
+    residual_arc: ARC
+    sail: SAIL | Literal["certified_category"]
+    tmpr: Literal["none", "low", "medium", "high"]
+    osos: list[OsoRequirement]
+    containment: ContainmentRequirement
+    trace: list[TraceNode]
+    warnings: list[str]
+    computed_at: datetime
+    is_verified: bool = Field(description="False while any table behind it is a seed.")
+    oso_gaps: int
+    freshly_computed: bool = Field(
+        default=True, description="False when an identical run was already stored."
+    )
+
+
+class CounterfactualIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    target_sail: SAIL | None = None
+    limit: int = Field(default=6, ge=1, le=20)
+
+
+class CounterfactualOut(BaseModel):
+    suggestions: list[CounterfactualSuggestion]
+    current_sail: SAIL | Literal["certified_category"]
+
+
+class ApplyCounterfactualIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    suggestion_id: str = Field(min_length=1, max_length=200)
+
+
+# ------------------------------------------------------------------ OSO evidence
+
+
+class OsoOut(BaseModel):
+    oso_id: str
+    title: str
+    required_robustness: Robustness
+    citation: Citation
+    status: Literal["unmet", "claimed", "documented", "verified"]
+    evidence: list[EvidenceOut] = Field(default_factory=list)
+    what_it_requires: str
+    checklist: list[str]
+
+
+class EvidenceOut(BaseModel):
+    id: UUID
+    oso_id: str | None = None
+    filename: str
+    bytes: int | None = None
+    content_type: str | None = None
+    storage_path: str
+    uploaded_at: datetime
+
+
+class EvidenceIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    oso_id: str | None = Field(default=None, max_length=20)
+    filename: str = Field(min_length=1, max_length=260)
+    bytes: int = Field(ge=0, le=40 * 1024 * 1024)
+    content_type: str | None = Field(default=None, max_length=120)
+
+
+# ------------------------------------------------------------------ dossiers
+
+
+class DossierOut(BaseModel):
+    id: UUID
+    operation_id: UUID
+    determination_id: UUID | None = None
+    version: int
+    format: Literal["docx", "pdf"]
+    storage_path: str
+    note: str | None = None
+    generated_at: datetime
+    download_url: str | None = Field(
+        default=None, description="Signed, short-lived. Absent when storage is not configured."
+    )
+
+
+class DossierIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    format: Literal["docx"] = "docx"
+    note: str | None = Field(default=None, max_length=300)
+
+
+class DossierSectionOut(BaseModel):
+    key: str
+    name: str
+    state: Literal["complete", "partial", "not_started"]
+    meta: str
+
+
+class DossierStatusOut(BaseModel):
+    operation_id: UUID
+    sections: list[DossierSectionOut]
+    versions: list[DossierOut]
+    next_version: int
+    can_generate: bool
+    blocker: str | None = None
+
+
+# ------------------------------------------------------------------ rulebase
+
+
+class RulebaseTableOut(BaseModel):
+    name: str
+    document: str
+    section: str
+    page: int | None = None
+    rows: int
+    verified: bool
+
+
+class RulebaseOut(BaseModel):
+    version: str
+    is_current: bool
+    tables: list[RulebaseTableOut]
+    unverified_tables: list[str]
+    verified: bool
+    changelog: str
+    sources_needed: list[str] = Field(
+        description="Documents still required before the rulebase can be verified."
+    )
+
+
+# ------------------------------------------------------------------ public checker
+
+
+class CategoryCheckIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    mass_band: Literal["sub250", "c_marked", "4to25", "over25"]
+    ground_environment: GroundEnvironment
+    operation_type: OperationType
+
+
+class CategoryCheckOut(BaseModel):
+    category: Literal["open", "specific", "certified"]
+    subcategory: Literal["A1", "A2", "A3"] | None = None
+    reason: str
+    sail: SAIL | Literal["certified_category"] | None = None
+    igrc: int | None = None
+    initial_arc: ARC | None = None
+    osos_required: int | None = None
+    hint: str | None = None
+    assumptions: list[str]
+    rulebase_version: str
+    is_verified: bool
+    disclaimer: str
+
+
+OsoOut.model_rebuild()

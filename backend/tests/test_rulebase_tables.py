@@ -27,6 +27,7 @@ EXPECTED_TABLES = {
     "citations",
     "containment",
     "igrc",
+    "density_environment_hint",
     "igrc_columns",
     "m1_m2",
     "oso",

@@ -1,0 +1,258 @@
+"""Wizard state, proposed facts, and the gate in front of the engine.
+
+A ``Mission`` is assembled only from values the operator has confirmed. Facts the
+language model proposed sit in ``proposed_facts`` with ``status = pending`` and are
+**inert**: this module reads confirmed facts and nothing else, and ``POST /determine``
+returns 409 listing what is still unconfirmed rather than running on a partial mission.
+
+That gate is the product. Everything else here is bookkeeping around it.
+"""
+
+from __future__ import annotations
+
+from typing import Any, cast
+from uuid import UUID
+
+from pydantic import ValidationError
+
+from app.db.repo import Repo, Row
+from app.domain import GeoJSONPolygon, Mission, MitigationClaim, OperationalVolume
+from app.domain.common import MitigationKind, Robustness
+
+#: Fields a Mission cannot be built without. A draft may be missing any of them; a
+#: determination may not.
+REQUIRED_FIELDS: tuple[str, ...] = (
+    "drone_id",
+    "operation_type",
+    "volume.flight_geography",
+    "volume.max_altitude_agl_m",
+    "ground_environment",
+    "airspace_class",
+)
+
+#: Fields the LLM is allowed to propose. Anything outside this set is rejected on the way
+#: in, so a model cannot invent a field name and have it land in the draft.
+PROPOSABLE_FIELDS: frozenset[str] = frozenset(
+    {
+        "drone_id",
+        "operation_type",
+        "volume.max_altitude_agl_m",
+        "volume.flight_geography",
+        "ground_environment",
+        "population_density_per_km2",
+        "airspace_class",
+        "near_aerodrome",
+        "controlled_airspace",
+        "atypical_airspace",
+        "country",
+        "mitigations.m1_strategic",
+        "mitigations.m1_ers",
+        "mitigations.m2_impact",
+        "mitigations.strategic_air",
+        "mitigations.tactical_air",
+    }
+)
+
+#: Human labels, so an unconfirmed-field list reads like the wizard rather than like JSON.
+FIELD_LABELS: dict[str, str] = {
+    "drone_id": "Aircraft",
+    "operation_type": "Operation type",
+    "volume.flight_geography": "Flight geography",
+    "volume.max_altitude_agl_m": "Maximum altitude",
+    "ground_environment": "Ground environment",
+    "population_density_per_km2": "Population density",
+    "airspace_class": "Airspace class",
+    "near_aerodrome": "Aerodrome environment",
+    "controlled_airspace": "Controlled airspace",
+    "atypical_airspace": "Atypical airspace",
+    "country": "Country",
+    "mitigations.m1_strategic": "M1 sheltering",
+    "mitigations.m1_ers": "M1 ground observation",
+    "mitigations.m2_impact": "M2 impact reduction",
+    "mitigations.strategic_air": "Strategic air risk mitigation",
+    "mitigations.tactical_air": "Tactical air risk mitigation",
+}
+
+
+class IntakeError(ValueError):
+    """The draft cannot be used. Never raised for a merely incomplete draft."""
+
+
+class UnconfirmedFacts(IntakeError):
+    """The mission has pending facts. ``fields`` lists them, in the operator's words."""
+
+    def __init__(self, fields: list[str]) -> None:
+        super().__init__("facts are waiting for confirmation: " + ", ".join(fields))
+        self.fields = fields
+
+
+def label(field: str) -> str:
+    return FIELD_LABELS.get(field, field)
+
+
+def _set_path(target: dict[str, Any], path: str, value: Any) -> None:
+    parts = path.split(".")
+    cursor = target
+    for part in parts[:-1]:
+        nxt = cursor.get(part)
+        if not isinstance(nxt, dict):
+            nxt = {}
+            cursor[part] = nxt
+        cursor = nxt
+    cursor[parts[-1]] = value
+
+
+def _get_path(source: dict[str, Any], path: str) -> Any:
+    cursor: Any = source
+    for part in path.split("."):
+        if not isinstance(cursor, dict) or part not in cursor:
+            return None
+        cursor = cursor[part]
+    return cursor
+
+
+def validate_proposals(facts: list[Row]) -> list[Row]:
+    """Reject anything the model is not allowed to propose, before it is stored.
+
+    A proposal for an unknown field would be inert anyway, but storing it would put text
+    the model invented in front of the operator as if it were a real wizard field.
+    """
+    out: list[Row] = []
+    for fact in facts:
+        field = str(fact.get("field", ""))
+        base = ".".join(field.split(".")[:2]) if field.startswith("mitigations.") else field
+        if base not in PROPOSABLE_FIELDS:
+            raise IntakeError(f"{field!r} is not a field the intake model may propose")
+        confidence = fact.get("confidence")
+        if confidence is None or not (0 <= float(confidence) <= 1):
+            raise IntakeError(f"{field!r} was proposed without a confidence between 0 and 1")
+        out.append(fact)
+    return out
+
+
+def apply_confirmed(draft: Row, facts: list[Row]) -> Row:
+    """Fold confirmed facts into the draft. Pending and rejected facts are ignored."""
+    merged: dict[str, Any] = dict(draft)
+    for fact in facts:
+        if fact.get("status") != "confirmed":
+            continue
+        _set_path(merged, str(fact["field"]), fact["value"])
+    return merged
+
+
+def unconfirmed_fields(facts: list[Row]) -> list[str]:
+    """Pending facts, as labels. The 409 body is built from this."""
+    return [label(str(f["field"])) for f in facts if f.get("status") == "pending"]
+
+
+def missing_fields(draft: Row) -> list[str]:
+    """Required fields the draft does not yet carry, as labels."""
+    return [label(f) for f in REQUIRED_FIELDS if _get_path(draft, f) in (None, "", [], {})]
+
+
+def build_mission(
+    *,
+    operation: Row,
+    confirmed_draft: Row,
+    org_id: UUID,
+) -> Mission:
+    """Assemble a validated Mission from a complete, confirmed draft.
+
+    Raises ``IntakeError`` with a readable list rather than a Pydantic dump: the operator
+    sees this message when a determination will not run.
+    """
+    missing = missing_fields(confirmed_draft)
+    if missing:
+        raise IntakeError("the mission is incomplete: " + ", ".join(missing))
+
+    volume_raw = dict(confirmed_draft.get("volume") or {})
+    try:
+        flight_geography = GeoJSONPolygon.model_validate(volume_raw["flight_geography"])
+    except (KeyError, ValidationError) as exc:
+        raise IntakeError("the flight geography is missing or not a valid GeoJSON polygon") from exc
+
+    volume_update: dict[str, Any] = {
+        "flight_geography": flight_geography,
+        "max_altitude_agl_m": float(volume_raw["max_altitude_agl_m"]),
+    }
+    for key in ("contingency_volume", "ground_risk_buffer"):
+        if volume_raw.get(key):
+            volume_update[key] = GeoJSONPolygon.model_validate(volume_raw[key])
+    if volume_raw.get("adjacent_area_km") is not None:
+        volume_update["adjacent_area_km"] = float(volume_raw["adjacent_area_km"])
+
+    mitigations_raw = confirmed_draft.get("mitigations") or {}
+    claims: list[MitigationClaim] = []
+    if isinstance(mitigations_raw, dict):
+        for kind, value in mitigations_raw.items():
+            claim = _claim(kind, value)
+            if claim is not None:
+                claims.append(claim)
+    elif isinstance(mitigations_raw, list):
+        for item in mitigations_raw:
+            claims.append(MitigationClaim.model_validate(item))
+
+    altitude = float(volume_raw["max_altitude_agl_m"])
+    try:
+        return Mission(
+            id=UUID(str(operation["id"])),
+            org_id=org_id,
+            drone_id=UUID(str(confirmed_draft["drone_id"])),
+            operation_type=confirmed_draft["operation_type"],
+            volume=OperationalVolume.model_validate(volume_update),
+            ground_environment=confirmed_draft["ground_environment"],
+            population_density_per_km2=confirmed_draft.get("population_density_per_km2"),
+            airspace_class=confirmed_draft["airspace_class"],
+            near_aerodrome=bool(confirmed_draft.get("near_aerodrome", False)),
+            # Derived from the altitude against the transcribed 500 ft threshold, never
+            # taken from the draft: the engine computes the band itself and the mission
+            # must not be able to disagree with it.
+            altitude_band="above_500ft" if altitude > 152.4 else "below_500ft",
+            controlled_airspace=bool(confirmed_draft.get("controlled_airspace", False)),
+            atypical_airspace=bool(confirmed_draft.get("atypical_airspace", False)),
+            mitigations=claims,
+            country=confirmed_draft.get("country", "AT"),
+        )
+    except ValidationError as exc:
+        details = "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors())
+        raise IntakeError(f"the mission is not valid: {details}") from exc
+
+
+def _claim(kind: str, value: Any) -> MitigationClaim | None:
+    """One mitigation from the draft's ``{kind: level}`` or ``{kind: {...}}`` shape."""
+    if value in (None, "", "none", Robustness.NONE):
+        return None
+    if isinstance(value, dict):
+        return MitigationClaim.model_validate({"kind": kind, **value})
+    return MitigationClaim(kind=cast("MitigationKind", kind), robustness=Robustness(value))
+
+
+def mitigation_rows(mission: Mission) -> list[Row]:
+    """The mitigations table as a projection of the mission, which stays authoritative."""
+    return [
+        {
+            "kind": m.kind,
+            "robustness": m.robustness.value,
+            "evidence_status": m.evidence_status,
+            "notes": m.notes,
+        }
+        for m in mission.mitigations
+    ]
+
+
+def save_draft(repo: Repo, org_id: UUID, operation_id: UUID, patch: Row) -> Row:
+    """Merge a wizard patch into the operation's draft mission.
+
+    Shallow-merges one level into ``volume`` and ``mitigations`` so a step can save its
+    own fields without resending the whole mission.
+    """
+    operation = repo.get_operation(org_id, operation_id)
+    draft: dict[str, Any] = dict(operation.get("mission") or {})
+    for key, value in patch.items():
+        if key in ("volume", "mitigations") and isinstance(value, dict):
+            existing = dict(draft.get(key) or {})
+            existing.update(value)
+            draft[key] = existing
+        else:
+            draft[key] = value
+    return repo.update_operation(org_id, operation_id, {"mission": draft})

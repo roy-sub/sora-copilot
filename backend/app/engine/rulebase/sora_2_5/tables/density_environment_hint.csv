@@ -1,0 +1,25 @@
+# table: density_environment_hint
+# document: SORA Copilot — not a regulatory source
+# version: 0.1
+# section: Suggested ground environment from a sampled density
+# page:
+# url:
+# verified: false
+# note: These are OURS, not the regulation's. SORA does not define "sparsely populated"
+#       as a density number — it is a judgement about the ground under the operation. This
+#       table only PREFILLS the wizard's choice so the operator has something to confirm
+#       or correct; it never reaches the engine without an explicit confirmation.
+# note: Neither "controlled_ground_area" nor "assembly_of_people" is ever suggested. A
+#       controlled ground area means access is restricted to people under the operator's
+#       control, and an assembly means people who cannot move away. A population raster
+#       cannot tell either of those from a housing estate, and the determination turns on
+#       exactly that distinction — so the operator states it.
+# note: verified stays false until the owner reviews the thresholds. That is a judgement
+#       call about operator practice, not a transcription.
+density_band,suggested_environment,rationale
+under_5,sparsely_populated,Open country; a handful of people per square kilometre
+under_50,sparsely_populated,Farmland with scattered dwellings
+under_500,sparsely_populated,Villages and hamlets; still not a built-up area
+under_5000,populated,"Residential, commercial or industrial density"
+under_50000,populated,Urban density
+over_50000,populated,"Dense urban core. An assembly of people is a separate judgement the operator makes"

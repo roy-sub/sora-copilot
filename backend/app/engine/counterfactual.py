@@ -217,6 +217,7 @@ def suggest(
     max_changes: int = 2,
 ) -> list[CounterfactualSuggestion]:
     """Minimal change sets that lower SAIL, best first. Each one is re-run, not predicted."""
+
     def run(m: Mission) -> Determination:
         return determine(
             m,

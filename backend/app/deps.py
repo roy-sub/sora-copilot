@@ -7,14 +7,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 from uuid import UUID
 
 import jwt
 from fastapi import Depends, Request
 
 from app.config import Settings, get_settings
-from app.db.client import get_client
 from app.problem import ProblemError
 
 _BEARER = "bearer"
@@ -72,23 +71,22 @@ def get_current_user(request: Request, settings: Annotated[Settings, Depends(get
 
 
 def get_org_context(user: Annotated[CurrentUser, Depends(get_current_user)]) -> OrgContext:
-    rows = (
-        get_client()
-        .table("org_members")
-        .select("org_id, role")
-        .eq("user_id", str(user.id))
-        .limit(1)
-        .execute()
-    )
-    if not rows.data:
+    """Resolve the caller's organisation through the repository.
+
+    Through the repository, not the Supabase client directly: the API has to work against
+    the in-memory store too, and a second path to the data is a second place for the
+    authorisation rule to drift.
+    """
+    from app.db import get_repo
+
+    row = get_repo().org_for_user(user.id)
+    if row is None:
         raise ProblemError(
             code="no_organisation",
             title="This account has no organisation",
             status_code=403,
-            detail="Sign in again to have one created, or ask an owner to invite you.",
+            detail="Call POST /api/v1/auth/session once after signing in.",
         )
-    # supabase-py types rows as loose JSON; narrow before trusting the shape.
-    row = cast("dict[str, Any]", rows.data[0])
     org_id, role = row.get("org_id"), row.get("role")
     if not isinstance(org_id, str) or not isinstance(role, str):
         raise ProblemError(

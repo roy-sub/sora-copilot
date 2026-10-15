@@ -111,8 +111,17 @@ def load_table(path: Path) -> Table:
     for lineno, row in enumerate(reader, start=2):
         if row.get(reader.fieldnames[0]) is None:
             raise RulebaseError(f"{path.name}: row {lineno} is empty")
-        if None in row.values():
-            raise RulebaseError(f"{path.name}: row {lineno} has more columns than the header")
+        # DictReader reports EXTRA columns under a None key and MISSING ones as None
+        # values. Both are malformed; neither may be read partially, because a truncated
+        # regulatory row is worse than no row.
+        if None in row:
+            extra = row[None]
+            raise RulebaseError(
+                f"{path.name}: row {lineno} has more columns than the header "
+                f"(trailing: {extra!r}). An unquoted comma in a field will do this."
+            )
+        if any(v is None for v in row.values()):
+            raise RulebaseError(f"{path.name}: row {lineno} has fewer columns than the header")
         rows.append({k: (v or "").strip() for k, v in row.items()})
     if not rows:
         raise RulebaseError(f"{path.name}: no data rows")
