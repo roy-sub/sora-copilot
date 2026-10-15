@@ -1,5 +1,32 @@
+# --- node / next
 node_modules/
 .next/
 out/
 next-env.d.ts
 *.tsbuildinfo
+
+# --- python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- generated
+backend/openapi.json
+backend/app/engine/rulebase/**/generated/
+
+# --- secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- media the owner drops in later
+frontend/public/media/*
+!frontend/public/media/.gitkeep
+
+# --- os
+.DS_Store

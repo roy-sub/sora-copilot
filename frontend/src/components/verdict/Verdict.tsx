@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/Shell";
 import { Disclaimer, RulebaseStamp, STAMP, type EvidenceState } from "@/components/Brand";
 import { ComputationProgress, useStagedRun } from "@/components/ComputationProgress";
+import { DemoNotice, PreliminaryNotice, PreliminaryTag } from "@/components/Preliminary";
 import { SailBadge, SailPlaceholder, SailScale, useSteppedLevel } from "@/components/SailBadge";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useToast } from "@/components/Toast";
@@ -138,6 +139,7 @@ function VerdictView({ op }: { op: Operation }) {
     <>
       <PageHeader title="Determination" />
       <main className="flex-1 flex flex-col gap-sheet min-w-0">
+        <DemoNotice />
         <div className="bg-sheet p-4 md:p-6 flex gap-8 items-start flex-wrap">
           <div className="flex gap-5 items-start">
             {sail ? <SailBadge level={shown} size="lg" /> : <SailPlaceholder size="lg" label="CERTIFIED" />}
@@ -149,7 +151,10 @@ function VerdictView({ op }: { op: Operation }) {
             </div>
           </div>
           <div className="flex-1 min-w-[min(300px,100%)] flex flex-col gap-2.5">
-            <span className="t-micro text-ink-low">Risk chain</span>
+            <div className="flex items-baseline justify-between gap-4 flex-wrap">
+              <span className="t-micro text-ink-low">Risk chain</span>
+              <PreliminaryTag />
+            </div>
             <RiskChainReadout key={runKey} links={chainLinks(d, notes(op.input))} countUp={runKey === 0} recomputing={!!busy} />
             <SailScale />
             {d.outcome.kind === "certified" && <p className="m-0 t-body-sm text-ink-mid">{d.outcome.reason} SORA does not apply; the operation needs the certified category.</p>}
@@ -196,6 +201,7 @@ function VerdictView({ op }: { op: Operation }) {
               )}
             </div>
             <div className="flex flex-col gap-3 pt-5 border-t border-hairline">
+              <PreliminaryNotice />
               <RulebaseStamp authoritative />
               <Disclaimer />
               <div className="flex gap-2.5 flex-wrap">

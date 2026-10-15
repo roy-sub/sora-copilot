@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MediaSlot } from "@/components/MediaSlot";
+import type { MediaId } from "@/lib/media-manifest";
 import { STAMP } from "@/components/Brand";
 import { ButtonLink } from "@/components/ui/Button";
 import { MarketingFooter, MarketingHeader } from "@/components/marketing/Chrome";
@@ -16,11 +17,12 @@ const CHAIN = [
   ["Step 04", "Residual ARC", "Strategic mitigation by operational restriction or common structure."],
 ] as const;
 
+// What each portrait depicts lives in lib/media-manifest.ts, so it is stated once.
 const PERSONAS = [
-  ["persona-1", "Two-person inspection team, Graz. On site, mid-task.", "Inspection company, Graz.", "Takes the roof survey it used to decline, because the assessment now costs an afternoon."],
-  ["persona-2", "Solo BVLOS operator at a controller, field setting.", "Solo BVLOS operator.", "Wants one answer before quoting: can this fly, and if not, what would it take."],
-  ["persona-3", "Compliance officer reviewing a printed dossier at a desk.", "Compliance officer.", "Reads the trace before the verdict. Signs nothing that cannot be defended clause by clause."],
-] as const;
+  ["persona-1", "Inspection company, Graz.", "Takes the roof survey it used to decline, because the assessment now costs an afternoon."],
+  ["persona-2", "Solo BVLOS operator.", "Wants one answer before quoting: can this fly, and if not, what would it take."],
+  ["persona-3", "Compliance officer.", "Reads the trace before the verdict. Signs nothing that cannot be defended clause by clause."],
+] as const satisfies readonly (readonly [MediaId, string, string])[];
 
 function Feature({ n, title, body, children }: { n: string; title: string; body: string; children?: React.ReactNode }) {
   return (
@@ -66,7 +68,7 @@ export default function Landing() {
       </section>
 
       <section className="bg-sheet p-sheet">
-        <MediaSlot slot="hero-loop" kind="video" ratio="16/9" size="1440×810" note="Screen capture: an operational volume being drawn on the map, then the SAIL badge resolving." />
+        <MediaSlot id="hero-loop" lazy={false} />
       </section>
 
       <section id="how" className="bg-sheet px-4 py-12 md:px-12 md:py-16">
@@ -93,20 +95,20 @@ export default function Landing() {
       <section className="grid gap-sheet grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <Feature n="01 — Trace" title="Every line cites its rule" body="The derivation tree holds the whole determination. Each node names the rule that fired and the clause it comes from; the raw facts you confirmed sit at the leaves. A case officer can follow it without asking you a question." />
         <div className="bg-sheet p-4 md:p-6 min-w-0">
-          <MediaSlot slot="feature-trace" kind="image" ratio="4/3" size="1280×960" note="The derivation tree at full width, nodes expanded, citations legible." />
+          <MediaSlot id="feature-trace" />
         </div>
       </section>
 
       <section className="grid gap-sheet grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <div className="bg-sheet p-4 md:p-6 min-w-0">
-          <MediaSlot slot="feature-map" kind="image" ratio="4/3" size="1280×960" note="Flight geography with derived contingency volume and ground risk buffer, density overlay on." />
+          <MediaSlot id="feature-map" />
         </div>
         <Feature n="02 — Geography" title="Draw the flight geography. The volumes follow." body="Contingency volume and ground risk buffer are derived from your aircraft's speed, altitude and response times, not typed in. Population density and ED-269 geo-zones sit underneath, so the adjacent area is visible before it becomes a finding." />
       </section>
 
       <section className="grid gap-sheet grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))]">
         <div className="bg-sheet p-4 md:p-6 min-w-0">
-          <MediaSlot slot="feature-dossier" kind="image" ratio="3/4" size="900×1200" note="A page of the exported DOCX dossier: OSO matrix with evidence references." />
+          <MediaSlot id="feature-dossier" />
         </div>
         <Feature n="03 — Dossier" title="The output looks like it came from an aviation professional" body="ConOps, the SORA assessment tables, the OSO matrix with evidence references, and an ERP skeleton. Versioned, rulebase-stamped, exported as DOCX.">
           <div className="mt-2 flex flex-col gap-sheet bg-hairline border-t border-hairline">
@@ -116,7 +118,7 @@ export default function Landing() {
           </div>
         </Feature>
         <div className="bg-sheet p-4 md:p-6 flex flex-col gap-4 min-w-0">
-          <MediaSlot slot="feature-counterfactual" kind="video" ratio="1/1" size="900×900" note="A mitigation claimed; SAIL steps III to II, one plate at a time." />
+          <MediaSlot id="feature-counterfactual" />
           <div>
             <span className="t-micro text-ink-low">04 — Counterfactuals</span>
             <p className="mt-2 mb-0 t-body-sm text-ink-mid pretty">When the answer is no, the advisor says what would make it yes — and applies it.</p>
@@ -127,9 +129,9 @@ export default function Landing() {
       <section className="bg-sheet p-6 md:p-12">
         <div className="t-micro text-ink-low mb-6">Who runs it</div>
         <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
-          {PERSONAS.map(([slot, note, who, body]) => (
+          {PERSONAS.map(([slot, who, body]) => (
             <div key={slot} className="flex flex-col gap-3">
-              <MediaSlot slot={slot} kind="image" ratio="1/1" size="600×600" note={note} />
+              <MediaSlot id={slot} />
               <p className="m-0 t-body-sm text-ink-mid pretty"><strong className="text-ink-hi font-semibold">{who}</strong> {body}</p>
             </div>
           ))}
@@ -155,7 +157,7 @@ export default function Landing() {
           <p className="m-0 t-body-sm text-ink-mid pretty">Marks shown for reference only. No endorsement by EASA, Austro Control or the LBA is implied or claimed.</p>
         </div>
         <div className="flex-1 min-w-[min(280px,100%)] max-w-[520px]">
-          <MediaSlot slot="proof-logos" kind="image" ratio="6/1" size="1200×200" note="Authority and standards marks, single row, monochrome." />
+          <MediaSlot id="proof-logos" />
         </div>
       </section>
 

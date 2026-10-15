@@ -5,6 +5,7 @@
 // wizard draft — persists to localStorage on this device only.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { usePrefs } from "@/lib/prefs";
 import { EVIDENCE, FLEET, OPERATIONS, type Aircraft, type Operation } from "@/data/fixtures";
 import type { EvidenceState } from "@/components/Brand";
 import type { OperationInput } from "@/engine/types";
@@ -47,6 +48,8 @@ const initial: State = {
 
 interface Api extends State {
   ready: boolean;
+  /** True when the fixture demo workspace is showing. Screens label its data as such. */
+  demo: boolean;
   operations: Operation[];
   fleet: Aircraft[];
   op: (id: string) => Operation | undefined;
@@ -61,6 +64,7 @@ interface Api extends State {
 const Ctx = createContext<Api | null>(null);
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
+  const { demo } = usePrefs();
   const [s, setS] = useState<State>(initial);
   const [ready, setReady] = useState(false);
 
@@ -77,12 +81,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
   }, [s, ready]);
 
+  // The fixture operations and fleet belong to the demo workspace, which is off by
+  // default — a real account lands on an empty dashboard. Operations the operator
+  // created on this device always show.
   const operations = useMemo(
-    () => [...s.created, ...OPERATIONS].map((o) => (s.inputs[o.id] ? { ...o, input: s.inputs[o.id] } : o)),
-    [s.created, s.inputs],
+    () => [...s.created, ...(demo ? OPERATIONS : [])].map((o) => (s.inputs[o.id] ? { ...o, input: s.inputs[o.id] } : o)),
+    [s.created, s.inputs, demo],
   );
 
-  const fleet = useMemo(() => [...FLEET, ...s.aircraft], [s.aircraft]);
+  const fleet = useMemo(() => [...(demo ? FLEET : []), ...s.aircraft], [s.aircraft, demo]);
   const op = useCallback((id: string) => operations.find((o) => o.id === id), [operations]);
   const setInput = useCallback((id: string, input: OperationInput | null) => setS((p) => {
     const inputs = { ...p.inputs };
@@ -100,7 +107,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const reset = useCallback(() => setS(initial), []);
 
   return (
-    <Ctx.Provider value={{ ...s, ready, operations, fleet, op, setInput, addOperation, setEvidence, addDossier, set, reset }}>
+    <Ctx.Provider value={{ ...s, ready, demo, operations, fleet, op, setInput, addOperation, setEvidence, addDossier, set, reset }}>
       {children}
     </Ctx.Provider>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/Shell";
 import { EmptyState } from "@/components/app/EmptyState";
+import { DemoNotice } from "@/components/Preliminary";
 import { StatusPill } from "@/components/Brand";
 import { SailBadge, SailPlaceholder } from "@/components/SailBadge";
 import { ButtonLink } from "@/components/ui/Button";
@@ -12,6 +13,7 @@ import type { OpStatus } from "@/data/fixtures";
 import { determinationOf, sailOf } from "@/lib/determine";
 import { cn } from "@/lib/cn";
 import { useWorkspace } from "@/lib/workspace";
+import { usePrefs } from "@/lib/prefs";
 import { opHref } from "@/components/verdict/Verdict";
 
 const FILTERS: ("all" | OpStatus)[] = ["all", "draft", "determined", "dossier ready", "submitted", "authorised"];
@@ -19,6 +21,7 @@ const COLS = "md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_92px_minmax(0,1fr)_110
 
 export default function Operations() {
   const { operations } = useWorkspace();
+  const { setDemo } = usePrefs();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [q, setQ] = useState("");
 
@@ -32,6 +35,7 @@ export default function Operations() {
     <>
       <PageHeader title="Operations" />
       <main className="flex-1 flex flex-col gap-sheet min-w-0">
+        <DemoNotice />
         <div className="bg-sheet px-4 md:px-6 py-5 flex items-center gap-3 flex-wrap justify-between">
           <div role="group" aria-label="Filter by status" className="flex gap-sheet bg-hairline border border-hairline rounded-sm overflow-x-auto no-scrollbar max-w-full">
             {FILTERS.map((f) => (
@@ -51,9 +55,21 @@ export default function Operations() {
           {rows.length === 0 ? (
             <div className="p-6">
               {operations.length === 0 ? (
-                <EmptyState slot="empty-operations" note="Line schematic: an empty operational volume outline over a blank chart." title="No operations yet"
+                <EmptyState
+                  slot="empty-operations"
+                  title="No operations yet"
                   body="Start with the aircraft and the area. The engine needs eleven facts to reach a SAIL; the wizard collects them in about four minutes."
-                  action={<ButtonLink href="/app/new/">New operation</ButtonLink>} />
+                  action={<ButtonLink href="/app/new/">New operation</ButtonLink>}
+                  secondaryAction={
+                    <button
+                      type="button"
+                      onClick={() => setDemo(true)}
+                      className="inline-flex items-center min-h-11 px-4 bg-transparent border border-hairline-strong rounded-sm t-micro-10 text-ink-mid hover:text-ink-hi tr-ui"
+                    >
+                      Load the demo workspace
+                    </button>
+                  }
+                />
               ) : (
                 <p className="m-0 t-body-sm text-ink-mid">No operations match this filter. <button type="button" className="underline bg-transparent border-0 p-0 text-ink-hi" onClick={() => { setFilter("all"); setQ(""); }}>Clear it</button>.</p>
               )}

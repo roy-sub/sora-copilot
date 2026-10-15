@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PreliminaryNotice, PreliminaryTag } from "@/components/Preliminary";
 import { Disclaimer, STAMP } from "@/components/Brand";
 import { SailBadge, SailPlaceholder } from "@/components/SailBadge";
 import { ButtonLink } from "@/components/ui/Button";
@@ -61,7 +62,10 @@ export function Checker() {
       </div>
 
       <div className="bg-sheet-raised px-4 py-8 md:p-12 flex flex-col gap-6" aria-live="polite">
-        <span className="t-micro text-ink-low">Result</span>
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <span className="t-micro text-ink-low">Result</span>
+          <PreliminaryTag />
+        </div>
         <div key={key} className="flex items-center gap-6 flex-wrap animate-[node-settle_240ms_var(--ease-ui)_both]">
           {sail ? <SailBadge level={sail} size="lg" /> : <SailPlaceholder size="lg" label={r.category === "open" ? "NO SAIL" : "OUT OF SORA"} />}
           <div className="flex flex-col gap-2 min-w-[200px] flex-1">
@@ -88,6 +92,7 @@ export function Checker() {
           <ButtonLink href="/app/new" shape="pill" size="lg">Run the full assessment</ButtonLink>
           <a href={mail} className="no-underline inline-flex items-center justify-center min-h-12 px-6 border border-hairline-strong rounded-pill t-micro text-ink-hi hover:bg-sheet hover:text-ink-hi tr-ui">Email me this estimate</a>
         </div>
+        <PreliminaryNotice />
         <Disclaimer className="pt-5 border-t border-hairline" />
       </div>
     </section>
