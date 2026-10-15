@@ -183,6 +183,36 @@ LibreOffice, which does not fit on a free tier. A test renders both formats from
 determination and asserts every risk value, the disclaimer, the UNVERIFIED banner and the
 trace appear in each; another asserts the running header is on every page of the PDF.
 
+## A known, harmless hydration recovery
+
+Against the static export, React reports a recoverable hydration mismatch on roughly one
+hard page load in six. It is worth writing down because it looks alarming in a console
+and because chasing it is easy to repeat.
+
+What it is not: it is not the theme. An A/B over 48 loads of the same page isolates the
+cause as the **previous page's route prefetch**, not the pre-paint theme script —
+
+| prior visit | stored theme | recoveries |
+|---|---|---|
+| no | none | 0 / 16 |
+| yes | none | 2 / 16 |
+| yes | light | 4 / 16 |
+
+— so it happens with no theme stored at all, and never on a cold load. Next prefetches
+the RSC payload of a linked route; a later hard load of that route hydrates against it.
+
+What it costs: nothing visible. Comparing an erroring render with a clean one of the same
+page gives identical text, identical element counts, and the correct theme. React
+re-renders the subtree on the client and the page is correct.
+
+It was worth catching anyway, because it *was* causing real damage until the theme fix
+above: the recovery resets `<html>`'s attributes to the ones the server emitted, which
+silently returned a light-theme visitor to dark. `PrefsProvider` now re-applies the
+stored theme after mount, so the recovery is cosmetic rather than destructive.
+
+Removing it would mean turning off `prefetch` on the links that cause it, which trades a
+real navigation speed-up for a console line. Not worth it.
+
 ## Invitations have no link
 
 Inviting a colleague stores an **address**, not a token, and sends nothing. The
