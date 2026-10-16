@@ -5,9 +5,21 @@ determination is computed by clingo and by nothing else.
 
 ## Run it
 
+**Python 3.12 or newer.** Check with `python3 -V` before anything else: on an older
+interpreter `pip install` refuses with *"requires a different Python"* and installs
+**nothing**, so the next error you see is a missing dependency that looks unrelated.
+
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 .venv/bin/python main.py          # http://localhost:8000 · docs at /docs
+```
+
+On a system whose `python3` is older, the quickest route that changes nothing else:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.12 .venv && uv pip install -e ".[dev]"
+.venv/bin/python main.py
 ```
 
 Or `make dev`, which does both. There is **no Dockerfile and nothing to build**: every

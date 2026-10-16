@@ -285,13 +285,43 @@ BASE=https://<render-host> SUPABASE_JWT_SECRET=... backend/scripts/smoke.sh
 
 ## Local development
 
+Needs **Python 3.12 or newer** and **Node 20+**. Check the first one before anything
+else — on an older interpreter `pip install` refuses with *"requires a different
+Python"* and installs **nothing**, so the error you see next is a missing dependency
+that looks unrelated to the version.
+
 ```bash
-cd backend  && python main.py   # http://localhost:8000 · docs at /docs
-cd frontend && npm run dev      # http://localhost:3000
+python3 -V     # must be 3.12 or newer
+
+git clone https://github.com/roy-sub/sora-copilot && cd sora-copilot
+
+# terminal 1
+cd backend && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/python main.py        # http://localhost:8000 · docs at /docs
+
+# terminal 2
+cd frontend && npm install && npm run dev   # http://localhost:3000
+```
+
+No `python3.12` on the machine? This installs one for the project without touching
+anything system-wide:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+cd backend && uv venv --python 3.12 .venv && uv pip install -e ".[dev]"
+.venv/bin/python main.py
 ```
 
 `make dev` does the same thing and creates the virtualenv first. `python main.py --help`
 lists the flags.
+
+**Two messages that look like errors and are not.** `npm run dev` prints
+`Request timed out after 3000ms … Retrying 1/3…` on a machine that cannot reach Google
+Fonts: that is `next/font/google` fetching Archivo and Outfit, and after three tries it
+falls back to a system face and carries on. The line that tells you the server is up is
+`Ready in Ns`. And the app's own `Request failed`/warming messages in the browser mean
+the backend is not running yet — the frontend treats a dead or sleeping API as *warming*
+and retries rather than showing a red box.
 
 Both run without any environment configuration. Auth and persistence report themselves
 as unconfigured rather than crashing, so the skeleton is usable before a Supabase project

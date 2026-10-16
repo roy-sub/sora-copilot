@@ -71,8 +71,38 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+#: What pyproject.toml declares. Kept here as a literal because this check has to run
+#: before anything is imported, including anything that could read pyproject.
+MIN_PYTHON = (3, 12)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+
+    # Checked before uvicorn, because an interpreter that is too old is the *reason*
+    # uvicorn is missing: pip refuses the install with "requires a different Python" and
+    # installs nothing, and the next thing you see is a missing dependency that has
+    # nothing obviously to do with the version. Say the real thing.
+    if sys.version_info < MIN_PYTHON:
+        have = ".".join(str(n) for n in sys.version_info[:3])
+        need = ".".join(str(n) for n in MIN_PYTHON)
+        print(
+            f"This is Python {have}; the backend needs {need} or newer.\n"
+            f"\n"
+            f"If you have already run `pip install`, it refused and installed nothing:\n"
+            f"    ERROR: Package 'sora-copilot-backend' requires a different Python\n"
+            f"\n"
+            f"The quickest fix, which changes nothing on your system:\n"
+            f"    curl -LsSf https://astral.sh/uv/install.sh | sh\n"
+            f"    uv venv --python {need} .venv\n"
+            f"    uv pip install -e '.[dev]'\n"
+            f"    .venv/bin/python main.py\n"
+            f"\n"
+            f"Or point an existing newer interpreter at a fresh virtualenv:\n"
+            f"    python{need} -m venv .venv && .venv/bin/pip install -e '.[dev]'",
+            file=sys.stderr,
+        )
+        return 1
 
     try:
         import uvicorn
@@ -80,7 +110,10 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "uvicorn is not installed. From backend/:\n"
             "    python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'\n"
-            "    .venv/bin/python main.py",
+            "    .venv/bin/python main.py\n"
+            "\n"
+            "If that pip run printed \"requires a different Python\", it installed\n"
+            "nothing: the interpreter is older than 3.12. `python3 -V` to check.",
             file=sys.stderr,
         )
         return 1

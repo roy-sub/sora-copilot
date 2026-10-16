@@ -89,3 +89,31 @@ def test_the_entry_point_runs_without_a_process_manager() -> None:
     assert args.port == 8000
     assert main.parse_args(["--port", "9000"]).port == 9000
     assert main.parse_args(["--prod"]).prod is True
+
+
+def test_the_minimum_python_matches_what_pyproject_declares() -> None:
+    """Two places say 3.12 and they have to agree, or the guard lies to someone."""
+    import main
+
+    config = tomllib.loads((BACKEND / "pyproject.toml").read_text(encoding="utf-8"))
+    declared = config["project"]["requires-python"]
+    assert declared.startswith(">=")
+    assert tuple(int(n) for n in declared[2:].split(".")) == main.MIN_PYTHON
+
+
+def test_too_old_a_python_says_so_instead_of_blaming_uvicorn(capsys, monkeypatch) -> None:
+    """The failure a 3.11 user actually hits, and the message they actually need.
+
+    pip refuses the install with "requires a different Python" and installs *nothing*,
+    so the next thing they see is `uvicorn is not installed` — which sends them to redo
+    the install that already failed. The version check has to come first and name the
+    real cause.
+    """
+    import main
+
+    monkeypatch.setattr(main, "MIN_PYTHON", (99, 0))
+    assert main.main([]) == 1
+    err = capsys.readouterr().err
+    assert "needs 99.0 or newer" in err
+    assert "installed nothing" in err
+    assert "uvicorn" not in err.lower()
