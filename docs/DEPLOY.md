@@ -11,7 +11,7 @@ beyond the Anthropic API key.
 
 | Piece | Where | Notes |
 |---|---|---|
-| Backend | Render — Docker web service, Frankfurt, free | Sleeps after ~15 min idle |
+| Backend | Render — **Python** web service, Frankfurt, free | Sleeps after ~15 min idle |
 | Frontend | Cloudflare Pages | `npm run build`, output `out` |
 | Database | Supabase Postgres, EU region, free | Pauses after ~7 days idle |
 
@@ -44,19 +44,30 @@ loses no data. `/healthz` stays green while it is paused, by design;
 
 ## 2. Backend on Render
 
-1. New → Web Service → connect the repository.
-2. Root directory `backend`, runtime **Docker**, region **Frankfurt**, instance **Free**.
-3. Environment: every backend key from `.env.example`. Set `ENV=production` — the app
-   refuses to start without the Supabase keys, which is the behaviour you want in
-   production. Set `CORS_ORIGINS` to the Pages origin. Set `GIT_SHA` to the commit so
-   `/healthz` can be traced back to a build.
-4. Health check path `/healthz`.
+There is **no Dockerfile**. Every dependency is a Python wheel and the renderers carry
+their own typeface, so a checkout plus `pip install` is a working backend — which is
+also why this deploys on any host that can run Python, not only on Render.
 
-The Dockerfile is multi-stage on `python:3.12-slim` and installs WeasyPrint's runtime
-libraries (`libcairo2`, `libpango-1.0-0`, `libpangocairo-1.0-0`, `libpangoft2-1.0-0`,
-`libgdk-pixbuf-2.0-0`, `libffi8`, `shared-mime-info`) plus a font, so PDF output is not
-blank. These are load-bearing: a dossier exported as PDF goes through WeasyPrint, and
-without the font it renders with blank glyph boxes rather than failing loudly. It runs as a non-root user and honours Render's `$PORT`.
+1. New → Web Service → connect the repository.
+2. Root directory `backend`, runtime **Python 3**, region **Frankfurt**, instance **Free**.
+3. Build command: `pip install .`
+4. Start command: `python main.py --prod`
+5. Health check path `/healthz`.
+6. Environment: every backend key from `.env.example`. Set `ENV=production` — the app
+   refuses to start without the Supabase keys, which is the behaviour you want in
+   production. Set `CORS_ORIGINS` to the Pages origin. Map `GIT_SHA` to Render's
+   `RENDER_GIT_COMMIT` so `/healthz` can be traced back to a build.
+
+`main.py` reads `$PORT`, and `--prod` binds every interface, turns off reload and
+honours `$WEB_CONCURRENCY` for workers. It prints which services are configured on
+startup, so the first line of the deploy log tells you whether the database, the intake
+model and payments are live.
+
+**Nothing to apt-get.** PDFs render through fpdf2 and the volume chart through Pillow,
+both pure Python, and `app/assets/fonts/` ships DejaVu Sans so neither depends on the
+host having a usable typeface. If that font were missing, a dossier would render as
+blank boxes rather than failing loudly — which is why it is in the repository and why
+`pyproject.toml` declares it as package data.
 
 ### The cold start is a product problem, not just an ops one
 
@@ -121,8 +132,14 @@ The build is a static export (`output: 'export'`, `trailingSlash: true`,
 
 Drop real assets into `frontend/public/media/` using the filenames in
 `frontend/src/lib/media-manifest.ts` and rebuild. No code change: `MediaSlot` probes for
-the file and falls back to the designed placeholder when it is missing. `?slots=1` shows
-each slot's id and size budget.
+the file and falls back to the designed placeholder when it is missing, so the site is
+presentable without them. `?slots=1` overlays each slot's id and size budget.
+
+[Media Generation Guide](./Media%20Generation%20Guide.md) has a finished, copy-pasteable
+prompt for all sixteen, with the path and aspect ratio above each one. A test checks
+those paths and dimensions against the manifest, because a drifted filename would send
+every generated file somewhere the app never looks — and `MediaSlot` would fall back to
+its placeholder without complaining.
 
 ## 6. Smoke test against production
 
@@ -159,9 +176,12 @@ BASE=https://<render-host> SUPABASE_JWT_SECRET=... backend/scripts/smoke.sh
 ## Local development
 
 ```bash
-cd backend  && make dev     # http://localhost:8000 · docs at /docs
-cd frontend && npm run dev  # http://localhost:3000
+cd backend  && python main.py   # http://localhost:8000 · docs at /docs
+cd frontend && npm run dev      # http://localhost:3000
 ```
+
+`make dev` does the same thing and creates the virtualenv first. `python main.py --help`
+lists the flags.
 
 Both run without any environment configuration. Auth and persistence report themselves
 as unconfigured rather than crashing, so the skeleton is usable before a Supabase project

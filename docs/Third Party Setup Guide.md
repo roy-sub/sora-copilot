@@ -211,7 +211,9 @@ answers `{"outcome": "duplicate"}`.
 | Setting | Value |
 |---|---|
 | Root directory | `backend` |
-| Runtime | Docker |
+| Runtime | Python 3 |
+| Build command | `pip install .` |
+| Start command | `python main.py --prod` |
 | Region | Frankfurt |
 | Instance type | Free |
 | Health check path | `/healthz` |
@@ -224,6 +226,10 @@ Set **every backend variable** from `.env.example` in Render's Environment tab, 
   there is more than one.
 - `GIT_SHA` — Render exposes the commit as `RENDER_GIT_COMMIT`; map it across so
   `/healthz` can be traced back to a build.
+
+There is **no Dockerfile**: the build is `pip install .` and the start command is
+`python main.py --prod`. Nothing needs apt-get — PDFs render through fpdf2 and the map
+chart through Pillow, both pure Python, and the typeface ships in the repository.
 
 **The free instance sleeps after ~15 minutes** and takes tens of seconds to wake. The
 frontend already treats 502/503/504 and network failures as *warming* rather than errors

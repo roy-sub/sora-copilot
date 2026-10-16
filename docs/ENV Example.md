@@ -120,12 +120,16 @@ in the URL, restrict it by HTTP referrer: this one really is public.
 ## Minimum viable configurations
 
 **Local, nothing configured** — both sides run, in-memory, deterministic extractor, free
-plan:
+plan. There is no Dockerfile and nothing to build:
 
 ```bash
-cd backend  && make dev     # :8000, API docs at /docs
-cd frontend && npm run dev  # :3000
+cd backend  && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+cd backend  && .venv/bin/python main.py   # :8000, API docs at /docs
+cd frontend && npm install && npm run dev # :3000
 ```
+
+The startup banner reports which services are configured, so the first line tells you
+what is live and what is degraded.
 
 **A real deployment people can sign up to** — the three Supabase keys, `CORS_ORIGINS`,
 `ENV=production`, and the frontend's `NEXT_PUBLIC_SUPABASE_*` + `NEXT_PUBLIC_API_URL`.
@@ -148,6 +152,12 @@ curl -s https://<host>/healthz/deep | jq
 BASE=https://<host> SUPABASE_JWT_SECRET=<secret> backend/scripts/smoke.sh
 ```
 
+```bash
+# And the whole UI in a real browser, against the built export.
+cd frontend && TOKEN=<a token> npm run smoke
+```
+
 A test in the backend suite asserts that every field of the `Settings` model appears in
 `.env.example`, so a new setting cannot be added without appearing in the template you
-copy.
+copy — and another asserts that every variable in `.env.example` is documented on this
+page.

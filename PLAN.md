@@ -430,6 +430,22 @@ regulatory values; engine changes ship with passing golden tests.
 
 ---
 
+## 9a. Decisions taken under standing authority (16 Oct 2026)
+
+Asked to complete the product and given latitude to decide, these are the calls made and
+why. Each is reversible; none invents a regulatory value.
+
+| Decision | Instead of | Why |
+|---|---|---|
+| **No Dockerfile.** `python main.py`, `pip install .` | Multi-stage image | Asked for directly. It also removes the only reason the backend needed native libraries. |
+| **fpdf2 for PDF** | WeasyPrint + HTML/print CSS | WeasyPrint needs cairo, pango and a system font. Those existed *because* of the Dockerfile; keeping them would have put the complexity back in the host's lap. fpdf2 is pure Python and sits behind the same `Writer`, so the cross-format guarantee is unchanged. |
+| **Bundle DejaVu Sans** (1.4 MB) | Rely on `fonts-dejavu-core` | Without a usable face the dossier renders blank boxes and the map chart is illegible — and neither fails loudly. A font in the repo is the only version that behaves the same on a laptop, on Render and in CI. |
+| **Declare `package-data`** | Editable installs only | The rulebase, the packs, the migrations and the fonts are not Python. `pip install .` was already shipping a backend that imported cleanly and then could not render a determination. |
+| **A seeded worked example** | A static demo page or screenshots | An empty dashboard explains nothing, and a fixture would show the product working without demonstrating it. §ARCHITECTURE has the reasoning. |
+| **A browser smoke suite** | Trusting the unit tests | The derivation tree had never rendered and every test passed. Geometry assertions are the only thing that catches that class of fault. |
+
+---
+
 ## 10. Phase state
 
 Every phase is implemented. The checks below are what was actually run, not a plan.

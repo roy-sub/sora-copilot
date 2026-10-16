@@ -41,7 +41,7 @@ Two commands, one per side.
 
 ```bash
 # backend — http://localhost:8000 · API docs at /docs
-cd backend && make dev
+cd backend && python main.py
 
 # frontend — http://localhost:3000
 cd frontend && npm install && npm run dev
@@ -95,7 +95,7 @@ compliance product is worse than an honest gap.
 | Rules engine | clingo (Answer Set Programming) |
 | Counterfactuals | bounded enumeration over the real engine |
 | Geospatial | shapely, pyproj, PostGIS |
-| Documents | one content path, rendered to DOCX (python-docx) or PDF (WeasyPrint) |
+| Documents | one content path, rendered to DOCX (python-docx) or PDF (fpdf2) |
 | Language model | Anthropic, for intake and prose only |
 | Database | Supabase Postgres (EU) + PostGIS + RLS |
 | Auth | Supabase Auth — email and magic link |
@@ -111,7 +111,8 @@ Free tiers throughout.
 backend/    FastAPI, the clingo rulebase, services, API
 frontend/   Next.js static export
 design/     the approved design system and screens — READ ONLY
-docs/       ARCHITECTURE · RULEBASE · DEPLOY · ENV Example · Third Party Setup Guide
+docs/       ARCHITECTURE · RULEBASE · DEPLOY · ENV Example
+            Third Party Setup Guide · Media Generation Guide
 PLAN.md     the plan, the open decisions, and what is still blocked
 ```
 

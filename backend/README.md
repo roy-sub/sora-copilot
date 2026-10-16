@@ -6,13 +6,24 @@ determination is computed by clingo and by nothing else.
 ## Run it
 
 ```bash
-make dev          # http://localhost:8000 · docs at /docs
+python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/python main.py          # http://localhost:8000 · docs at /docs
 ```
 
-`make dev` creates `.venv`, installs the project and starts uvicorn with reload. It runs
-without any environment configuration — auth and persistence report themselves as
-unconfigured rather than crashing, so the skeleton is usable before a Supabase project
-exists. See `../.env.example`.
+Or `make dev`, which does both. There is **no Dockerfile and nothing to build**: every
+dependency is a Python wheel, and the PDF renderer and the map chart carry their own
+typeface in `app/assets/fonts/`, so a checkout plus `pip install` is a working backend
+on any machine with Python 3.12.
+
+It runs with no environment configuration at all — auth, persistence, the intake model
+and payments each report themselves as unconfigured rather than crashing, and the
+startup banner says which. See `../.env.example` and `../docs/ENV Example.md`.
+
+```bash
+python main.py --help     # flags
+python main.py --port 9000
+python main.py --prod     # no reload, all interfaces, $WEB_CONCURRENCY workers
+```
 
 ## Other commands
 
@@ -22,12 +33,13 @@ make lint         # ruff + mypy --strict
 make fmt          # ruff --fix and format
 make rulebase     # validate the transcribed tables, report what is still UNVERIFIED
 make openapi      # write openapi.json, the input to the typed frontend client
-make docker       # build the production image
+make smoke        # walk the whole product against a running API ($BASE)
 ```
 
 ## Layout
 
 ```
+main.py          the entry point: `python main.py`
 app/
   main.py        FastAPI app, CORS, RFC 7807 handlers, /healthz
   config.py      pydantic-settings; production refuses to start under-configured
@@ -37,7 +49,11 @@ app/
   domain/        Pydantic models — the vocabulary shared with the engine and frontend
   engine/        PURE. No network, no LLM, no database. Enforced by tests/test_boundary.py
     rulebase/    transcribed CSV tables + the clingo rules that reason over them
+  national/      country packs: the administrative half of an application
+  assets/fonts/  DejaVu Sans, bundled so documents render the same everywhere
   services/      orchestration, geometry, documents, and llm.py (the only anthropic importer)
+                 docwriter.py renders one content path to DOCX and PDF
+                 demo.py builds the worked example, through the real engine
   api/v1/        routers, added as their phase lands
 tests/
   test_boundary.py   the neurosymbolic boundary, enforced by AST inspection

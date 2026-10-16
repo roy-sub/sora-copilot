@@ -145,7 +145,7 @@ Three properties the regulation needs and a procedural implementation does not g
 browser (static export, Cloudflare Pages)
   │  Supabase Auth in the browser; access token as a Bearer header
   ▼
-FastAPI on Render (Docker, Frankfurt, free tier — sleeps after ~15 min idle)
+FastAPI on Render (plain Python, Frankfurt, free tier — sleeps after ~15 min idle)
   │  deps.py verifies the JWT and resolves org_id from org_members
   │  ── org_id is NEVER read from a request body or query string
   ▼
@@ -172,16 +172,42 @@ the authority's own forms or PDF to file. A PDF whose SAIL did not match the DOC
 would be the worst bug this product could ship, so there is no second code path in which
 it could happen: `services/dossier.py` describes the document **once**, against the
 `Writer` protocol in `services/docwriter.py`, and a backend turns those calls into
-`.docx` (python-docx) or `.pdf` (WeasyPrint, through print CSS).
+`.docx` (python-docx) or `.pdf` (fpdf2). Both are pure Python with the typeface
+bundled, so a dossier renders identically on a laptop, on a free-tier host and in CI
+with nothing to install but the wheels.
 
 The vocabulary is deliberately small — headings, paragraphs, bullets, key/value tables,
 grid tables, notes, images, page breaks. Anything richer would start to encode layout in
 the content path, which is where drift begins.
 
-The PDF is rendered from HTML rather than converted from the DOCX: converting would need
-LibreOffice, which does not fit on a free tier. A test renders both formats from the same
-determination and asserts every risk value, the disclaimer, the UNVERIFIED banner and the
-trace appear in each; another asserts the running header is on every page of the PDF.
+The PDF is drawn directly rather than converted from the DOCX: converting would need
+LibreOffice, which does not fit on a free tier. An earlier version rendered HTML through
+WeasyPrint, which worked but needed cairo, pango and a system font — five native
+libraries that existed only because a Dockerfile installed them. When the Dockerfile
+went, so did they.
+
+A test renders both formats from the same determination and asserts every risk value,
+the disclaimer, the UNVERIFIED banner and the trace appear in each; another asserts the
+running header is on every page of the PDF. One more is about fidelity over polish:
+fpdf2 has no escape character for its inline markdown, so a bullet drops its emphasis
+rather than let the parser eat a rule id.
+
+## Why there is a browser smoke suite
+
+`frontend/scripts/smoke-ui.mjs` exists because of a bug nothing else caught. React
+Flow's structural stylesheet was never imported, so the derivation tree laid itself out
+roughly 1200px below the container it was meant to fill and the panel rendered blank —
+on the one screen whose entire job is to show that every line cites its rule.
+
+Every test passed. The component mounted, 27 nodes sat in the DOM with correct
+coordinates, the API returned a complete trace. Nothing was wrong except what you could
+see.
+
+So the suite asserts **geometry, not existence**: a node is counted only if its box
+actually intersects the panel that is supposed to contain it. That check read 0/27
+before the fix and 27/27 after. The same shape of assertion covers horizontal overflow
+on every route and the media placeholders on the landing page — the class of fault where
+the DOM is right and the render is not.
 
 ## A known, harmless hydration recovery
 
@@ -212,6 +238,27 @@ stored theme after mount, so the recovery is cosmetic rather than destructive.
 
 Removing it would mean turning off `prefetch` on the links that cause it, which trades a
 real navigation speed-up for a console line. Not worth it.
+
+## The worked example is not a fixture
+
+A new account lands on an empty dashboard, and an empty dashboard explains nothing. The
+hardest thing to convey here is not a feature, it is the *shape* of a determination — a
+chain from iGRC to SAIL where every step names the rule that produced it — and that is
+far easier to show than to describe.
+
+So `POST /api/v1/demo/example` assembles a plausible Austrian powerline inspection and
+hands it to **the same engine every other run goes through**, into the caller's own
+organisation. Three consequences follow, and all three are the point:
+
+- If the rulebase changes, the worked example changes with it. If the engine cannot
+  justify a conclusion, the example fails exactly as a real operation would.
+- It counts against the plan, and it can be edited, re-run and deleted. A free account
+  that has used its three operations is refused rather than given a fourth through a
+  side door.
+- It carries the same UNVERIFIED warnings as anything else.
+
+A canned SAIL in a fixture would make the product *look* like it works without
+demonstrating that it does, which in a compliance tool is the wrong trade twice over.
 
 ## Invitations have no link
 
