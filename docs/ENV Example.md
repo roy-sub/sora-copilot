@@ -88,7 +88,7 @@ not configured, and no button is offered that would fail.
 
 | Variable | Required | Default | What it is |
 |---|---|---|---|
-| `RULEBASE_VERSION` | no | `2.5.0-rc1` | The version determinations pin to. Must exist in `rulebase_versions`. |
+| `RULEBASE_VERSION` | no | `2.5.0-rc2` | The version determinations pin to. Must exist in `rulebase_versions`. |
 | `CORS_ORIGINS` | production | `http://localhost:3000` | Comma-separated. Add the deployed frontend origin. |
 | `ENV` | no | `development` | `development` \| `test` \| `production`. |
 | `GIT_SHA` | no | `unknown` | Injected at deploy time; surfaced by `/healthz` so a run traces to a commit. On Render, map `RENDER_GIT_COMMIT` across. |
@@ -133,7 +133,7 @@ what is live and what is degraded.
 
 **A real deployment people can sign up to** — the three Supabase keys, `CORS_ORIGINS`,
 `ENV=production`, and the frontend's `NEXT_PUBLIC_SUPABASE_*` + `NEXT_PUBLIC_API_URL`.
-Apply migrations `001`, `002` and `003` in order.
+Apply migrations `001`, `002`, `003` and `004` in order.
 
 **Taking money** — add the five Stripe variables and `STRIPE_RETURN_URL`.
 

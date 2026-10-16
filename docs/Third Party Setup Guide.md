@@ -265,6 +265,8 @@ if you have not already.
 
 ---
 
+Not using Cloudflare? The frontend is a folder of static files, so any host will serve it — Hostinger included. [Deployment Guide](./Deployment%20Guide.md), Part Two, has the commands that produce the folder and what to do with it.
+
 ## 6. A map style URL — the basemap
 
 **Optional.** Without it the volume editor still works: it draws on a plain graticule and
@@ -339,15 +341,22 @@ export the DOCX, and reopen the operation to check it persisted.
 
 ## What is *still* missing after all of this
 
-Configuring every service above gives you a working product. It does not give you a
-*verified* one. Two things remain, and neither can be bought:
+Configuring every service above gives you a working product that people can sign up to,
+use, and pay for. It does not give you a *verified* one. Two things remain, and neither
+can be bought.
 
-1. **The regulatory tables are transcribed from seeds, not from the official source.**
-   All 14 of them. Every determination carries an UNVERIFIED warning, the verdict screen
-   shows a banner, and the dossier says on its cover that it must not be submitted to an
-   authority. Fixing this means supplying the published JARUS SORA 2.5 and EU 2019/947
-   text; `GET /api/v1/rulebase/current` lists exactly which files need filling in, and
-   the settings screen shows the same list under "What is still needed".
+1. **Eight of the fourteen regulatory tables are still transcribed from seeds.** Six are
+   verified: `igrc`, `igrc_columns` and `sail` against the JARUS SORA 2.5 Main Body
+   release cross-checked with the Norwegian CAA's own SORA 2.5 calculator, plus the
+   three tables that are the product's own data rather than transcriptions. A
+   determination that reads one of the remaining eight carries a warning naming it, the
+   verdict screen shows a strip counting them, and the dossier says on its cover that it
+   must not be submitted to an authority.
+
+   `GET /api/v1/rulebase/current` lists exactly which tables are open and which document
+   closes each, and the settings screen shows the same list under "What is still
+   needed". [Final Manual Task](./Final%20Manual%20Task.md) explains the one-minute
+   action that lets this be finished.
 
 2. **The Austria pack is this project's reading of the process, not a transcription of
    anything Austro Control published.** Every one of its 14 items is marked UNVERIFIED in
@@ -358,5 +367,6 @@ Configuring every service above gives you a working product. It does not give yo
    `source` to the clause once you have confirmed it.
 
 Until both are done the product is a working engine with honest labels on it, which is
-the right state to be in — but it is not something an operator should file with an
-authority.
+the right state to be in — but the output is not yet something an operator should file
+with an authority. Nothing else on this page is outstanding: once the credentials above
+are in place, every feature the product offers is live.

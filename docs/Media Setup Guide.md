@@ -1,26 +1,50 @@
-# Media Generation Guide
+# Media Setup Guide
 
-Every image, video and illustration the product needs, with a finished prompt for each.
+Every image, video and illustration the product needs: the exact file path to save it
+at, its aspect ratio and pixel size, and a finished prompt you can copy straight into a
+generator.
 
-> **All sixteen are built and committed.** `frontend/public/media/` holds the real
-> files, and `backend/tests/test_media_assets.py` checks every one against the manifest
-> for exact pixel size, byte budget and — for the two videos — H.264 in yuv420p, so a
-> drifted or missing asset fails the build instead of silently falling back to a
-> placeholder. This guide is now a **replacement** guide: the prompts below are what to
-> hand a generator if you want to swap one for something else.
+## How to use this document
+
+1. Find the asset in the **Index** below.
+2. Scroll to its section.
+3. Copy the **brand block** (one block, shared by most assets) and then the asset's own
+   prompt, into Higgsfield / ChatGPT 2.5 / Seedance 2.5 — or any generator you prefer.
+4. Save the result at the **exact path** and **exact pixel size** given above the prompt.
+5. Rebuild the frontend. The asset appears. No code change, no manifest edit.
+
+Steps 4 is the one that matters. `frontend/src/lib/media-manifest.ts` reserves each
+slot's aspect ratio so the page does not jump when the file loads, and the app looks for
+each file by name. A file at the wrong path is a file the app never looks at; a file at
+the wrong size is a layout shift. `backend/tests/test_media_assets.py` checks every one
+and fails the build if either is wrong, so you will be told rather than left guessing.
+
+> **There are already sixteen working assets in the repository.** They were built from
+> the product itself — screenshots of the real derivation tree, the real map, two pages
+> of the real generated PDF, a screen recording — plus brand graphics rendered against
+> the app's own stylesheet. The site is complete and shippable as it stands.
 >
-> How the shipped ones were made, and why, is in [What is actually in
-> `public/media/`](#what-is-actually-in-publicmedia) at the end.
-
-`MediaSlot` reserves the exact aspect ratio from `frontend/src/lib/media-manifest.ts`
-and draws a labelled placeholder when a file is missing, so the site stays presentable
-either way. Drop a replacement at the path given below and it appears on the next build:
-no code change, no manifest edit — but do keep the pixel size, or the test will say so.
+> This guide is therefore a **replacement** guide: use it to swap in generated artwork
+> where you prefer it. The appendix at the end says exactly how each shipped asset was
+> made, so you can decide which are worth replacing. Nothing here is required before
+> launch.
 
 **Suggested tools.** Higgsfield for the photographic and cinematic stills, ChatGPT 2.5
 for the UI composites and the flat graphics, Seedance 2.5 for the two video loops. Each
 prompt below names the one it was written for, but they are all plain descriptive
 prompts and will work elsewhere.
+
+**Checking your work.** After saving files and rebuilding:
+
+```bash
+cd backend  && .venv/bin/python -m pytest tests/test_media_assets.py -q
+cd frontend && npm run build
+```
+
+The first command tells you, per asset, whether the file exists, whether it is the right
+pixel size, whether it is inside its byte budget, and — for the two videos — whether it
+is H.264 in `yuv420p`, which is what makes a video play on an iPhone rather than show a
+black rectangle.
 
 ---
 
@@ -702,11 +726,12 @@ is the first thing a visitor downloads on a free-tier deployment.
 
 ---
 
-## What is actually in `public/media/`
+## Appendix — what is in `public/media/` today
 
-The sixteen files in the repository were not generated from the prompts above. They are
-built by `frontend/scripts/make-media.mjs`, and most of them are pictures of the product
-rather than illustrations of it:
+The sixteen files already in the repository were not generated from the prompts above.
+They are built by `frontend/scripts/make-media.mjs`, and most of them are pictures of
+the product rather than illustrations of it. Replace any of them freely — but these are
+the ones worth keeping, because a screenshot of the thing cannot misrepresent it:
 
 ```bash
 # with the API on :8000 and `npx serve out -l 3002` running

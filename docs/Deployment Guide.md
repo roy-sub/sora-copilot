@@ -1,21 +1,32 @@
-# Deployment
+# Deployment Guide
 
-Where each piece goes and how it is wired. For *where to get the credentials* — which
-dashboard, which button, which line of `.env` — read
-[Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) instead, and for what each
-variable does, [ENV Example](./ENV%20Example.md). This page assumes you already have
-them.
+Two things get deployed: a **Python backend** on Render, and a **folder of static files**
+for the frontend, which you upload to Cloudflare Pages (or Hostinger, or any web host —
+it is just files).
 
 Everything runs on free tiers. No Redis, no Celery, no always-on worker, no paid service
-beyond the Anthropic API key.
+beyond the Anthropic API key, which is itself optional.
 
-| Piece | Where | Notes |
+| Piece | Where | What it actually is |
 |---|---|---|
+| Database | Supabase, EU region, free | Postgres. Pauses after ~7 days with no traffic |
 | Backend | Render — **Python** web service, Frankfurt, free | Sleeps after ~15 min idle |
-| Frontend | Cloudflare Pages | `npm run build`, output `out` |
-| Database | Supabase Postgres, EU region, free | Pauses after ~7 days idle |
+| Frontend | Cloudflare Pages / Hostinger | A folder of HTML, CSS, JS and images |
 
 EU regions throughout: data residency is a stated selling point, not an afterthought.
+
+**Order matters.** Supabase first (the backend needs its keys), then the backend (the
+frontend needs its URL), then the frontend.
+
+**Before you start**, get the credentials. Which dashboard, which button, which line of
+`.env` is in [Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md); what each
+variable does is in [ENV Example](./ENV%20Example.md). This page assumes you have them.
+
+---
+
+# PART ONE — the backend on Render
+
+Jump to [Part Two](#part-two--the-frontend-folder) for the frontend.
 
 ## 1. Supabase
 
@@ -28,6 +39,10 @@ EU regions throughout: data residency is a stated selling point, not an aftertho
      the webhook's idempotency log.
    - `backend/app/db/migrations/003_invites.sql` — organisation invitations, so a Team
      plan's seats can be used.
+   - `004_rulebase_rc2.sql` — adds rulebase `2.5.0-rc2` and makes it the current one.
+     It inserts a row rather than editing `2.5.0-rc1`, because determinations pin the
+     version they were computed against, and a stored record has to keep describing
+     itself correctly.
 3. Authentication → Providers → Email: enable email, and enable magic links.
 4. Authentication → URL Configuration → Redirect URLs: add
    `http://localhost:3000/app/` and `https://<your-pages-domain>/app/`. Magic links
@@ -118,22 +133,109 @@ stripe trigger customer.subscription.created
 Then confirm `GET /api/v1/billing` reports the new plan, and that sending the same event
 twice answers `{"outcome": "duplicate"}`.
 
-## 4. Frontend on Cloudflare Pages
+# PART TWO — the frontend folder
 
-1. New project → connect the repository.
-2. Build command `npm run build`, output directory `out`, root directory `frontend`.
-3. Environment: every `NEXT_PUBLIC_*` key from `.env.example`. These are inlined at
-   build time, so **changing one requires a rebuild**, not just a restart.
+The frontend is a **static export**: `output: 'export'`, `trailingSlash: true`,
+`images.unoptimized`. No SSR, no server actions, no route handlers. The build produces a
+folder called `out/`, and every file a visitor needs is inside it. Any host that can
+serve files will serve this.
 
-The build is a static export (`output: 'export'`, `trailingSlash: true`,
-`images.unoptimized`). No SSR, no server actions, no route handlers — Pages serves files.
+## 4a. Build the folder
 
-`npm run prebuild` copies MapLibre's worker into `public/`. MapLibre 6 loads it from
-`new URL("./maplibre-gl-worker.mjs", import.meta.url)`, which webpack cannot analyse, so
-no worker chunk is emitted and the map renders nothing at all — no error, just an empty
-chart. The component calls `setWorkerUrl("/maplibre-gl-worker.mjs")` and the prebuild
-step puts the file there. It is deliberately not committed: it is a build artefact of a
-pinned dependency, and a stale copy would be a silent version skew.
+Run this on your own machine, or anywhere with Node 20+:
+
+```bash
+git clone https://github.com/roy-sub/sora-copilot
+cd sora-copilot/frontend
+
+# The NEXT_PUBLIC_* values are baked into the JavaScript at build time, so they have to
+# be set BEFORE you build. Changing one later means building again — a restart does
+# nothing, because there is no server to restart.
+cat > .env.local <<'EOF'
+NEXT_PUBLIC_SUPABASE_URL=https://<your-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your anon key>
+NEXT_PUBLIC_API_URL=https://<your-render-host>
+NEXT_PUBLIC_SITE_URL=https://<your-frontend-domain>
+NEXT_PUBLIC_MAP_STYLE_URL=
+EOF
+
+npm install
+npm run build
+```
+
+When it finishes you have **`frontend/out/`**. That is the folder to upload. Check it:
+
+```bash
+ls frontend/out/            # index.html, app/, pricing/, _next/, media/, …
+du -sh frontend/out/        # a few MB
+ls frontend/out/media | wc -l   # 16 — the media assets ship with the build
+ls frontend/out/maplibre-gl-worker.mjs   # must exist, or the map renders nothing
+```
+
+To hand it to someone, or to upload it as a single file:
+
+```bash
+cd frontend && zip -r ../sora-copilot-frontend.zip out
+```
+
+> `npm run build` runs `npm run prebuild` first, which copies MapLibre's worker into
+> `public/`. Without it the map draws an empty grid and reports no error at all, so if
+> `out/maplibre-gl-worker.mjs` is missing, something skipped the prebuild step.
+
+## 4b. Upload it — Cloudflare Pages
+
+**Option A — connect the repository** (rebuilds automatically on every push):
+
+1. https://pages.cloudflare.com → Create a project → Connect to Git → pick the repo.
+2. Framework preset: **Next.js (Static HTML Export)**, or None.
+3. Build command `npm run build`, output directory `out`, root directory `frontend`.
+4. Settings → Environment variables: add every `NEXT_PUBLIC_*` from your `.env.local`.
+   They are build-time, so **a change needs a redeploy**, not a restart.
+5. Save and Deploy. You get `https://<project>.pages.dev`.
+
+**Option B — upload the folder** (no Git connection, no build on their side):
+
+1. https://pages.cloudflare.com → Create a project → **Upload assets**.
+2. Drag the `frontend/out` folder in, or the zip you made above.
+3. Deploy.
+
+With Option B you rebuild and re-upload by hand whenever anything changes — including
+whenever a `NEXT_PUBLIC_*` value changes.
+
+## 4c. Upload it — Hostinger (or any other host)
+
+1. Build the folder exactly as in 4a.
+2. Hostinger hPanel → **File Manager** → open `public_html`.
+3. Delete whatever is in there, then upload `sora-copilot-frontend.zip` and extract it.
+4. Move the **contents of `out/`** into `public_html` so that `public_html/index.html`
+   exists. A common mistake is ending up with `public_html/out/index.html`, which serves
+   a directory listing or a 404.
+5. If the host offers it, enable HTTPS and force it.
+
+Two things to get right on any non-Cloudflare host:
+
+- **Trailing slashes.** The export is built with `trailingSlash: true`, so every route is
+  a real directory with an `index.html` inside it (`/pricing/index.html`). Apache and
+  LiteSpeed serve this correctly out of the box. Nothing to configure.
+- **The API origin.** Whatever domain the frontend ends up on must be listed in the
+  backend's `CORS_ORIGINS`, or every request from the browser is blocked and the app
+  looks broken while the backend looks healthy. See Part One, step 2.
+
+## 4d. Point the backend at the frontend
+
+Back in Render → your service → Environment:
+
+```
+CORS_ORIGINS=https://<your-frontend-domain>
+STRIPE_RETURN_URL=https://<your-frontend-domain>/app/settings/
+```
+
+Then in Supabase → Authentication → URL Configuration → Redirect URLs, add
+`https://<your-frontend-domain>/app/`. Magic links fail silently without it.
+
+---
+
+# AFTER BOTH PARTS
 
 ## 5. Media
 
@@ -146,7 +248,7 @@ falling back to a placeholder nobody notices in review.
 To replace one, drop a file at the manifest's path at the manifest's size and rebuild;
 no code change. `?slots=1` overlays each slot's id and size budget. To rebuild them all
 from the product, run `frontend/scripts/make-media.mjs` — [Media Generation
-Guide](./Media%20Generation%20Guide.md) explains how each was made and carries a
+Guide](./Media%20Setup%20Guide.md) explains how each was made and carries a
 finished prompt for anything you want to generate instead.
 
 ## 6. Smoke test against production

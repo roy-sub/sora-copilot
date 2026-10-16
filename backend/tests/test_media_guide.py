@@ -1,6 +1,6 @@
 """The media guide must address files the app will actually request.
 
-`docs/Media Generation Guide.md` carries a finished prompt per asset, and someone will
+`docs/Media Setup Guide.md` carries a finished prompt per asset, and someone will
 generate sixteen files from it and drop them in. If a path or a dimension has drifted
 from `media-manifest.ts`, every one of them lands somewhere the app never looks — and
 the failure is silent, because `MediaSlot` falls back to its placeholder. The site would
@@ -19,7 +19,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 MANIFEST = ROOT / "frontend" / "src" / "lib" / "media-manifest.ts"
-GUIDE = ROOT / "docs" / "Media Generation Guide.md"
+GUIDE = ROOT / "docs" / "Media Setup Guide.md"
 
 #: `src:` is the asset; `poster:` is a video's fallback frame, which also has to exist.
 _ASSET = re.compile(r'(?:src|poster):\s*"(/media/[^"]+)"')

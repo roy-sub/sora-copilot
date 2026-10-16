@@ -140,7 +140,7 @@ Moves: `src/ package.json package-lock.json next.config.ts tsconfig.json postcss
 |---|---|
 | `ARCHITECTURE.md` | The neurosymbolic boundary with the diagram, the three enforcement mechanisms, and how `test_boundary.py` implements them. The selling point, written down. |
 | `RULEBASE.md` | How a rule is added or verified: transcribe CSV → `build_rulebase.py` → `.lp` → golden test → CHANGELOG → VERSION bump. Includes the UNVERIFIED protocol. |
-| `DEPLOY.md` | Render (Docker, Frankfurt, free-tier sleep + external uptime ping), Cloudflare Pages (`npm run build`, output `out`), Supabase (EU region, resuming a paused project), environment matrix. |
+| `Deployment Guide.md` | Render (Docker, Frankfurt, free-tier sleep + external uptime ping), Cloudflare Pages (`npm run build`, output `out`), Supabase (EU region, resuming a paused project), environment matrix. |
 | `SORA_Build_Spec.md` | The attached spec, committed so the contract lives in the repo. |
 | `HANDOFF-design-phase.md` | The old root `HANDOFF.md`. |
 

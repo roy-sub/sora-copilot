@@ -113,7 +113,7 @@ A SaaS that automates the EU drone Specific Operations Risk Assessment. The oper
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── RULEBASE.md                  # how to add/verify a rule
-│   └── DEPLOY.md
+│   └── Deployment Guide.md
 ├── .env.example
 ├── PLAN.md
 └── README.md

@@ -56,7 +56,7 @@ To sign in and persist anything, copy `.env.example` to `backend/.env` and
 `backend/app/db/migrations/` in order. Every variable is explained in [docs/ENV Example.md](docs/ENV%20Example.md); which
 dashboard each credential comes from is in
 [Third Party Setup Guide](docs/Third%20Party%20Setup%20Guide.md); how the pieces are
-deployed is in [docs/DEPLOY.md](docs/DEPLOY.md).
+deployed is in [docs/Deployment Guide.md](docs/Deployment%20Guide.md).
 
 ### Checks
 
@@ -112,7 +112,7 @@ backend/    FastAPI, the clingo rulebase, services, API
 frontend/   Next.js static export
 design/     the approved design system and screens — READ ONLY
 docs/       ARCHITECTURE · RULEBASE · DEPLOY · ENV Example
-            Third Party Setup Guide · Media Generation Guide
+            Third Party Setup Guide · Media Setup Guide
 PLAN.md     the plan, the open decisions, and what is still blocked
 ```
 

@@ -26,7 +26,7 @@ def get_client() -> Client:
             status_code=503,
             detail=(
                 "SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and SUPABASE_JWT_SECRET are not set. "
-                "See .env.example and docs/DEPLOY.md."
+                "See .env.example and docs/Deployment Guide.md."
             ),
         )
     return create_client(s.supabase_url, s.supabase_service_role_key)
