@@ -1,7 +1,7 @@
 {
   "name": "atypical-airspace",
   "description": "Atypical or segregated airspace short-circuits the air risk tree to ARC a.",
-  "rulebase_version": "2.5.0-rc1",
+  "rulebase_version": "2.5.0-rc2",
   "verified_against_official_text": false,
   "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
   "mission": {

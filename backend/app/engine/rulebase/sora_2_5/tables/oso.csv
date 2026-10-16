@@ -1,10 +1,12 @@
 # table: oso
-# document: JARUS SORA 2.5 main body
+# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex E (JAR_doc_28)
 # version: 2.5
-# section: OSO assignment matrix
-# page: UNKNOWN
-# url:
+# section: Step #9 — OSO assignment by SAIL (was Step #8 in SORA 2.0)
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Annex-E-Release.JAR_doc_28pdf.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: The seventeen OSO rows and their ids are correct for SORA 2.5 — the count fell from 24 by merging, OSO#10 folding into OSO#05 — but the robustness grid is the SORA 2.0 grid restricted to the surviving seventeen. That restriction is a guess. Transcribe the Step #9 table from the Main Body release, where 'NR' marks an OSO not required at a SAIL, and check the per-SAIL integrity and assurance criteria in Annex E (JAR_doc_28), which groups some OSOs as SAIL II / III / IV-to-VI rather than one level per SAIL
 # note: SORA 2.5 defines 17 OSOs: #01-09, 13, 16-20, 23, 24. The design copy said
 #       "~24 OSOs", which is SORA 2.0. The count shown in the UI is always derived from
 #       the number of rows here, never written down.

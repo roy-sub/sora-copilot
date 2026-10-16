@@ -1,10 +1,12 @@
 # table: containment
-# document: JARUS SORA 2.5 main body
+# document: JARUS SORA 2.5 Main Body (JAR_doc_25)
 # version: 2.5
-# section: Containment requirements
-# page: UNKNOWN
-# url:
+# section: Step #7 — containment requirements (moved ahead of the OSOs in 2.5)
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: Research found a genuine conflict in the published material and so this table deliberately computes no level. Several sources state SORA 2.5 replaced the two-tier basic/enhanced classification with three tiers, low, medium and high; the Netherlands ILT AltMoC of 6 September 2024, written against SORA 2.5, says the levels remain basic and enhanced. One of those is wrong and the primary text settles it. Two anchors ARE established and should survive transcription: basic containment is 'no probable failure of the UAS or any external system supporting the operation shall lead to operation outside of the operational volume', and the loss-of-control-of-operation rate the containment argument must meet is 10^-SAIL per flight hour. Until the tiers are settled every row yields assessment_required and NO level, which is a correct answer rather than a blank
 # note: The build spec wants containment computed from this table; the design phase
 #       deliberately returned "assessment required" and computed nothing, because
 #       containment depends on the adjacent area. PLAN.md §6.4 records the resolution:

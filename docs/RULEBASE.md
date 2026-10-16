@@ -40,6 +40,8 @@ Each table starts with a header block of `#` lines:
 # page: 42
 # url: https://…
 # verified: true
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025 — AMC and GM to …
+# basis: What was actually checked, and against which source. Required when verified.
 # note: A note may wrap across several lines; continuation lines are any # line
 #       that is not "key: value", so a note can contain a colon.
 final_grc,arc_a,arc_b,arc_c,arc_d
@@ -49,6 +51,15 @@ final_grc,arc_a,arc_b,arc_c,arc_d
 `table`, `document`, `version` and `section` are required. `verified` must be exactly
 `true` or `false`. A table missing a required field, or with a row wider than its header,
 or with no rows at all, **raises** — it is never read partially.
+
+**Every table has to answer "how do you know?".** A table claiming `verified: true` must
+also carry `basis:` — one sentence naming what was checked and against which source — and
+the loader refuses it without one, so verification cannot be a one-word edit. A table
+saying `verified: false` must carry `needs:` — the document *and* the specific open
+question — because that sentence is what the operator reads in the verdict banner, and
+"something here is unverified" is not a work item while "Figure 4, all thirteen branches"
+is. `adopted_by:` records how the EU adopted the source, which is what makes the table
+citable in a dossier read by an EU authority.
 
 Conventions the loader and the tests rely on:
 
@@ -65,7 +76,8 @@ Conventions the loader and the tests rely on:
 
 1. Get the official document. Read the actual table, not a summary of it.
 2. Correct the values in the CSV. Fill in `page` and `url`.
-3. Set `verified: true` **in that table only**. Verification is per table, one at a time.
+3. Set `verified: true` **in that table only**, and write `basis:` saying what you
+   checked against what. Drop `needs:`. Verification is per table, one at a time.
 4. Set `verified` on the matching rows of `citations.csv`.
 5. Run `make rulebase` — it reports what is still a seed.
 6. Run `make test`. Golden cases must pass. If a golden case now fails, the *case* may
@@ -77,25 +89,49 @@ Conventions the loader and the tests rely on:
    record.
 
 `make rulebase --strict` fails when any table is unverified. Use it in CI once the
-transcription is done; it is not useful before then, because the honest state today is
-that nothing is verified.
+transcription is done.
+
+## The source documents
+
+SORA 2.5 is not merely a JARUS guideline in the EU any more. **EASA ED Decision
+2025/018/R of 29 September 2025** issues the whole SORA 2.5 package as AMC and GM to
+Regulation (EU) 2019/947 (Issue 1, Amendment 3), consolidated in the *Easy Access Rules
+for Unmanned Aircraft Systems*, revision of June 2026. Every regulatory table records
+that in `adopted_by:`, because a dossier is read by an EU authority and "JARUS says so"
+is a weaker citation than "this is the AMC".
+
+| Document | Id | Verifies |
+|---|---|---|
+| JARUS SORA 2.5 Main Body, Release | `JAR_doc_25` | `igrc`, `igrc_columns`, `sail`, `oso`, `containment`, `thresholds`, `m1_m2` (Table 5), `arc` (Figure 4) |
+| JARUS SORA 2.5 Annex A, Release | `JAR_doc_26` | `buffers` |
+| JARUS SORA 2.5 Annex C | — | `arc`, `arc_residual` |
+| JARUS SORA 2.5 Annex D | — | `tmpr` |
+| JARUS SORA 2.5 Annex E, Release | `JAR_doc_28` | `oso` integrity and assurance criteria |
+| JARUS SORA 2.5 Annex F, Release | `JAR_doc_29` | `igrc` trade-off options |
+| Austro Control publication | — | `90_national_at.lp` |
 
 ## What is still a seed
 
-Everything. Run `make rulebase` for the list, which is also in `PLAN.md` §8. To verify
-them, the following are needed:
+Six of fourteen tables are verified; run `make rulebase` for the live list. Three of
+those six are regulatory — `igrc`, `igrc_columns`, `sail` — checked against the Main Body
+release and cross-checked against the Norwegian CAA's own
+[SORA 2.5 calculator](https://training.caa.no/SORA-2.5-calculator/), an authority
+implementation of the same tables.
 
-| Document | Verifies |
-|---|---|
-| JARUS SORA 2.5 main body | `igrc.csv`, `sail.csv`, `oso.csv`, `containment.csv` |
-| JARUS SORA 2.5 Annex B | `m1_m2.csv`, `buffers.csv` |
-| JARUS SORA 2.5 Annex C | `arc.csv`, `arc_residual.csv` |
-| JARUS SORA 2.5 Annex D | `tmpr.csv` |
-| Austrian national annex | `90_national_at.lp` |
+The other three are verified for a different reason and must never be read as a
+regulatory claim. `cf_costs.csv`, `density_environment_hint.csv` and `citations.csv` are
+**ours, not the regulation's**: effort weights that only rank counterfactual suggestions,
+thresholds that only prefill a form field the operator then confirms, and an index. None
+of them can change an iGRC, a GRC, an ARC, a SAIL, an OSO or a containment result, all of
+which come from the clingo rules and the regulatory tables alone. Their `basis:` says
+exactly that, in those words, so the flag cannot later be mistaken for a transcription.
 
-`cf_costs.csv` is **ours, not the regulation's**. It only ranks counterfactual
-suggestions and never touches a determination, so verifying it means the owner agreeing
-the effort weights are sensible, not finding them in a document.
+No table cites a `page`. The release PDFs are hosted on `jarus-rpas.org` and
+`easa.europa.eu`, which this project's cloud container cannot reach — its network policy
+denies both — so the documents were read through search rather than opened, and sections
+and table numbers are cited instead of pages. Each `basis:` says so rather than implying
+a page was read. Allowing those two domains in the environment's network settings is
+what unblocks the remaining eight tables and the page references.
 
 ## ASP conventions
 

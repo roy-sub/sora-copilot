@@ -1,10 +1,12 @@
 # table: arc_residual
 # document: JARUS SORA 2.5 Annex C
 # version: 2.5
-# section: Strategic air risk mitigation
-# page: UNKNOWN
-# url:
+# section: Step #5 — strategic mitigation of the air risk, residual ARC
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-Annex-C-v1.0.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: The seed lowers the initial ARC by exactly one class for any claimed strategic mitigation. Annex C's actual residual-ARC rules, and whether more than one class can ever be claimed, were not established. Transcribe them from Annex C
 # note: A claimed strategic mitigation lowers the initial ARC by one class. Whether more
 #       than one class can ever be claimed is exactly the sort of thing that must come
 #       from the official text, so this table is one step only until verified.

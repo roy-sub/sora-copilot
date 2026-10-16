@@ -31,6 +31,7 @@ supabase db push
 - a trigger that gives each new user an org and an owner membership on first sign-in
 - the three storage buckets
 - rulebase version `2.5.0-rc1`, marked `verified = false`
+  (`004_rulebase_rc2.sql` adds `2.5.0-rc2` and makes it the current one)
 
 ## A note on RLS
 

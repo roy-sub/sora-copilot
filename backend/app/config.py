@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     stripe_return_url: str = "http://localhost:3000/app/settings/"
 
     # ---------------------------------------------------------------- Rulebase
-    rulebase_version: str = "2.5.0-rc1"
+    rulebase_version: str = "2.5.0-rc2"
 
     # ---------------------------------------------------------------- HTTP
     cors_origins: str = "http://localhost:3000"

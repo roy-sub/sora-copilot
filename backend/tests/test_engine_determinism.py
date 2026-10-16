@@ -52,7 +52,7 @@ def test_exactly_one_answer_set(name: str) -> None:
 def test_the_same_mission_hashes_the_same() -> None:
     case = json.loads((GOLDEN / "powerline-corridor-aerodrome.json").read_text(encoding="utf-8"))
     mission = Mission.model_validate(case["mission"])
-    assert mission_hash(mission, "2.5.0-rc1") == mission_hash(mission, "2.5.0-rc1")
+    assert mission_hash(mission, "2.5.0-rc2") == mission_hash(mission, "2.5.0-rc2")
 
 
 def test_a_different_rulebase_version_hashes_differently() -> None:
@@ -66,7 +66,7 @@ def test_a_changed_mitigation_hashes_differently() -> None:
     case = json.loads((GOLDEN / "powerline-corridor-aerodrome.json").read_text(encoding="utf-8"))
     mission = Mission.model_validate(case["mission"])
     changed = mission.model_copy(update={"mitigations": []})
-    assert mission_hash(mission, "2.5.0-rc1") != mission_hash(changed, "2.5.0-rc1")
+    assert mission_hash(mission, "2.5.0-rc2") != mission_hash(changed, "2.5.0-rc2")
 
 
 # ------------------------------------------------------------------ scaling
@@ -113,8 +113,12 @@ def test_the_generated_facts_contain_no_zero_igrc_cell() -> None:
 
 def test_the_generator_marks_every_unverified_table() -> None:
     text = generate.render()
-    for table in ("igrc", "sail", "oso", "arc", "containment", "tmpr"):
+    for table in ("oso", "arc", "containment", "tmpr", "m1_m2", "thresholds"):
         assert f"table_unverified({table})." in text
+    # ...and does not mark the ones that have been checked, or a determination would
+    # carry a warning it has outgrown.
+    for table in ("igrc", "igrc_columns", "sail"):
+        assert f"table_unverified({table})." not in text
 
 
 def test_boolean_cells_are_emitted_as_constants_not_strings() -> None:

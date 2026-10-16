@@ -14,22 +14,18 @@ from app.engine.rulebase.loader import load_rulebase, rulebase_version
 
 router = APIRouter(tags=["rulebase"])
 
-#: What each unverified table still needs. Shown to the operator, not just logged.
+#: What each still-unverified table needs, named by the document that closes it. Shown
+#: to the operator, not just logged: "something is unverified" is not a work item, and
+#: "Figure 4 of the Main Body release" is.
 SOURCES: dict[str, str] = {
-    "igrc": "JARUS SORA 2.5 main body — intrinsic ground risk class table",
-    "igrc_columns": "JARUS SORA 2.5 main body — iGRC column limits",
-    "thresholds": "JARUS SORA 2.5 main body and Annex C — scope thresholds",
-    "m1_m2": "JARUS SORA 2.5 Annex B — ground risk mitigations",
-    "arc": "JARUS SORA 2.5 Annex C — initial air risk class",
-    "arc_residual": "JARUS SORA 2.5 Annex C — strategic air risk mitigation",
-    "sail": "JARUS SORA 2.5 main body — SAIL matrix",
-    "oso": "JARUS SORA 2.5 main body — OSO assignment matrix",
-    "containment": "JARUS SORA 2.5 main body — containment requirements",
-    "tmpr": "JARUS SORA 2.5 Annex D — tactical mitigation performance",
-    "buffers": "JARUS SORA 2.5 / Annex B — operational volume method",
-    "citations": "The documents above, for page references",
-    "cf_costs": "Owner review — these are our effort weights, not a regulation",
-    "density_environment_hint": "Owner review — our prefill thresholds, not a regulation",
+    "thresholds": "JARUS SORA 2.5 Main Body (JAR_doc_25) — Figure 4, for the 500 ft band",
+    "m1_m2": "JARUS SORA 2.5 Main Body (JAR_doc_25) Table 5, and Annex B",
+    "arc": "JARUS SORA 2.5 Main Body (JAR_doc_25) — Figure 4, all 13 branches",
+    "arc_residual": "JARUS SORA 2.5 Annex C — Step #5 residual ARC",
+    "oso": "JARUS SORA 2.5 Main Body (JAR_doc_25) Step #9, and Annex E (JAR_doc_28)",
+    "containment": "JARUS SORA 2.5 Main Body (JAR_doc_25) Step #7 — tier names and levels",
+    "tmpr": "JARUS SORA 2.5 Annex D — TMPR by residual ARC",
+    "buffers": "JARUS SORA 2.5 Annex A (JAR_doc_26) — contingency volume and adjacent area",
 }
 
 
@@ -48,15 +44,19 @@ def current() -> RulebaseOut:
                 page=t.page,
                 rows=len(t.rows),
                 verified=t.verified,
+                basis=t.basis,
+                needs=t.needs,
+                adopted_by=t.adopted_by,
             )
             for name, t in sorted(tables.items())
         ],
         unverified_tables=unverified,
         verified=not unverified,
         changelog=(
-            "Seed skeleton. No table has been verified against an official source, so "
-            "every determination carries an UNVERIFIED warning and must not be submitted "
-            "to an authority."
+            f"{len(tables) - len(unverified)} of {len(tables)} tables verified. "
+            f"{len(unverified)} still carry seed values, so a determination that reads "
+            f"one of them carries an UNVERIFIED warning naming it and must not be "
+            f"submitted to an authority. Each table's own header says what it needs."
             if unverified
             else "All tables verified."
         ),

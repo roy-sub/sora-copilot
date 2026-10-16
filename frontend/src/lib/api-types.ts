@@ -2615,10 +2615,16 @@ export interface components {
         };
         /** RulebaseTableOut */
         RulebaseTableOut: {
+            /** Adopted By */
+            adopted_by?: string | null;
+            /** Basis */
+            basis?: string | null;
             /** Document */
             document: string;
             /** Name */
             name: string;
+            /** Needs */
+            needs?: string | null;
             /** Page */
             page?: number | null;
             /** Rows */

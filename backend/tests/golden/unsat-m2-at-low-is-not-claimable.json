@@ -1,7 +1,7 @@
 {
   "name": "m2-at-low-is-not-claimable",
   "description": "M2 has no low level in the table, so claiming it is refused rather than ignored.",
-  "rulebase_version": "2.5.0-rc1",
+  "rulebase_version": "2.5.0-rc2",
   "verified_against_official_text": false,
   "note": "An input the rulebase must REFUSE. A silent acceptance here would be a determination built on an unclaimable mitigation.",
   "mission": {
@@ -66,6 +66,6 @@
   "adjacent_area_populated": false,
   "expect_unsatisfiable": true,
   "expect_reasons": [
-    "m2_impact cannot be claimed at low robustness \u2014 the table does not offer that level"
+    "m2_impact cannot be claimed at low robustness — the table does not offer that level"
   ]
 }

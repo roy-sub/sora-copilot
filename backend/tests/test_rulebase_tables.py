@@ -4,6 +4,10 @@ Hard rule 3: no invented regulatory values. These tests cannot tell a true value
 false one — only the official document can. What they can do is guarantee that every
 table says where it came from, that an unverified table is loudly unverified, and that
 the seed values match the shapes the spec and the regulation describe.
+
+They also guarantee that verification cannot be claimed cheaply: a table that says
+``verified: true`` must state its basis, and one that says false must state what it still
+needs, so the operator's warning names the open question instead of only its existence.
 """
 
 from __future__ import annotations
@@ -36,13 +40,16 @@ EXPECTED_TABLES = {
     "tmpr",
 }
 
+#: Not transcribed from anything: the product's own weights, hints and index.
+OURS = {"cf_costs", "citations", "density_environment_hint"}
+
 
 def test_every_expected_table_loads() -> None:
     assert set(load_rulebase()) == EXPECTED_TABLES
 
 
 def test_version_file_matches_the_spec_seed() -> None:
-    assert rulebase_version() == "2.5.0-rc1"
+    assert rulebase_version() == "2.5.0-rc2"
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED_TABLES))
@@ -53,20 +60,67 @@ def test_table_declares_its_provenance(name: str) -> None:
     assert t.rows, f"{name} has no rows"
 
 
-def test_no_table_claims_to_be_verified_yet() -> None:
-    """Every table is a seed until the owner supplies the official documents.
+#: Still seeds. Each one's header says what it is waiting for; see docs/RULEBASE.md.
+STILL_SEEDS = {
+    "arc",
+    "arc_residual",
+    "buffers",
+    "containment",
+    "m1_m2",
+    "oso",
+    "thresholds",
+    "tmpr",
+}
 
-    This test is expected to change — deliberately, one table at a time, together with a
-    CHANGELOG entry. It exists so verification cannot happen by accident.
+
+def test_exactly_the_tables_we_have_checked_claim_verification() -> None:
+    """Verification moves one table at a time, with a CHANGELOG entry and a basis.
+
+    This test is expected to change as tables are checked off. It exists so verification
+    cannot happen by accident, and so the set cannot quietly grow.
     """
-    assert unverified_tables() == sorted(EXPECTED_TABLES)
+    assert unverified_tables() == sorted(STILL_SEEDS)
+
+
+@pytest.mark.parametrize("name", sorted(EXPECTED_TABLES))
+def test_a_table_answers_how_do_you_know(name: str) -> None:
+    t = load_rulebase()[name]
+    if t.verified:
+        assert t.basis, f"{name} claims verification without saying what was checked"
+        assert len(t.basis) > 60, f"{name}'s basis is too short to be a real answer"
+    else:
+        assert t.needs, f"{name} is unverified without saying what it needs"
+        assert len(t.needs) > 60, f"{name}'s needs is too short to be actionable"
 
 
 def test_unverified_tables_produce_a_warning_the_user_will_see() -> None:
-    warnings = warnings_for(["igrc", "sail"])
+    warnings = warnings_for(["arc", "oso"])
     assert len(warnings) == 2
     assert all(w.startswith("UNVERIFIED:") for w in warnings)
     assert all("must not be submitted" in w for w in warnings)
+
+
+def test_a_verified_table_produces_no_warning() -> None:
+    assert warnings_for(["igrc", "igrc_columns", "sail"]) == []
+
+
+def test_the_warning_names_the_tables_own_open_question() -> None:
+    """A generic "something is unverified" is not actionable; the specifics are."""
+    (arc,) = warnings_for(["arc"])
+    assert "thirteen" in arc.lower(), "the ARC warning should say the tree is short"
+    (oso,) = warnings_for(["oso"])
+    assert "Step #9" in oso
+    (containment,) = warnings_for(["containment"])
+    assert "10^-SAIL" in containment
+
+
+def test_every_regulatory_table_records_the_eu_adoption() -> None:
+    """SORA 2.5 is EU law through an ED Decision, and a dossier is read in the EU."""
+    tables = load_rulebase()
+    for name in EXPECTED_TABLES - OURS:
+        assert tables[name].adopted_by, f"{name} does not record how the EU adopted it"
+        assert "2025/018/R" in tables[name].adopted_by
+        assert "2019/947" in tables[name].adopted_by
 
 
 def test_sail_matrix_matches_the_spec_seed_shape() -> None:
@@ -196,10 +250,43 @@ def test_every_rule_id_in_a_table_has_a_citation() -> None:
             assert rule_id in cited, f"{name}.csv rule_id {rule_id!r} is missing from citations.csv"
 
 
-def test_cf_costs_is_marked_as_ours_not_the_regulations() -> None:
-    t = load_rulebase()["cf_costs"]
-    assert "not a regulatory source" in t.document
-    assert not t.verified
+@pytest.mark.parametrize("name", sorted(OURS))
+def test_our_own_tables_are_marked_as_ours_not_the_regulations(name: str) -> None:
+    """These three are the product's own data. Saying so is the point of the field.
+
+    They are `verified: true` because there is no official source to check them against
+    — and the basis has to say exactly that, so nobody later mistakes the flag for a
+    regulatory claim.
+    """
+    t = load_rulebase()[name]
+    assert "SORA Copilot" in t.document
+    assert t.verified
+    assert "not a transcribed regulatory table" in (t.basis or "")
+    assert "never be presented as one" in (t.basis or "")
+
+
+def test_our_own_tables_cannot_reach_a_determination() -> None:
+    """The guard behind the flag above: ours rank and prefill, they never decide."""
+    basis = load_rulebase()["cf_costs"].basis or ""
+    for word in ("iGRC", "GRC", "ARC", "SAIL", "OSO", "containment"):
+        assert word in basis
+    assert "clingo" in basis
+
+
+def test_a_table_claiming_verification_without_a_basis_is_rejected(tmp_path) -> None:
+    bad = tmp_path / "noBasis.csv"
+    bad.write_text("# table: b\n# document: d\n# version: 1\n# section: s\n"
+                   "# verified: true\nk,v\n1,2\n")
+    with pytest.raises(RulebaseError, match="basis"):
+        load_table(bad)
+
+
+def test_an_unverified_table_without_a_needs_is_rejected(tmp_path) -> None:
+    bad = tmp_path / "noNeeds.csv"
+    bad.write_text("# table: b\n# document: d\n# version: 1\n# section: s\n"
+                   "# verified: false\nk,v\n1,2\n")
+    with pytest.raises(RulebaseError, match="needs"):
+        load_table(bad)
 
 
 def test_a_table_without_a_verified_header_is_rejected(tmp_path) -> None:
@@ -211,6 +298,7 @@ def test_a_table_without_a_verified_header_is_rejected(tmp_path) -> None:
 
 def test_a_table_with_no_rows_is_rejected(tmp_path) -> None:
     bad = tmp_path / "empty.csv"
-    bad.write_text("# table: e\n# document: d\n# version: 1\n# section: s\n# verified: false\nk,v\n")
+    bad.write_text("# table: e\n# document: d\n# version: 1\n# section: s\n"
+                   "# verified: false\n# needs: " + "the official text, " * 4 + "\nk,v\n")
     with pytest.raises(RulebaseError, match="no data rows"):
         load_table(bad)

@@ -362,15 +362,26 @@ function VerdictView({
   );
 }
 
+/**
+ * Says how many tables are open, not that everything is.
+ *
+ * Part of the rulebase is now checked against the published SORA 2.5 text and part is
+ * not, so a blanket "none of this has been verified" would be false — and false in the
+ * direction that teaches an operator to ignore the banner. Each warning names one table
+ * and its own open question, so the count is the headline and the notes are the detail.
+ */
 function UnverifiedBanner({ warnings }: { warnings: string[] }) {
   const [open, setOpen] = useState(false);
+  const n = warnings.length;
   return (
     <div role="status" className="bg-sheet px-4 md:px-6 py-3 border-l-[3px] border-sail-3">
       <div className="flex items-center gap-3 flex-wrap">
         <span className="t-micro-10 text-sail-3 flex-none">Unverified rulebase</span>
         <span className="flex-1 t-cap text-ink-mid pretty">
-          The regulatory tables behind this determination have not been checked against
-          the published JARUS SORA 2.5 text. It must not be submitted to an authority.
+          {n === 1 ? "One of the regulatory tables" : `${n} of the regulatory tables`} behind
+          this determination {n === 1 ? "is" : "are"} still transcribed from a seed rather
+          than checked against the published JARUS SORA 2.5 text. It must not be submitted
+          to an authority.
         </span>
         <button
           type="button"
@@ -378,7 +389,7 @@ function UnverifiedBanner({ warnings }: { warnings: string[] }) {
           aria-expanded={open}
           className="min-h-11 px-3 bg-transparent border border-hairline-strong rounded-sm t-micro-10 text-ink-mid hover:text-ink-hi tr-ui"
         >
-          {open ? "Hide" : `${warnings.length} notes`}
+          {open ? "Hide" : n === 1 ? "Which one" : "Which ones"}
         </button>
       </div>
       {open && (

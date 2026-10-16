@@ -1,7 +1,7 @@
 {
   "name": "powerline-corridor-aerodrome",
   "description": "Alta X on a 110 kV line south of Gratkorn: sparsely populated, inside the LOWG aerodrome environment, M1 sheltering at low and a strategic air risk mitigation claimed.",
-  "rulebase_version": "2.5.0-rc1",
+  "rulebase_version": "2.5.0-rc2",
   "verified_against_official_text": false,
   "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
   "mission": {

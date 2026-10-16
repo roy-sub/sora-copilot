@@ -1,10 +1,12 @@
 # table: tmpr
 # document: JARUS SORA 2.5 Annex D
 # version: 2.5
-# section: Tactical mitigation performance requirements
-# page: UNKNOWN
-# url:
+# section: Step #6 — tactical mitigation performance requirements by residual ARC
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: The mapping here is the obvious monotone one, which is exactly why it must come from Annex D rather than from plausibility. Annex D also carries the detect-and-avoid performance criteria behind each level, which the dossier should cite alongside the level. Transcribe both
 # note: Keyed on the residual ARC. The seed mapping is the obvious monotone one and is
 #       exactly the kind of plausible guess that must be replaced from Annex D.
 residual_arc,tmpr,rule_id

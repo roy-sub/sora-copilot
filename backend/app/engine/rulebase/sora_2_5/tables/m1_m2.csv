@@ -1,10 +1,12 @@
 # table: m1_m2
 # document: JARUS SORA 2.5 Annex B
 # version: 2.5
-# section: Ground risk mitigations M1 and M2
-# page: UNKNOWN
-# url:
+# section: Step #3 — final ground risk class, mitigations (Main Body Table 5)
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: The credits here are a seed. SORA 2.5 restructured the ground mitigations and the Main Body carries them as Table 5, 'Mitigations for Final GRC determination'; the per-robustness credit values were not established by research. Transcribe Table 5 and Annex B. The open modelling question below stands: there is still no slot for M1(B)
 # note: grc_delta is the change applied to the intrinsic GRC. An empty grc_delta means
 #       the mitigation cannot be claimed at that robustness — the UI shows the level
 #       disabled rather than hiding it, so the path to it stays visible.

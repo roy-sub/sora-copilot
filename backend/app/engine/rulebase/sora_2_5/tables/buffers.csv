@@ -1,10 +1,12 @@
 # table: buffers
-# document: JARUS SORA 2.5 / Annex B — operational volume and ground risk buffer method
+# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex A (JAR_doc_26)
 # version: 2.5
-# section: Contingency volume and ground risk buffer parameters
-# page: UNKNOWN
-# url:
+# section: Step #1 — operational volume, contingency volume and ground risk buffer
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: The 1:1 ground risk buffer IS sourced: the Main Body states an initial buffer may use the 1-to-1 principle, and that a UA leaving the contingency volume is expected to end its flight within the buffer, with the buffer driven by the UA's flight characteristics and the containment requirements. What is NOT sourced is every contingency-volume parameter below — reaction time, bank angle, position error, vertical margin — and the adjacent-area ring, where one secondary source says the adjacent area is at least 5 km with an assembly-of-people check within 1 km against the seed's 1 km ring. Transcribe the method from Annex A
 # note: Read by services/geo.py, not by the rulebase. The ground risk buffer seed is the
 #       1:1 rule (buffer = altitude), which is the conservative MVP default and is
 #       flagged as such in the UI rather than presented as the ballistic method.

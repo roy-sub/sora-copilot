@@ -90,7 +90,7 @@ def test_the_full_flow_produces_a_pinned_determination(
     assert d["initial_arc"] == "c"
     assert d["residual_arc"] == "b"
     assert d["sail"] == "III"
-    assert d["rulebase_version"] == "2.5.0-rc1"
+    assert d["rulebase_version"] == "2.5.0-rc2"
     assert d["mission_hash"]
     assert d["freshly_computed"] is True
     assert len(d["osos"]) == 17

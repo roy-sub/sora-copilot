@@ -1,10 +1,12 @@
 # table: igrc
-# document: JARUS SORA 2.5 main body
+# document: JARUS SORA 2.5 Main Body, Release (JAR_doc_25)
 # version: 2.5
-# section: Intrinsic ground risk class table
-# page: UNKNOWN
-# url:
-# verified: false
+# section: Step #2 — intrinsic ground risk class determination (iGRC table)
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
+# verified: true
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# basis: Every cell, every density band and the >50 000 ppl/km2 cut-off cross-checked against the SORA 2.5 Main Body release and against the Norwegian CAA's own SORA 2.5 calculator (https://training.caa.no/SORA-2.5-calculator/), an authority implementation of the same table, plus JARUS Annex F, which states the final table has no iGRC 11. All three agree with these rows cell for cell. The PDF page number is not cited because this container's network policy blocks jarus-rpas.org, so the document was read through search rather than opened directly
 # note: Rows are population density bands, ordered; columns are the dimension/speed pairs
 #       defined in igrc_columns.csv. band_index fixes the row order so the band can be
 #       selected as the first one whose max_density is not yet exceeded.

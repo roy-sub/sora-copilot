@@ -1,7 +1,7 @@
 {
   "name": "powerline-corridor-no-mitigations",
   "description": "The same corridor with nothing claimed, so the mitigation deltas can be seen to do work.",
-  "rulebase_version": "2.5.0-rc1",
+  "rulebase_version": "2.5.0-rc2",
   "verified_against_official_text": false,
   "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
   "mission": {

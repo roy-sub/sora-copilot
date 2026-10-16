@@ -406,6 +406,12 @@ class RulebaseTableOut(BaseModel):
     page: int | None = None
     rows: int
     verified: bool
+    #: Why this table counts as verified. Present exactly when ``verified`` is true.
+    basis: str | None = None
+    #: What a seed table is still waiting for. Present exactly when ``verified`` is false.
+    needs: str | None = None
+    #: How the EU adopted the source document, for a dossier read by an EU authority.
+    adopted_by: str | None = None
 
 
 class RulebaseOut(BaseModel):

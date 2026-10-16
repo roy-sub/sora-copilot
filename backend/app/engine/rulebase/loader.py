@@ -5,9 +5,15 @@ section and page it came from, plus ``verified: true|false``. A table that is mi
 required header field, or that has a malformed row, raises — it is never read partially,
 because a half-read regulatory table is worse than no table.
 
-``verified: false`` is not an error. It is the normal state until the owner supplies the
-official document, and it propagates into every determination's ``warnings`` and into
-the verdict UI as an UNVERIFIED banner.
+``verified: false`` is not an error. It is the normal state until the table has been
+checked against the official text, and it propagates into every determination's
+``warnings`` and into the verdict UI as an UNVERIFIED banner.
+
+A table may not flip to ``verified: true`` silently. The header must then also carry
+``basis:`` — one sentence naming what was actually checked and against which source — and
+the loader refuses the table without it. Conversely an unverified table must carry
+``needs:``, naming the document and the specific open question, so the warning the
+operator reads says what is missing rather than only that something is.
 """
 
 from __future__ import annotations
@@ -42,6 +48,12 @@ class Table:
     page: int | None
     url: str | None
     verified: bool
+    #: Why this table is considered verified. Required when ``verified`` is true.
+    basis: str | None
+    #: What a still-unverified table is waiting for. Required when ``verified`` is false.
+    needs: str | None
+    #: How the EU adopted the source document, where the table records it.
+    adopted_by: str | None
     notes: tuple[str, ...]
     fieldnames: tuple[str, ...]
     rows: tuple[dict[str, str], ...]
@@ -51,13 +63,18 @@ class Table:
         return self.section
 
     def warning(self) -> str | None:
-        """The sentence the operator sees when this table fed their determination."""
+        """The sentence the operator sees when this table fed their determination.
+
+        It names the table's own open question rather than a generic complaint, because
+        "something here is unverified" is not actionable and "the ARC decision tree in
+        this table has ten branches where Annex C has thirteen" is.
+        """
         if self.verified:
             return None
         return (
-            f"UNVERIFIED: {self.name} is transcribed from a seed, not from "
-            f"{self.document} ({self.section}). This determination must not be submitted "
-            f"to an authority until the table is verified."
+            f"UNVERIFIED: {self.name} is a seed, not transcribed from "
+            f"{self.document} ({self.section}). {self.needs} This determination must not "
+            f"be submitted to an authority until the table is verified."
         )
 
 
@@ -95,6 +112,19 @@ def _parse_header(lines: list[str], path: Path) -> tuple[dict[str, str], list[st
         raise RulebaseError(f"{path.name}: header is missing {', '.join(missing)}")
     if meta.get("verified") not in {"true", "false"}:
         raise RulebaseError(f"{path.name}: header needs 'verified: true' or 'verified: false'")
+    # Verification may not happen by accident or by a one-word edit. Claiming it costs a
+    # sentence saying what was checked; not claiming it costs a sentence saying what is
+    # missing. Either way the table answers "how do you know?" in its own header.
+    if meta["verified"] == "true" and not meta.get("basis"):
+        raise RulebaseError(
+            f"{path.name}: a table may not claim 'verified: true' without 'basis:' — one "
+            f"sentence naming what was checked and against which source"
+        )
+    if meta["verified"] == "false" and not meta.get("needs"):
+        raise RulebaseError(
+            f"{path.name}: an unverified table needs 'needs:' — the document and the "
+            f"specific open question, so the operator's warning is actionable"
+        )
     return meta, notes
 
 
@@ -136,6 +166,9 @@ def load_table(path: Path) -> Table:
         page=int(page) if page.isdigit() else None,
         url=meta.get("url") or None,
         verified=meta["verified"] == "true",
+        basis=meta.get("basis") or None,
+        needs=meta.get("needs") or None,
+        adopted_by=meta.get("adopted_by") or None,
         notes=tuple(notes),
         fieldnames=tuple(reader.fieldnames),
         rows=tuple(rows),

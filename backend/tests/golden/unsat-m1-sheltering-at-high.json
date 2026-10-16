@@ -1,7 +1,7 @@
 {
   "name": "m1-sheltering-at-high",
   "description": "M1 sheltering has no high level in the table.",
-  "rulebase_version": "2.5.0-rc1",
+  "rulebase_version": "2.5.0-rc2",
   "verified_against_official_text": false,
   "note": "An input the rulebase must REFUSE. A silent acceptance here would be a determination built on an unclaimable mitigation.",
   "mission": {
@@ -66,6 +66,6 @@
   "adjacent_area_populated": false,
   "expect_unsatisfiable": true,
   "expect_reasons": [
-    "m1_strategic cannot be claimed at high robustness \u2014 the table does not offer that level"
+    "m1_strategic cannot be claimed at high robustness — the table does not offer that level"
   ]
 }

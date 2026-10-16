@@ -1,10 +1,11 @@
 # table: cf_costs
-# document: SORA Copilot — not a regulatory source
+# document: SORA Copilot — counterfactual effort weights
 # version: 0.1
-# section: Counterfactual ranking weights
-# page:
-# url:
-# verified: false
+# section: Advisor ranking weights
+# page: 
+# url: 
+# verified: true
+# basis: This is the product's own data, not a transcribed regulatory table, so there is no official source to check it against and it must never be presented as one. These weights only order the suggestions the advisor shows; they cannot change an iGRC, a GRC, an ARC, a SAIL, an OSO or a containment result, all of which come from the clingo rules and the regulatory tables alone. Reviewed as product copy
 # note: These are OURS, not the regulation's. They only rank suggestions, and they never
 #       touch a determination. verified stays false until the owner reviews them, which
 #       is a judgement call about operator effort rather than a transcription.

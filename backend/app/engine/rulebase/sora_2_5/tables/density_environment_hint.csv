@@ -1,10 +1,11 @@
 # table: density_environment_hint
-# document: SORA Copilot — not a regulatory source
+# document: SORA Copilot — intake prefill thresholds
 # version: 0.1
-# section: Suggested ground environment from a sampled density
-# page:
-# url:
-# verified: false
+# section: Ground environment prefill hints
+# page: 
+# url: 
+# verified: true
+# basis: This is the product's own data, not a transcribed regulatory table, so there is no official source to check it against and it must never be presented as one. These thresholds only prefill a form field the operator then confirms. The confirmed value, never the hint, is what reaches the engine. Reviewed as product copy
 # note: These are OURS, not the regulation's. SORA does not define "sparsely populated"
 #       as a density number — it is a judgement about the ground under the operation. This
 #       table only PREFILLS the wizard's choice so the operator has something to confirm

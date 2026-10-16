@@ -1,10 +1,12 @@
 # table: arc
-# document: JARUS SORA 2.5 Annex C
+# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex C
 # version: 2.5
-# section: Initial air risk class decision tree
-# page: UNKNOWN
-# url:
+# section: Step #4 — initial air risk class, decision tree (Figure 4)
+# page: 
+# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-Annex-C-v1.0.pdf
 # verified: false
+# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
+# needs: This table is not merely unchecked, it is structurally short. SORA 2.5 aggregates the airspace into THIRTEEN collision risk categories and assigns the initial ARC from the decision tree at Figure 4 of the Main Body; these ten ordered rows are a ten-branch reconstruction. Transcribe all thirteen branches from Figure 4, in the tree's own precedence order, before flipping this table. Also record the alternative route Step #4 allows: where a competent authority, ANSP or U-space provider publishes a collision risk map, that map sets the initial ARC and the tree is not used at all
 # note: Rows are ordered; 30_arc.lp applies the first whose conditions all hold, which
 #       is how the decision tree's precedence is preserved. "*" is a wildcard.
 # note: altitude_band splits on 500 ft AGL = 152.4 m (PLAN.md §0), not the round 150 m
