@@ -16,11 +16,11 @@ install: $(VENV)/bin/activate ## Create the venv and install the project
 
 .PHONY: dev
 dev: install ## Run the API with reload on $(PORT)
-	$(VENV)/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port $(PORT)
+	$(PY) main.py --port $(PORT)
 
 .PHONY: serve
-serve: install ## Run the API without reload (production shape)
-	$(VENV)/bin/uvicorn app.main:app --host 0.0.0.0 --port $(PORT)
+serve: install ## Run the API the way a host runs it: no reload, all interfaces
+	$(PY) main.py --prod --port $(PORT)
 
 .PHONY: test
 test: install ## Run the test suite
@@ -36,6 +36,10 @@ fmt: install ## Apply ruff fixes and formatting
 	$(VENV)/bin/ruff check --fix app tests scripts
 	$(VENV)/bin/ruff format app tests scripts
 
+.PHONY: smoke
+smoke: install ## Walk the whole product against a running API ($$BASE)
+	./scripts/smoke.sh
+
 .PHONY: rulebase
 rulebase: install ## Regenerate .lp fact files from the transcribed CSV tables
 	$(PY) scripts/build_rulebase.py
@@ -43,10 +47,6 @@ rulebase: install ## Regenerate .lp fact files from the transcribed CSV tables
 .PHONY: openapi
 openapi: install ## Write the OpenAPI schema to openapi.json (frontend client input)
 	$(PY) scripts/export_openapi.py
-
-.PHONY: docker
-docker: ## Build the production image
-	docker build -t sora-copilot-backend .
 
 .PHONY: clean
 clean: ## Remove the venv and caches

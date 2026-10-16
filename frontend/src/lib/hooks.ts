@@ -48,6 +48,7 @@ export const keys = {
   dossier: (id: string) => ["operations", id, "dossier"] as const,
   billing: ["billing"] as const,
   seats: ["seats"] as const,
+  workedExample: ["demo", "example"] as const,
   countries: ["national"] as const,
   pack: (code: string) => ["national", code] as const,
   checklist: (id: string) => ["operations", id, "checklist"] as const,
@@ -372,6 +373,33 @@ export function useGenerateDossier(id: string) {
 
 export function useCategoryCheck() {
   return useMutation({ mutationFn: (body: CategoryCheckIn) => api.categoryCheck(body) });
+}
+
+// ------------------------------------------------------------------ the worked example
+
+export function useWorkedExample() {
+  const ready = useReady();
+  return useQuery({ queryKey: keys.workedExample, queryFn: api.workedExample, enabled: ready });
+}
+
+/**
+ * Build the worked example and go straight to its verdict.
+ *
+ * The determination is computed by the engine on the way, so this is a real operation
+ * appearing in the operator's own list — which is why every list the new rows could
+ * show up in is invalidated rather than just the one being looked at.
+ */
+export function useSeedWorkedExample() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.seedWorkedExample(),
+    onSuccess: (operation) => {
+      qc.setQueryData(keys.workedExample, operation);
+      qc.invalidateQueries({ queryKey: keys.operations });
+      qc.invalidateQueries({ queryKey: keys.drones });
+      qc.invalidateQueries({ queryKey: keys.billing });
+    },
+  });
 }
 
 // ------------------------------------------------------------------ seats

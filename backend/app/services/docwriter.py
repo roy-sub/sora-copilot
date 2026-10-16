@@ -10,6 +10,9 @@ and a backend turns those calls into a `.docx` or a `.pdf`. Neither backend deci
 goes in the document; both are told. A test renders both from the same input and asserts
 the values match.
 
+Both backends are pure Python with the typeface bundled, so a dossier renders the same
+on a laptop, on a free-tier host and in CI with nothing to install but the wheels.
+
 The vocabulary is deliberately small — headings, paragraphs, bullets, key/value tables,
 grid tables, notes, images, page breaks. Anything richer would start to encode layout in
 the content path, which is where drift begins.
@@ -17,9 +20,8 @@ the content path, which is where drift begins.
 
 from __future__ import annotations
 
-import html
 from io import BytesIO
-from typing import Any, Protocol
+from typing import Protocol
 
 from docx import Document as new_document
 from docx.document import Document
@@ -28,16 +30,16 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
+from fpdf import FPDF
+from fpdf.fonts import FontFace
+from PIL import Image
+
+from app.services import fonts
 
 INK = RGBColor(0x1A, 0x1A, 0x1A)
 MUTED = RGBColor(0x5A, 0x60, 0x66)
 WARN = RGBColor(0x8A, 0x52, 0x10)
 
-#: Hex equivalents, for the HTML backend. Kept beside the DOCX colours so the two
-#: documents cannot end up looking like different products.
-INK_HEX = "#1a1a1a"
-MUTED_HEX = "#5a6066"
-WARN_HEX = "#8a5210"
 
 
 class Writer(Protocol):
@@ -202,153 +204,251 @@ class DocxWriter:
 # ------------------------------------------------------------------ PDF
 
 
-#: Print CSS. `@page` carries the running header, so the disclaimer and the UNVERIFIED
-#: banner appear on every page of the PDF exactly as they do in the DOCX — a printed page
-#: has to be readable on its own.
-_CSS = """
-@page {{
-  size: A4;
-  margin: 26mm 22mm 20mm 22mm;
-  @top-left {{
-    content: "{header}";
-    font: 7.5pt/1.3 "DejaVu Sans", sans-serif;
-    color: {muted};
-    white-space: pre-wrap;
-    width: 100%;
-  }}
-  @bottom-right {{
-    content: counter(page) " / " counter(pages);
-    font: 7.5pt "DejaVu Sans", sans-serif;
-    color: {muted};
-  }}
-}}
-body {{ font: 10.5pt/1.45 "DejaVu Sans", sans-serif; color: {ink}; }}
-h1.doc-title {{ font-size: 22pt; margin: 0 0 4pt; }}
-p.doc-subtitle {{ font-size: 14pt; color: {muted}; margin: 0 0 18pt; }}
-h1 {{ font-size: 15pt; margin: 18pt 0 6pt; }}
-h2 {{ font-size: 12.5pt; margin: 14pt 0 5pt; }}
-h3 {{ font-size: 11pt; margin: 12pt 0 4pt; }}
-p {{ margin: 0 0 6pt; }}
-ul {{ margin: 0 0 6pt 0; padding-left: 16pt; }}
-li {{ margin: 0 0 3pt; }}
-.note {{ font-size: 8.5pt; color: {muted}; }}
-.warn {{ font-weight: bold; color: {warn}; }}
-table {{ border-collapse: collapse; width: 100%; margin: 0 0 10pt; font-size: 9.5pt; }}
-th, td {{ border: 0.5pt solid #b9bfc4; padding: 3pt 5pt; text-align: left;
-          vertical-align: top; }}
-th {{ background: #eef1f3; font-weight: bold; }}
-td.k {{ font-weight: bold; width: 38%; }}
-img {{ max-width: 100%; }}
-.break {{ break-before: page; }}
-"""
+#: Point sizes, matched to the DOCX styles so the two documents read as one product.
+_SIZE = {"title": 22, "subtitle": 14, "h1": 15, "h2": 12.5, "h3": 11, "body": 10.5,
+         "note": 8.5, "table": 9, "header": 7.5}
+
+#: Page geometry in millimetres. A4 with the DOCX's margins.
+_MARGIN_X = 22.0
+_MARGIN_TOP = 26.0
+_MARGIN_BOTTOM = 18.0
+
+#: RGB tuples for fpdf2, from the same values the DOCX uses.
+_INK = (0x1A, 0x1A, 0x1A)
+_MUTED = (0x5A, 0x60, 0x66)
+_WARN = (0x8A, 0x52, 0x10)
+_RULE = (0xB9, 0xBF, 0xC4)
+_TH_FILL = (0xEE, 0xF1, 0xF3)
 
 
-class HtmlWriter:
-    """WeasyPrint. The format an authority files.
+#: What fpdf2 reads as emphasis inside a cell. Doubled, not single — a rule id with one
+#: underscore is safe; `__like_this__` is not.
+_MD_DELIMITERS = ("**", "__", "--")
 
-    Renders through HTML rather than converting the DOCX, because converting would need
-    LibreOffice — which does not fit on a free tier, and which this product deliberately
-    does not depend on.
+
+def _has_markup(*parts: str) -> bool:
+    """Whether any part would be eaten as emphasis rather than printed."""
+    return any(d in part for part in parts for d in _MD_DELIMITERS)
+
+
+class _Pdf(FPDF):
+    """An A4 page with the running header and the page number the dossier needs.
+
+    The header is not decoration: a printed page is read on its own, so the disclaimer
+    and the UNVERIFIED banner have to be on every one of them.
     """
 
     def __init__(self, *, disclaimer: str, stamp: str, banner: str | None) -> None:
+        super().__init__(orientation="P", unit="mm", format="A4")
         self._disclaimer = disclaimer
         self._stamp = stamp
         self._banner = banner
-        self._parts: list[str] = []
-        self._pending_break = False
+        self.set_margins(_MARGIN_X, _MARGIN_TOP, _MARGIN_X)
+        self.set_auto_page_break(auto=True, margin=_MARGIN_BOTTOM)
+        self.add_font("dejavu", "", str(fonts.regular()))
+        self.add_font("dejavu", "B", str(fonts.bold()))
+        self.set_font("dejavu", size=_SIZE["body"])
 
-    def _emit(self, html_fragment: str) -> None:
-        if self._pending_break:
-            html_fragment = html_fragment.replace("<", '<div class="break"></div><', 1)
-            self._pending_break = False
-        self._parts.append(html_fragment)
+    def header(self) -> None:  # fpdf2 calls this on every new page
+        top = 8.0
+        self.set_y(top)
+        self.set_font("dejavu", size=_SIZE["header"])
+        self.set_text_color(*_MUTED)
+        self.multi_cell(0, 3.4, self._disclaimer, align="L", new_x="LMARGIN", new_y="NEXT")
+        self.multi_cell(0, 3.4, self._stamp, align="L", new_x="LMARGIN", new_y="NEXT")
+        if self._banner:
+            self.set_font("dejavu", "B", _SIZE["header"])
+            self.set_text_color(*_WARN)
+            self.multi_cell(0, 3.4, self._banner, align="L", new_x="LMARGIN", new_y="NEXT")
+        # Start the body below whatever the header actually took, never under it.
+        self.set_y(max(self.get_y() + 4.0, _MARGIN_TOP))
+        self.set_font("dejavu", size=_SIZE["body"])
+        self.set_text_color(*_INK)
 
-    @staticmethod
-    def _e(text: str) -> str:
-        return html.escape(str(text))
+    def footer(self) -> None:  # fpdf2 calls this on every new page
+        self.set_y(-14)
+        self.set_font("dejavu", size=_SIZE["header"])
+        self.set_text_color(*_MUTED)
+        self.cell(0, 5, f"{self.page_no()} / {{nb}}", align="R")
+        self.set_text_color(*_INK)
+
+
+class PdfWriter:
+    """fpdf2. The format an authority files.
+
+    Pure Python, with the typeface bundled in the repository — so a dossier renders
+    identically on a laptop, on a free-tier host and in CI, with nothing to install
+    beyond ``pip install``. The previous backend rendered HTML through WeasyPrint, which
+    needed cairo, pango and a system font: five native libraries that existed only
+    because a Dockerfile installed them, and the Dockerfile is gone.
+    """
+
+    def __init__(self, *, disclaimer: str, stamp: str, banner: str | None) -> None:
+        self._pdf = _Pdf(disclaimer=disclaimer, stamp=stamp, banner=banner)
+        self._pdf.add_page()
+
+    # -------------------------------------------------------------- helpers
+
+    @property
+    def _width(self) -> float:
+        return float(self._pdf.w - 2 * _MARGIN_X)
+
+    def _text(self, body: str, *, size: float, bold: bool = False,
+              colour: tuple[int, int, int] = _INK, leading: float = 1.45,
+              space_after: float = 2.0, indent: float = 0.0) -> None:
+        pdf = self._pdf
+        pdf.set_font("dejavu", "B" if bold else "", size)
+        pdf.set_text_color(*colour)
+        if indent:
+            pdf.set_x(_MARGIN_X + indent)
+        pdf.multi_cell(
+            self._width - indent, size * leading * 0.3528, body,
+            align="L", new_x="LMARGIN", new_y="NEXT",
+        )
+        pdf.ln(space_after)
+        pdf.set_text_color(*_INK)
+
+    def _space_for(self, lines: float, size: float) -> None:
+        """Keep a heading with at least the start of what follows it."""
+        needed = lines * size * 0.52
+        if self._pdf.get_y() + needed > self._pdf.h - _MARGIN_BOTTOM:
+            self._pdf.add_page()
+
+    # -------------------------------------------------------------- the protocol
 
     def title(self, text: str, subtitle: str | None = None) -> None:
-        self._emit(f'<h1 class="doc-title">{self._e(text)}</h1>')
+        self._text(text, size=_SIZE["title"], bold=True, leading=1.15, space_after=1.0)
         if subtitle:
-            self._parts.append(f'<p class="doc-subtitle">{self._e(subtitle)}</p>')
+            self._text(subtitle, size=_SIZE["subtitle"], colour=_MUTED, space_after=5.0)
+        else:
+            self._pdf.ln(4.0)
 
     def heading(self, text: str, level: int = 1) -> None:
-        tag = f"h{min(max(level, 1), 3)}"
-        self._emit(f"<{tag}>{self._e(text)}</{tag}>")
+        size = _SIZE[f"h{min(max(level, 1), 3)}"]
+        self._space_for(4, size)
+        self._pdf.ln(2.0 if level > 1 else 3.0)
+        self._text(text, size=size, bold=True, leading=1.2, space_after=1.5)
 
     def paragraph(self, text: str) -> None:
-        self._emit(f"<p>{self._e(text)}</p>")
-
-    def _list_item(self, inner: str) -> None:
-        """Append to the open list, or start one.
-
-        Consecutive bullets have to share a `<ul>`: a run of single-item lists stacks
-        the margin between every line and reads as loose, which is not how the DOCX
-        renders the same content.
-        """
-        if self._parts and self._parts[-1].endswith("</ul>") and not self._pending_break:
-            self._parts[-1] = self._parts[-1][: -len("</ul>")] + f"<li>{inner}</li></ul>"
-            return
-        self._emit(f"<ul><li>{inner}</li></ul>")
+        self._text(text, size=_SIZE["body"])
 
     def bullet(self, text: str) -> None:
-        self._list_item(self._e(text))
+        self._bullet_row(text, lead=None)
 
     def lead_bullet(self, lead: str, rest: str) -> None:
-        self._list_item(f"<strong>{self._e(lead)}</strong>{self._e(rest)}")
+        self._bullet_row(rest, lead=lead)
+
+    def _bullet_row(self, text: str, *, lead: str | None) -> None:
+        """A hanging bullet: the glyph in the gutter, the text in a block beside it.
+
+        Written as two cells rather than one string so a wrapped second line aligns
+        under the first word, not under the bullet.
+        """
+        pdf = self._pdf
+        size = _SIZE["body"]
+        line = size * 1.45 * 0.3528
+        gutter = 4.5
+        if pdf.get_y() + line * 2 > pdf.h - _MARGIN_BOTTOM:
+            pdf.add_page()
+        y0 = pdf.get_y()
+        pdf.set_font("dejavu", size=size)
+        pdf.set_text_color(*_INK)
+        pdf.set_xy(_MARGIN_X, y0)
+        pdf.cell(gutter, line, "\u2022")
+        pdf.set_xy(_MARGIN_X + gutter, y0)
+        # One multi_cell either way, so a wrapped line hangs under the first word rather
+        # than returning to the margin. `write()` cannot do that: it wraps to the page.
+        #
+        # The emphasis rides along as markdown, which is the only way fpdf2 mixes weights
+        # inside a wrapping block — and fpdf2 has no escape character. So when the content
+        # itself contains a delimiter, the bold lead is dropped rather than letting the
+        # renderer eat part of a rule id. A document that is right beats one that is bold.
+        markup = bool(lead) and not _has_markup(lead or "", text)
+        body = f"**{lead}**{text}" if markup else f"{lead or ''}{text}"
+        pdf.multi_cell(
+            self._width - gutter, line, body,
+            align="L", new_x="LMARGIN", new_y="NEXT", markdown=markup,
+        )
+        pdf.ln(0.8)
 
     def note(self, text: str) -> None:
-        self._emit(f'<p class="note">{self._e(text)}</p>')
+        self._text(text, size=_SIZE["note"], colour=_MUTED, space_after=2.5)
 
     def warning(self, text: str) -> None:
-        self._emit(f'<p class="warn">{self._e(text)}</p>')
+        self._text(text, size=_SIZE["body"], bold=True, colour=_WARN, space_after=2.5)
 
     def kv_table(self, rows: list[tuple[str, str]]) -> None:
-        body = "".join(
-            f'<tr><td class="k">{self._e(k)}</td><td>{self._e(v)}</td></tr>' for k, v in rows
-        )
-        self._emit(f"<table>{body}</table>")
+        self._grid(None, [[k, v] for k, v in rows], widths=(38.0, 62.0), key_column=True)
 
     def table(self, headers: list[str], rows: list[list[str]]) -> None:
-        head = "".join(f"<th>{self._e(h)}</th>" for h in headers)
-        body = "".join(
-            "<tr>" + "".join(f"<td>{self._e(c)}</td>" for c in row) + "</tr>" for row in rows
-        )
-        self._emit(f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>")
+        self._grid(headers, rows, widths=None, key_column=False)
+
+    def _grid(
+        self,
+        headers: list[str] | None,
+        rows: list[list[str]],
+        *,
+        widths: tuple[float, ...] | None,
+        key_column: bool,
+    ) -> None:
+        """One table renderer for both shapes, so they cannot look like two products."""
+        pdf = self._pdf
+        pdf.set_font("dejavu", size=_SIZE["table"])
+        pdf.set_draw_color(*_RULE)
+        pdf.set_line_width(0.18)
+        columns = len(headers) if headers else (len(rows[0]) if rows else 0)
+        if not columns:
+            return
+        col_widths = widths or tuple(100.0 / columns for _ in range(columns))
+
+        with pdf.table(
+            col_widths=col_widths,
+            line_height=_SIZE["table"] * 1.35 * 0.3528,
+            text_align="LEFT",
+            borders_layout="ALL",
+            headings_style=FontFace(emphasis="BOLD", fill_color=_TH_FILL, color=_INK),
+            first_row_as_headings=headers is not None,
+            padding=(1.2, 1.6, 1.2, 1.6),
+        ) as table:
+            if headers:
+                row = table.row()
+                for cell in headers:
+                    row.cell(cell)
+            for values in rows:
+                row = table.row()
+                for index, cell in enumerate(values):
+                    style = (
+                        FontFace(emphasis="BOLD")
+                        if key_column and index == 0
+                        else None
+                    )
+                    row.cell(cell or "", style=style)
+        pdf.ln(3.0)
+        pdf.set_font("dejavu", size=_SIZE["body"])
 
     def image(self, png: bytes, width_cm: float) -> None:
-        import base64
-
-        encoded = base64.b64encode(png).decode("ascii")
-        self._emit(f'<img src="data:image/png;base64,{encoded}" style="width:{width_cm}cm">')
+        pdf = self._pdf
+        width_mm = min(width_cm * 10.0, self._width)
+        with Image.open(BytesIO(png)) as probe:
+            ratio = probe.height / probe.width
+        height_mm = width_mm * ratio
+        if pdf.get_y() + height_mm > pdf.h - _MARGIN_BOTTOM:
+            pdf.add_page()
+        pdf.image(BytesIO(png), x=_MARGIN_X, w=width_mm)
+        pdf.ln(2.5)
 
     def page_break(self) -> None:
-        self._pending_break = True
+        self._pdf.add_page()
 
     def render(self) -> bytes:
-        import weasyprint
-
-        header = self._disclaimer + "\n" + self._stamp
-        if self._banner:
-            header += "\n" + self._banner
-        css = _CSS.format(
-            header=header.replace('"', "'").replace("\n", "\\A "),
-            ink=INK_HEX,
-            muted=MUTED_HEX,
-            warn=WARN_HEX,
-        )
-        document = (
-            '<!doctype html><html><head><meta charset="utf-8">'
-            f"<style>{css}</style></head><body>" + "".join(self._parts) + "</body></html>"
-        )
-        pdf: Any = weasyprint.HTML(string=document).write_pdf()
-        return bytes(pdf)
+        # `{nb}` in the footer resolves to the total once the document is complete.
+        self._pdf.alias_nb_pages()
+        return bytes(self._pdf.output())
 
 
 def writer_for(fmt: str, *, disclaimer: str, stamp: str, banner: str | None) -> Writer:
     if fmt == "docx":
         return DocxWriter(disclaimer=disclaimer, stamp=stamp, banner=banner)
     if fmt == "pdf":
-        return HtmlWriter(disclaimer=disclaimer, stamp=stamp, banner=banner)
+        return PdfWriter(disclaimer=disclaimer, stamp=stamp, banner=banner)
     raise ValueError(f"unknown dossier format {fmt!r}")

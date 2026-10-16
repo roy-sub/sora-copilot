@@ -36,6 +36,7 @@ import { MITIGATIONS, MitigationCard } from "@/components/wizard/MitigationCard"
 import { STEPS, WizardStepper, stepIndex, type StepKey } from "@/components/wizard/WizardStepper";
 import { ApiError } from "@/lib/api";
 import { PlanLimit, isPlanLimit } from "@/components/PlanLimit";
+import { WorkedExampleButton } from "@/components/app/WorkedExampleButton";
 import {
   type AirspaceClass,
   type Draft,
@@ -479,6 +480,13 @@ function StartPanel({
           {busy ? "Starting" : "Start the wizard"}
         </Button>
       </form>
+      <div className="pt-5 border-t border-hairline flex flex-col gap-3 w-full max-w-[460px]">
+        <p className="m-0 t-cap text-ink-low pretty">
+          Not sure what the engine needs? Have it build a finished one — a real
+          powerline inspection, run through the same engine, that you can then edit.
+        </p>
+        <WorkedExampleButton />
+      </div>
     </main>
   );
 }

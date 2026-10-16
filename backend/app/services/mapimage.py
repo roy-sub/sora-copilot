@@ -42,8 +42,9 @@ EARTH_RADIUS_M = 6_378_137.0
 
 Ring = list[tuple[float, float]]
 
-#: DejaVu ships with the runtime image (the Dockerfile installs fonts-dejavu-core). The
-#: bitmap default is unreadable at print size, so fall back only if DejaVu is absent.
+#: Bundled with the backend (``app/assets/fonts``), not taken from the host: there is no
+#: Dockerfile installing ``fonts-dejavu-core`` any more, and PIL's bitmap default is
+#: unreadable at print size.
 _FONT_PATHS = (
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/share/fonts/dejavu/DejaVuSans.ttf",

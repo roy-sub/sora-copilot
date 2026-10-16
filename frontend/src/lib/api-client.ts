@@ -164,6 +164,9 @@ export const api = {
 
   rulebase: () => request<Rulebase>(`${V1}/rulebase/current`, { anonymous: true }),
 
+  workedExample: () => request<Operation | null>(`${V1}/demo/example`),
+  seedWorkedExample: () => request<Operation>(`${V1}/demo/example`, { method: "POST" }),
+
   seats: () => request<Seats>(`${V1}/orgs/me/seats`),
   invite: (email: string, role: InviteRole = "member") =>
     request<Seats>(`${V1}/orgs/me/invites`, { method: "POST", body: { email, role } }),

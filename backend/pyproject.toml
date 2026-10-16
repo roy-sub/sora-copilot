@@ -24,7 +24,7 @@ dependencies = [
   "pillow>=11,<12",
   "pyproj>=3.7,<4",
   "python-docx>=1.2,<2",
-  "weasyprint>=66,<67",
+  "fpdf2>=2.8,<3",
   "anthropic>=0.75,<1",
   "stripe>=12,<13",
 ]
@@ -46,6 +46,21 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+# The backend is not only Python. The rulebase is CSV and clingo source, the country
+# packs are JSON, and the PDF renderer and the map chart carry their own typeface. None
+# of those directories is a package, so without this a plain `pip install .` yields a
+# backend that imports cleanly and then cannot render a determination or a document.
+[tool.setuptools.package-data]
+app = [
+  "engine/rulebase/*/*.lp",
+  "engine/rulebase/*/VERSION",
+  "engine/rulebase/*/tables/*.csv",
+  "national/packs/*.json",
+  "db/migrations/*.sql",
+  "assets/fonts/*.ttf",
+  "assets/fonts/*.txt",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,5 +84,5 @@ warn_unreachable = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["clingo.*", "supabase.*", "shapely.*", "pyproj.*", "docx.*", "weasyprint.*"]
+module = ["clingo.*", "supabase.*", "shapely.*", "pyproj.*", "docx.*", "fpdf.*"]
 ignore_missing_imports = true

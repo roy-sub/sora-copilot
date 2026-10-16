@@ -8,6 +8,7 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     billing,
+    demo,
     determine,
     dossier,
     drones,
@@ -25,6 +26,7 @@ router = APIRouter()
 router.include_router(health.router)
 router.include_router(orgs.router)
 router.include_router(billing.router)
+router.include_router(demo.router)
 router.include_router(drones.router)
 router.include_router(operations.router)
 router.include_router(determine.router)

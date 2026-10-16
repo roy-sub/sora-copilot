@@ -577,16 +577,77 @@ def test_the_builder_refuses_an_unknown_format_directly() -> None:
         )
 
 
-def test_consecutive_bullets_share_one_list_but_a_break_starts_a_new_one() -> None:
-    """A run of single-item lists reads as loose; a page break must still cut cleanly."""
-    from app.services.docwriter import HtmlWriter
+def test_the_pdf_writer_lays_out_bullets_and_breaks() -> None:
+    """The vocabulary, exercised directly: bullets land on a page, a break starts another."""
+    import io
 
-    w = HtmlWriter(disclaimer="d", stamp="s", banner=None)
-    w.bullet("one")
-    w.bullet("two")
+    from pypdf import PdfReader
+
+    from app.services.docwriter import PdfWriter
+
+    w = PdfWriter(disclaimer="Disclaimer line", stamp="Stamp line", banner=None)
+    w.heading("A heading")
+    w.bullet("the first bullet")
+    w.bullet("the second bullet")
+    w.lead_bullet("67.7 m — ", "the rule that produced it")
     w.page_break()
-    w.bullet("three")
-    html = "".join(w._parts)
-    assert html.count("<ul>") == 2, html
-    assert "<li>one</li><li>two</li>" in html
-    assert '<div class="break"></div><ul><li>three</li></ul>' in html
+    w.bullet("after the break")
+    reader = PdfReader(io.BytesIO(w.render()))
+
+    assert len(reader.pages) == 2, "page_break() did not start a new page"
+    first = reader.pages[0].extract_text() or ""
+    second = reader.pages[1].extract_text() or ""
+    for phrase in ["A heading", "the first bullet", "the second bullet"]:
+        assert phrase in first, f"{phrase!r} missing from page 1"
+    # A lead bullet is one line, not two: the emphasis must not break the sentence.
+    assert "67.7 m" in first and "the rule that produced it" in first
+    assert "after the break" in second
+    # The running header is on both pages, and the page count resolves.
+    for page_text in (first, second):
+        assert "Disclaimer line" in page_text
+        assert "Stamp line" in page_text
+    assert "1 / 2" in first and "2 / 2" in second
+
+
+def test_the_pdf_writer_renders_characters_a_latin_1_font_would_drop() -> None:
+    """The dossier is full of them: em dashes, multiplication signs, umlauts.
+
+    A core PDF font is Latin-1 and would silently mangle these, which is why the
+    typeface is bundled rather than assumed.
+    """
+    import io
+
+    from pypdf import PdfReader
+
+    from app.services.docwriter import PdfWriter
+
+    sample = "Graz Süd — 6.75 km² × 1.0 · iGRC 5"
+    w = PdfWriter(disclaimer="d", stamp="s", banner=None)
+    w.paragraph(sample)
+    text = PdfReader(io.BytesIO(w.render())).pages[0].extract_text() or ""
+    for ch in ["ü", "—", "²", "×", "·"]:
+        assert ch in text, f"{ch!r} did not survive the renderer"
+
+
+def test_the_pdf_never_eats_content_to_make_a_phrase_bold() -> None:
+    """fpdf2 has no escape character, so emphasis is dropped before content is.
+
+    A rule id, a filename or a citation containing `**`, `__` or `--` must print as
+    itself. In a dossier that reaches an authority, a mangled identifier is a far worse
+    outcome than an unbolded one.
+    """
+    import io
+
+    from pypdf import PdfReader
+
+    from app.services.docwriter import PdfWriter
+
+    hostile = ["under_scores", "aster*isk", "__doubled__", "**stars**", "--dashes--"]
+    w = PdfWriter(disclaimer="d", stamp="s", banner=None)
+    for item in hostile:
+        w.lead_bullet("lead — ", f"a value {item} inside a sentence")
+        w.bullet(f"plain {item}")
+    text = PdfReader(io.BytesIO(w.render())).pages[0].extract_text() or ""
+    for item in hostile:
+        assert item in text, f"{item!r} was eaten by the markdown parser"
+    assert "\\" not in text, "an escape character leaked into the document"

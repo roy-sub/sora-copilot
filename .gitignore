@@ -13,6 +13,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
+# setuptools' build tree, left behind by `pip wheel .` / `pip install .`
+backend/build/
+backend/dist/
 
 # --- generated
 backend/openapi.json

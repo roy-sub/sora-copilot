@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/Shell";
 import { EmptyState } from "@/components/app/EmptyState";
+import {
+  WorkedExampleButton,
+  useExampleRequestedByUrl,
+} from "@/components/app/WorkedExampleButton";
 import { StatusPill } from "@/components/Brand";
 import { SailBadge, SailPlaceholder } from "@/components/SailBadge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { sailLevel, type OperationStatus } from "@/lib/api-client";
-import { useOperations } from "@/lib/hooks";
+import { useOperations, useSeedWorkedExample } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const FILTERS: ("all" | OperationStatus)[] = [
@@ -37,6 +42,19 @@ export default function Operations() {
   const { data: operations = [], isLoading, error } = useOperations();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [q, setQ] = useState("");
+
+  // The marketing pages promise "see a worked example", so arriving from one builds it
+  // and goes straight to the verdict rather than dropping the visitor on a list.
+  const router = useRouter();
+  const seedExample = useSeedWorkedExample();
+  useExampleRequestedByUrl(
+    useCallback(() => {
+      seedExample.mutate(undefined, {
+        onSuccess: (operation) =>
+          router.push(`/app/operations/view/?id=${encodeURIComponent(operation.id)}`),
+      });
+    }, [seedExample, router]),
+  );
 
   const counts = useMemo(
     () =>
@@ -128,8 +146,9 @@ export default function Operations() {
                 <EmptyState
                   slot="empty-operations"
                   title="No operations yet"
-                  body="Start with the aircraft and the area. The engine needs six confirmed facts to reach a SAIL; the wizard collects them in about four minutes."
+                  body="Start with the aircraft and the area — the engine needs six confirmed facts to reach a SAIL, and the wizard collects them in about four minutes. Or have it build one for you: a real powerline inspection, run through the engine, with the derivation tree and the advisor already populated."
                   action={<ButtonLink href="/app/new/">New operation</ButtonLink>}
+                  secondaryAction={<WorkedExampleButton />}
                 />
               ) : (
                 <p className="m-0 t-body-sm text-ink-mid">
