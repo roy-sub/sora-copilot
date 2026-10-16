@@ -39,6 +39,7 @@ needs a **rebuild**, not a restart.
 | `SUPABASE_URL` | production | — | Project URL, `https://<ref>.supabase.co`. |
 | `SUPABASE_SERVICE_ROLE_KEY` | production | — | **Server secret.** Bypasses row-level security by design; the backend holds it and the browser never does. |
 | `SUPABASE_JWT_SECRET` | production | — | Verifies the access token on every request. `app/deps.py` resolves `org_id` from the verified `sub` and never from a request body. |
+| `DATABASE_URL` | no — local only | — | The Postgres connection string, used by `make migrate` to create the schema and by nothing else. **Not** `SUPABASE_URL`: get it from Supabase → Connect → Session pooler, port 5432. The running backend talks to Supabase over PostgREST and never opens a Postgres socket, so do **not** put this in Render's environment. |
 
 *Without them:* an in-memory store. Everything works; nothing survives a restart, and
 `/healthz` reports `supabase_configured: false`. In `ENV=production` the app **refuses

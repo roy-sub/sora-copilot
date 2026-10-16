@@ -12,6 +12,9 @@
   --radius-sm: 2px;
   --radius-md: 10px;
   --radius-pill: 999px;
+  /* The sticky marketing header's resting height. Anchor scroll padding reads it,
+     so the two cannot drift apart. */
+  --header-h: 4rem;
 }
 
 @theme inline {
@@ -80,7 +83,15 @@
 
 /* ------------------------------------------------------------ base */
 @layer base {
-  html { background: var(--black); }
+  html {
+    background: var(--black);
+    /* The marketing header is sticky, so an in-page anchor would otherwise land
+       underneath it. One declaration covers every #hash on every page. */
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
   body {
     margin: 0;
     background: var(--ground);

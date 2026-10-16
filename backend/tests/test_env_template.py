@@ -48,11 +48,31 @@ def test_every_setting_appears_in_the_template() -> None:
 
 
 def test_the_template_holds_no_setting_the_code_does_not_read() -> None:
-    """A variable nobody reads is a variable somebody will set and then wonder about."""
+    """A variable nobody reads is a variable somebody will set and then wonder about.
+
+    "The code" is wider than `Settings`: `DATABASE_URL` is read by
+    `scripts/migrate.py` and deliberately not by the running backend, which talks to
+    Supabase over PostgREST and never opens a Postgres socket. So the template is
+    checked against the settings *and* the scripts, rather than against a hand-kept
+    allow-list that would go stale the first time a script is added.
+    """
     known = {name.upper() for name in Settings.model_fields}
-    # The frontend's own variables are in the same file by design: one template to copy.
-    extra = sorted(k for k in template_keys() if k not in known and not k.startswith("NEXT_PUBLIC_"))
-    assert not extra, f".env.example sets variables the backend never reads: {extra}"
+    scripts = "\n".join(
+        p.read_text(encoding="utf-8")
+        for p in (Path(__file__).resolve().parent.parent / "scripts").glob("*.py")
+    )
+    extra = sorted(
+        k
+        for k in template_keys()
+        if k not in known
+        # The frontend's own variables are in the same file by design: one template.
+        and not k.startswith("NEXT_PUBLIC_")
+        and f'"{k}"' not in scripts
+    )
+    assert not extra, (
+        ".env.example sets variables neither app/config.py nor backend/scripts/ reads: "
+        f"{extra}"
+    )
 
 
 def test_no_secret_is_prefixed_public() -> None:

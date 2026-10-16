@@ -40,6 +40,14 @@ fmt: install ## Apply ruff fixes and formatting
 smoke: install ## Walk the whole product against a running API ($$BASE)
 	./scripts/smoke.sh
 
+.PHONY: migrate
+migrate: install ## Create/update the Supabase schema (needs $$DATABASE_URL)
+	$(PY) scripts/migrate.py
+
+.PHONY: migrate-status
+migrate-status: install ## Say which migrations would run; change nothing
+	$(PY) scripts/migrate.py --dry-run
+
 .PHONY: rulebase
 rulebase: install ## Regenerate .lp fact files from the transcribed CSV tables
 	$(PY) scripts/build_rulebase.py

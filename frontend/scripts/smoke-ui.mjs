@@ -154,6 +154,40 @@ try {
     placeholders.join(", "),
   );
 
+  // ---------------------------------------------------------------- the header
+  step("the header follows the page");
+
+  // The landing page is five screens long and the one control a visitor wants at the
+  // moment they are convinced — "Start a SORA" — used to scroll off the top with the
+  // rest of the nav. Sticky is only half the fix: a sticky header eats in-page anchor
+  // targets unless something reserves its height, so both halves are checked here.
+  const headerBefore = await page.locator("header").first().boundingBox();
+  await page.evaluate(() => window.scrollTo(0, 2400));
+  await page.waitForTimeout(400);
+  const headerAfter = await page.locator("header").first().boundingBox();
+  check(headerBefore.y === 0 && headerAfter.y === 0, "the header stays at the top when scrolled");
+  check(
+    await page.getByRole("link", { name: /start a sora/i }).first().isVisible(),
+    "the primary call to action is reachable from anywhere on the page",
+  );
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  await page.getByRole("link", { name: "How it works" }).click();
+  // Smooth scrolling means the first reading is mid-flight; wait for it to settle.
+  for (let last = -1, i = 0; i < 40; i++) {
+    const y = await page.evaluate(() => Math.round(window.scrollY));
+    if (y === last) break;
+    last = y;
+    await page.waitForTimeout(100);
+  }
+  const anchored = await page.locator("#how").boundingBox();
+  check(
+    anchored.y >= headerAfter.height,
+    "an in-page anchor clears the sticky header",
+    `#how landed at ${Math.round(anchored.y)} under a ${Math.round(headerAfter.height)}px header`,
+  );
+
   // ---------------------------------------------------------------- the example
   step("the worked example");
   await page.goto(`${BASE}/app/`, { waitUntil: "networkidle" });

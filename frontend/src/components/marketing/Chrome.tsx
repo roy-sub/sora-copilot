@@ -11,7 +11,13 @@ const NAV = [
 
 export function MarketingHeader({ variant = "nav" }: { variant?: "nav" | "cta" | "stamp" | "plain" }) {
   return (
-    <header className="bg-sheet flex items-center justify-between gap-6 px-4 md:px-6 min-h-16 flex-wrap">
+    /* Sticky, not static. Scrolling a long landing page used to take the nav and the
+       "Start a SORA" button away with it, which is the one control a visitor wants
+       within reach at the point they are convinced. The background is translucent with
+       a blur so the hero video still reads through it, and a hairline keeps the header
+       separated from whatever scrolls under it. `--header-h` is the same token the
+       global scroll-padding uses, so an in-page anchor cannot land underneath. */
+    <header className="sticky top-0 z-40 bg-sheet/80 backdrop-blur-md border-b border-hairline flex items-center justify-between gap-6 px-4 md:px-6 min-h-(--header-h) flex-wrap">
       <div className="py-3"><Wordmark /></div>
       {variant === "nav" && (
         <nav aria-label="Main" className="flex items-center gap-1 flex-nowrap overflow-x-auto max-w-full no-scrollbar">

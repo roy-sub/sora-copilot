@@ -30,19 +30,56 @@ Jump to [Part Two](#part-two--the-frontend-folder) for the frontend.
 
 ## 1. Supabase
 
+Creating a Supabase project gives you an **empty** database. It is not pre-populated:
+every table this product reads and writes is created by the SQL in
+`backend/app/db/migrations/`, and something has to run it. That something is one
+command, below.
+
 1. Create a project in an **EU region** (Frankfurt or Dublin — the settings screen lets
-   an operator choose, so pick the one you will offer first).
-2. SQL Editor → run the migrations **in order**:
-   - `backend/app/db/migrations/001_init.sql` — enables `postgis` and `pgcrypto`,
-     creates every table with RLS enabled and forced, and seeds rulebase `2.5.0-rc1`.
-   - `backend/app/db/migrations/002_billing.sql` — subscriptions, dossier credits and
-     the webhook's idempotency log.
-   - `backend/app/db/migrations/003_invites.sql` — organisation invitations, so a Team
-     plan's seats can be used.
-   - `004_rulebase_rc2.sql` — adds rulebase `2.5.0-rc2` and makes it the current one.
-     It inserts a row rather than editing `2.5.0-rc1`, because determinations pin the
-     version they were computed against, and a stored record has to keep describing
-     itself correctly.
+   an operator choose, so pick the one you will offer first). Save the database password
+   it shows you; it is shown once.
+
+2. **Create the schema.** In the dashboard, press **Connect** at the top, choose
+   **Session pooler**, and copy the URI. It looks like:
+
+   ```
+   postgresql://postgres.abcdefghijkl:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+   ```
+
+   Replace `[YOUR-PASSWORD]` with the database password and put the whole thing in
+   `backend/.env` as `DATABASE_URL=…`. Then:
+
+   ```bash
+   cd backend
+   make migrate-status     # says what will run, changes nothing
+   make migrate            # creates the schema
+   ```
+
+   Expect five migrations and then `5 migration(s) applied.`
+
+   - **Use port 5432** — the session pooler or the direct connection. The transaction
+     pooler on **6543** cannot run schema changes and will fail partway.
+   - `DATABASE_URL` is **not** `SUPABASE_URL`. The running backend never opens a
+     Postgres socket; it talks to Supabase over PostgREST. So this variable belongs in
+     your local `.env` only, and **not** in Render's environment.
+   - Re-running `make migrate` is safe. It keeps a ledger in `public.schema_migrations`
+     and applies only what is missing, one transaction per file.
+   - If you already pasted the SQL into the SQL editor by hand, run
+     `backend/.venv/bin/python scripts/migrate.py --baseline` once. It records the
+     files as applied without re-running them, so the ledger starts telling the truth.
+
+   What the five create: `001_init.sql` enables `postgis` and `pgcrypto` and creates
+   every table with RLS enabled *and* forced, the sign-up trigger, the three storage
+   buckets and rulebase `2.5.0-rc1`. `002_billing.sql` adds subscriptions, dossier
+   credits and the webhook's idempotency log. `003_invites.sql` adds organisation
+   invitations, so a Team plan's seats can be used. `004` and `005` add rulebase
+   `2.5.0-rc2` and `2.5.1` and make the latter current. Each inserts a row rather than
+   editing the previous one, because determinations pin the version they were computed
+   against and a stored record has to keep describing itself correctly.
+
+   If you would rather not use the command: the SQL editor still works. Paste the five
+   files in numeric order, one at a time, each as its own run.
+
 3. Authentication → Providers → Email: enable email, and enable magic links.
 4. Authentication → URL Configuration → Redirect URLs: add
    `http://localhost:3000/app/` and `https://<your-pages-domain>/app/`. Magic links
@@ -51,6 +88,15 @@ Jump to [Part Two](#part-two--the-frontend-folder) for the frontend.
    JWT Settings: copy the JWT secret.
 6. Storage: the migration creates `evidence`, `dossiers` and `public-assets`. The first
    two are private and reached only through backend-minted signed URLs.
+
+**Check it worked.** In the SQL editor:
+
+```sql
+select filename from public.schema_migrations order by filename;
+select version, is_current, verified from public.rulebase_versions order by version;
+```
+
+Five filenames, and `2.5.1` as the only `is_current` row, with `verified` true.
 
 **A paused project** (about 7 days of no traffic on the free tier) is restored from the
 Supabase dashboard — open the project and choose Restore. It takes a few minutes and

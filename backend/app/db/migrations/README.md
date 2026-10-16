@@ -6,14 +6,27 @@ them from 001.
 
 ## Applying
 
-**Supabase SQL editor** (simplest for the free tier): open the project → SQL Editor →
-paste the file → Run. Apply them in numeric order.
-
-**Supabase CLI**, if you have it linked:
-
 ```bash
-supabase db push
+cd backend
+make migrate-status     # what would run; changes nothing
+make migrate            # apply what is missing
 ```
+
+`scripts/migrate.py` reads `DATABASE_URL` (the Postgres connection string from
+Supabase → Connect → Session pooler, **not** `SUPABASE_URL`), keeps a ledger in
+`public.schema_migrations`, and applies each pending file in its own transaction.
+
+Re-running is a no-op. That is the point of the ledger: Postgres has no
+`CREATE POLICY IF NOT EXISTS`, so replaying `001` over a live database fails partway
+and leaves it half-migrated. The ledger also stores each file's SHA-256 and refuses to
+continue if an applied file has since been edited — which is where the rule above stops
+being something a person has to remember.
+
+For a database whose schema was already created by hand, `--baseline` records the files
+as applied without running them.
+
+**By hand**, if you prefer: Supabase SQL editor → paste each file → Run, in numeric
+order. **Supabase CLI**, if you have it linked: `supabase db push`.
 
 ## What 001 sets up
 
@@ -30,8 +43,9 @@ supabase db push
   policy pattern
 - a trigger that gives each new user an org and an owner membership on first sign-in
 - the three storage buckets
-- rulebase version `2.5.0-rc1`, marked `verified = false`
-  (`004_rulebase_rc2.sql` adds `2.5.0-rc2` and makes it the current one)
+- rulebase version `2.5.0-rc1`, marked `verified = false`. `004_rulebase_rc2.sql`
+  adds `2.5.0-rc2`; `005_rulebase_2_5_1.sql` adds `2.5.1`, the first version with
+  every table transcribed from the adopted text, and makes it current
 
 ## A note on RLS
 
