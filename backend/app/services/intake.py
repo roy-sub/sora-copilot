@@ -203,14 +203,26 @@ def save_draft(repo: Repo, org_id: UUID, operation_id: UUID, patch: Row) -> Row:
 
     Shallow-merges one level into ``volume`` and ``mitigations`` so a step can save its
     own fields without resending the whole mission.
+
+    A value of ``None`` **deletes** the field rather than storing a null, at either
+    level, which is what lets the wizard withdraw an answer. The engine reads absence as
+    "not established" — no demonstrated air traffic density means no Table C.2
+    reduction, no adjacent-area measurement means Step #8 asks for an assessment — so a
+    field that cannot be cleared is a claim the operator cannot take back.
     """
     operation = repo.get_operation(org_id, operation_id)
     draft: dict[str, Any] = dict(operation.get("mission") or {})
     for key, value in patch.items():
         if key in ("volume", "mitigations") and isinstance(value, dict):
             existing = dict(draft.get(key) or {})
-            existing.update(value)
+            for inner, inner_value in value.items():
+                if inner_value is None:
+                    existing.pop(inner, None)
+                else:
+                    existing[inner] = inner_value
             draft[key] = existing
+        elif value is None:
+            draft.pop(key, None)
         else:
             draft[key] = value
     return repo.update_operation(org_id, operation_id, {"mission": draft})

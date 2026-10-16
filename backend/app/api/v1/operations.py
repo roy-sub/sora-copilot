@@ -168,8 +168,16 @@ def get_draft(operation_id: UUID, ctx: OrgContextDep, repo: RepoDep) -> DraftOut
 
 @router.patch("/{operation_id}/draft", response_model=DraftOut, tags=["intake"])
 def patch_draft(operation_id: UUID, body: MissionDraftPatch, ctx: OrgContextDep, repo: RepoDep) -> DraftOut:
-    """Save one wizard step. Nothing here reaches the engine."""
-    patch = body.model_dump(exclude_none=True, mode="json")
+    """Save one wizard step. Nothing here reaches the engine.
+
+    ``exclude_unset``, not ``exclude_none``: a field the client did not send is left
+    alone, and a field it sent as ``null`` is **removed** from the draft. The difference
+    is not cosmetic here. Setting the demonstrated air traffic density back to "not
+    demonstrated" has to withdraw the Table C.2 reduction it bought; with
+    ``exclude_none`` the key was dropped from the patch and the old rating survived, so
+    the operator saw an ARC reduction they had just said they could not substantiate.
+    """
+    patch = body.model_dump(exclude_unset=True, mode="json")
     if body.drone_id is not None:
         try:
             repo.get_drone(ctx.org_id, body.drone_id)

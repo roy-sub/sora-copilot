@@ -158,6 +158,77 @@ def test_a_changed_mitigation_produces_a_new_determination(
     assert second["final_grc"] == 3
 
 
+def test_withdrawing_an_answer_withdraws_what_it_bought(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], complete_draft: dict[str, Any]
+) -> None:
+    """An operator must be able to take an answer back, and lose the credit with it.
+
+    This failed. The draft patch dropped null fields before merging, so setting the
+    demonstrated air traffic density back to "not demonstrated" left the old rating in
+    the draft: the operator said they could not substantiate the demonstration and the
+    engine went on crediting them the Table C.2 reduction it bought. Of the two
+    directions a merge bug can fail in, that is the dangerous one — it keeps an air risk
+    reduction the operation cannot support.
+    """
+    oid = operation["id"]
+    with_demonstration = client.post(f"/api/v1/operations/{oid}/determine", headers=auth).json()
+    assert with_demonstration["initial_arc"] == "c"
+    assert with_demonstration["residual_arc"] == "b", "the fixture demonstrates a density of 1"
+
+    cleared = client.patch(
+        f"/api/v1/operations/{oid}/draft",
+        json={"demonstrated_air_density_rating": None},
+        headers=auth,
+    )
+    assert cleared.status_code == 200, cleared.text
+    assert "demonstrated_air_density_rating" not in cleared.json()["mission"]
+
+    without = client.post(f"/api/v1/operations/{oid}/determine?force=true", headers=auth).json()
+    assert without["residual_arc"] == "c", "Table C.2 sells the reduction for a demonstration"
+    assert without["sail"] != with_demonstration["sail"]
+
+
+def test_a_field_the_patch_does_not_mention_is_left_alone(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], complete_draft: dict[str, Any]
+) -> None:
+    """The other half of the merge: null deletes, absent does not.
+
+    Without this the fix above would be a different bug — a wizard step that saves two
+    fields would wipe the five it does not carry.
+    """
+    oid = operation["id"]
+    before = client.get(f"/api/v1/operations/{oid}/draft", headers=auth).json()["mission"]
+    after = client.patch(
+        f"/api/v1/operations/{oid}/draft",
+        json={"near_aerodrome": False},
+        headers=auth,
+    ).json()["mission"]
+
+    assert after["near_aerodrome"] is False
+    for field in ("operation_type", "ground_environment", "airspace_class", "country"):
+        assert after[field] == before[field], field
+    assert after["demonstrated_air_density_rating"] == before["demonstrated_air_density_rating"]
+    assert after["volume"]["max_altitude_agl_m"] == before["volume"]["max_altitude_agl_m"]
+
+
+def test_a_null_inside_volume_clears_only_that_key(
+    client: TestClient, auth: dict[str, str], operation: dict[str, Any], complete_draft: dict[str, Any]
+) -> None:
+    oid = operation["id"]
+    client.patch(
+        f"/api/v1/operations/{oid}/draft", json={"volume": {"duration_min": 45}}, headers=auth
+    )
+    volume = client.patch(
+        f"/api/v1/operations/{oid}/draft",
+        json={"volume": {"duration_min": None}},
+        headers=auth,
+    ).json()["mission"]["volume"]
+
+    assert "duration_min" not in volume
+    assert "flight_geography" in volume, "clearing one key must not take the outline with it"
+    assert volume["max_altitude_agl_m"] == 118
+
+
 def test_counterfactuals_are_offered_and_each_lowers_sail(
     client: TestClient,
     auth: dict[str, str],
