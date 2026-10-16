@@ -115,8 +115,9 @@ Free tiers throughout.
 backend/    FastAPI, the clingo rulebase, services, API
 frontend/   Next.js static export
 design/     the approved design system and screens — READ ONLY
-docs/       ARCHITECTURE · RULEBASE · DEPLOY · ENV Example
-            Third Party Setup Guide · Media Setup Guide
+docs/       ARCHITECTURE · RULEBASE · Deployment Guide · ENV Example
+            Supabase Setup · Third Party Setup Guide · Media Setup Guide
+            Final Manual Task
 PLAN.md     the plan, the open decisions, and what is still blocked
 ```
 

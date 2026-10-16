@@ -81,9 +81,11 @@ it is now the table's own four rows rather than a monotone rule that happened to
 
 Three things, none of them code:
 
-1. **Fill in the `.env` files** — [ENV Example](./ENV%20Example.md) lists every
-   variable, and [Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) walks
-   through getting each value.
+1. **Set up Supabase and fill in the `.env` files** —
+   [Supabase Setup](./Supabase%20Setup.md) creates the database schema from the
+   dashboard in one paste, no terminal needed. [ENV Example](./ENV%20Example.md) lists
+   every variable, and [Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md)
+   walks through getting each value.
 2. **Deploy the backend to Render** — [Deployment Guide](./Deployment%20Guide.md),
    Part 1.
 3. **Host the frontend on Cloudflare Pages or Hostinger** — Deployment Guide, Part 2,

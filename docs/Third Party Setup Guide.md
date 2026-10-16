@@ -55,7 +55,7 @@ the browser never does.
    - `backend/app/db/migrations/002_billing.sql`
    - `backend/app/db/migrations/003_invites.sql`
 
-   001 creates every table with RLS enabled and forced, the storage buckets, and the
+   001 creates every table with RLS on, the storage buckets, and the
    trigger that gives each new user an organisation. 002 adds subscriptions, dossier
    credits and the webhook's idempotency log. 003 adds invitations, so a Team plan's
    seats can be used. Never edit a migration that has been applied; corrections land as

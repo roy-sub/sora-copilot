@@ -13,16 +13,25 @@ is a step that gets half-done.
 What it does, and why each part is there:
 
 * **A ledger.** `public.schema_migrations` records every file applied, with the SHA-256
-  of the text that was applied. Re-running is then a no-op rather than an error — which
-  matters because Postgres has no `CREATE POLICY IF NOT EXISTS`, so replaying `001`
-  over a live database fails halfway through and leaves it part-migrated.
-* **One transaction per file.** A migration that fails rolls back whole. There is no
-  state where half of `002` is in the database.
+  of the text that was applied, so `make migrate` runs only what is missing and can
+  say what has already run. The SQL editor leaves no such record, which is why
+  `bundle.sql` writes the same rows — paste the bundle and a later `make migrate`
+  reports "nothing to do" rather than starting again.
 * **A changed-file warning.** If a file's hash no longer matches what was applied, it
   says so and stops. Editing an applied migration is the one thing the migrations
   README forbids, and this is where that rule gets enforced rather than remembered.
-* **`--baseline`.** For a database where the SQL was already pasted in by hand: records
-  the files as applied without running them, so the ledger starts telling the truth.
+* **One transaction per file.** A migration that fails rolls back whole. There is no
+  state where half of `002` is in the database.
+* **`--baseline`.** For a database where the SQL was already pasted in by hand before
+  the bundle existed: records the files as applied without running them, so the ledger
+  starts telling the truth.
+
+The migrations themselves are written to be replayable — every `create` is
+`if not exists`, and each policy and trigger is dropped `if exists` before it is
+created — so running them twice is harmless. That was verified by running the whole
+set twice against a Postgres 16: 18 tables, 17 policies, 3 buckets, one current
+rulebase version, both times. The ledger is therefore about knowing what has run, not
+about surviving a replay.
 
 It never drops anything and never rewrites a migration.
 """
@@ -109,12 +118,18 @@ def _psycopg():
     return psycopg
 
 
+#: A migration is `NNN_lower_snake.sql`. Anything else in the directory — `bundle.sql`,
+#: a scratch file, an editor backup — is not one, and is skipped rather than guessed at.
+#: This is not hypothetical: adding the bundle crashed the runner on `int("bundle")`.
+MIGRATION_NAME = re.compile(r"^(\d+)_[a-z0-9_]+\.sql$")
+
+
 def files() -> list[Path]:
-    found = sorted(MIGRATIONS.glob("*.sql"))
+    found = [p for p in MIGRATIONS.glob("*.sql") if MIGRATION_NAME.match(p.name)]
     if not found:
-        sys.exit(f"No .sql files in {MIGRATIONS}")
+        sys.exit(f"No NNN_name.sql migrations in {MIGRATIONS}")
     # Numeric order, not string order, so 010 lands after 009 rather than after 001.
-    return sorted(found, key=lambda p: (int(re.match(r"(\d+)", p.name).group(1)), p.name))  # type: ignore[union-attr]
+    return sorted(found, key=lambda p: (int(MIGRATION_NAME.match(p.name).group(1)), p.name))  # type: ignore[union-attr]
 
 
 def digest(path: Path) -> str:

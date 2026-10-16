@@ -32,14 +32,22 @@ Jump to [Part Two](#part-two--the-frontend-folder) for the frontend.
 
 Creating a Supabase project gives you an **empty** database. It is not pre-populated:
 every table this product reads and writes is created by the SQL in
-`backend/app/db/migrations/`, and something has to run it. That something is one
-command, below.
+`backend/app/db/migrations/`, and something has to run it — either one paste in the SQL
+editor or one command, below. Neither needs the other.
 
 1. Create a project in an **EU region** (Frankfurt or Dublin — the settings screen lets
    an operator choose, so pick the one you will offer first). Save the database password
    it shows you; it is shown once.
 
-2. **Create the schema.** In the dashboard, press **Connect** at the top, choose
+2. **Create the schema.** Two routes; both run the same SQL and end in the same place.
+
+   **From the dashboard only, no terminal** — SQL Editor → New query → paste the whole
+   of `backend/app/db/migrations/bundle.sql` → Run. That file is the five migrations
+   concatenated in order inside one transaction, so it lands completely or not at all.
+   [Supabase Setup](./Supabase%20Setup.md) is the step-by-step, including what to
+   check afterwards.
+
+   **Or from a terminal.** Press **Connect** at the top of the dashboard, choose
    **Session pooler**, and copy the URI. It looks like:
 
    ```
@@ -69,7 +77,7 @@ command, below.
      files as applied without re-running them, so the ledger starts telling the truth.
 
    What the five create: `001_init.sql` enables `postgis` and `pgcrypto` and creates
-   every table with RLS enabled *and* forced, the sign-up trigger, the three storage
+   every table with RLS on, the sign-up trigger, the three storage
    buckets and rulebase `2.5.0-rc1`. `002_billing.sql` adds subscriptions, dossier
    credits and the webhook's idempotency log. `003_invites.sql` adds organisation
    invitations, so a Team plan's seats can be used. `004` and `005` add rulebase
@@ -77,8 +85,8 @@ command, below.
    editing the previous one, because determinations pin the version they were computed
    against and a stored record has to keep describing itself correctly.
 
-   If you would rather not use the command: the SQL editor still works. Paste the five
-   files in numeric order, one at a time, each as its own run.
+   The two routes agree: pasting `bundle.sql` writes the same ledger rows, so a later
+   `make migrate` reports "nothing to do" rather than running everything again.
 
 3. Authentication → Providers → Email: enable email, and enable magic links.
 4. Authentication → URL Configuration → Redirect URLs: add

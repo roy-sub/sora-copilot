@@ -21,8 +21,23 @@ MIGRATIONS = Path(__file__).resolve().parent.parent / "app" / "db" / "migrations
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "migrate.py"
 
 
+BUNDLE = MIGRATIONS / "bundle.sql"
+
+
 def files() -> list[Path]:
-    return sorted(MIGRATIONS.glob("*.sql"))
+    return sorted(p for p in MIGRATIONS.glob("*.sql") if p.name != BUNDLE.name)
+
+
+def _bundler():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "bundle_under_test", SCRIPT.parent / "bundle_migrations.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_every_migration_is_numbered_and_the_numbers_do_not_collide() -> None:
@@ -82,10 +97,13 @@ def test_no_migration_drops_or_truncates() -> None:
 def test_the_runner_keeps_a_ledger_and_refuses_an_edited_migration() -> None:
     """What makes re-running safe.
 
-    Postgres has no CREATE POLICY IF NOT EXISTS, so replaying 001 over a live database
-    fails halfway and leaves it part-migrated. The ledger is what turns "run it again"
-    from a hazard into a no-op, and the hash check is where the README's "never edit an
-    applied migration" rule stops being a thing people remember.
+    The migrations are replayable on their own — every create is guarded and each
+    policy and trigger is dropped if it exists first — so the ledger is not there to
+    survive a replay. It is there so that the runner knows what has already run, so
+    that pasting bundle.sql and running `make migrate` agree with each other, and so
+    that the hash check can catch an applied migration that has since been edited,
+    which is where the README's "never edit an applied migration" rule stops being a
+    thing people remember.
     """
     source = SCRIPT.read_text(encoding="utf-8")
     assert "create table if not exists public.schema_migrations" in source.replace(
@@ -125,3 +143,61 @@ def test_the_env_template_documents_the_connection_string() -> None:
     )
     assert "DATABASE_URL=" in template
     assert "NOT SUPABASE_URL" in template
+
+
+# ------------------------------------------------------------------ the bundle
+
+
+def test_the_committed_bundle_matches_the_migrations() -> None:
+    """The bundle is generated, never a second source of truth.
+
+    `bundle.sql` exists so the schema can be created from the Supabase SQL editor with
+    one paste and no connection string. That convenience is only safe while the file
+    is exactly the migrations concatenated — a bundle that has drifted would build a
+    database the code does not expect, and nothing else would notice. Regenerate with
+    `cd backend && make bundle`.
+    """
+    assert BUNDLE.is_file(), "run `make bundle`"
+    assert BUNDLE.read_text(encoding="utf-8") == _bundler().build(), (
+        "app/db/migrations/bundle.sql has drifted from the migrations. "
+        "Run `cd backend && make bundle` and commit the result."
+    )
+
+
+def test_the_bundle_is_one_transaction_and_records_every_migration() -> None:
+    """Both halves of what makes the paste route equivalent to `make migrate`.
+
+    The transaction means a bundle that fails anywhere leaves the database exactly as
+    it was. The ledger rows mean a later `make migrate` sees these files as applied
+    and reports nothing to do, instead of running the whole set a second time.
+    """
+    sql = BUNDLE.read_text(encoding="utf-8")
+    assert sql.count("\nbegin;\n") == 1
+    assert sql.rstrip().endswith("commit;")
+    assert "create table if not exists public.schema_migrations" in sql
+    for path in files():
+        assert f"('{path.name}'," in sql, f"{path.name} is not recorded in the ledger"
+
+
+def test_the_runner_and_the_bundler_agree_on_what_a_migration_is() -> None:
+    r"""The bug adding the bundle caused.
+
+    `migrate.py` ordered files by `int(re.match(r"(\d+)", name))`. `bundle.sql` has no
+    leading digits, so the moment it landed in the directory the runner crashed on
+    `NoneType.group` before touching the database. Both now use the same pattern, and
+    anything that is not `NNN_lower_snake.sql` is skipped rather than guessed at.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("migrate_under_test2", SCRIPT)
+    assert spec and spec.loader
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+
+    assert runner.MIGRATION_NAME.pattern == _bundler().MIGRATION_NAME.pattern
+    assert not runner.MIGRATION_NAME.match("bundle.sql")
+    assert not runner.MIGRATION_NAME.match("001_init.sql.bak")
+    assert runner.MIGRATION_NAME.match("010_later.sql")
+    # And the runner, reading the real directory, does not pick the bundle up.
+    assert BUNDLE not in runner.files()
+    assert [p.name for p in runner.files()] == [p.name for p in files()]

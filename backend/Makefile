@@ -48,6 +48,10 @@ migrate: install ## Create/update the Supabase schema (needs $$DATABASE_URL)
 migrate-status: install ## Say which migrations would run; change nothing
 	$(PY) scripts/migrate.py --dry-run
 
+.PHONY: bundle
+bundle: install ## Regenerate migrations/bundle.sql for the Supabase SQL editor
+	$(PY) scripts/bundle_migrations.py
+
 .PHONY: rulebase
 rulebase: install ## Regenerate .lp fact files from the transcribed CSV tables
 	$(PY) scripts/build_rulebase.py
