@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480"
+     role="img" aria-label="An empty operational-volume outline over a blank graticule">
+  <title>An empty operational-volume outline over a blank graticule</title>
+  <!--
+    Two ink weights and one accent mark, per design/project. The greys are chosen to
+    read on both the dark sheet (#121517) and the light one (#f5f5f5), because a
+    placeholder that only works in one theme is half a placeholder.
+  -->
+  <g fill="none" stroke="#7d8894">
+    <!-- the graticule: blank, because there is nothing to plot yet -->
+    <g stroke-width="1" opacity=".3">
+      <path d="M60 60h360M60 130h360M60 200h360M60 270h360M60 340h360M60 410h360"/>
+      <path d="M60 60v350M130 60v350M200 60v350M270 60v350M340 60v350M410 60v350"/>
+    </g>
+    <!-- the frame -->
+    <rect x="60" y="60" width="360" height="350" stroke-width="1.25" opacity=".55"/>
+    <!-- the operational volume outline: dashed, unclosed, unfilled -->
+    <path stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+          stroke-dasharray="11 9"
+          d="M146 300l34-96 72-28 86 44-24 92-98 18z"/>
+    <!-- its vertices, hollow -->
+    <g stroke-width="2" fill="#7d8894" fill-opacity=".07">
+      <circle cx="146" cy="300" r="4.5"/><circle cx="180" cy="204" r="4.5"/>
+      <circle cx="252" cy="176" r="4.5"/><circle cx="338" cy="220" r="4.5"/>
+      <circle cx="314" cy="312" r="4.5"/><circle cx="216" cy="330" r="4.5"/>
+    </g>
+  </g>
+  <!-- the one accent mark: the point the operator has not placed yet -->
+  <g transform="translate(252 176)">
+    <circle r="7.5" fill="#caff01" stroke="#0a0c0d" stroke-width="1.25"/>
+  </g>
+</svg>

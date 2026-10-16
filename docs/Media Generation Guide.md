@@ -2,11 +2,20 @@
 
 Every image, video and illustration the product needs, with a finished prompt for each.
 
-The app ships with none of these. `MediaSlot` reserves the exact aspect ratio from
-`frontend/src/lib/media-manifest.ts` and draws a labelled placeholder until the file
-appears, so the site is complete and presentable without them — but it is not
-*finished*. Drop a file at the path given below and it appears on the next build. No
-code change, no manifest edit.
+> **All sixteen are built and committed.** `frontend/public/media/` holds the real
+> files, and `backend/tests/test_media_assets.py` checks every one against the manifest
+> for exact pixel size, byte budget and — for the two videos — H.264 in yuv420p, so a
+> drifted or missing asset fails the build instead of silently falling back to a
+> placeholder. This guide is now a **replacement** guide: the prompts below are what to
+> hand a generator if you want to swap one for something else.
+>
+> How the shipped ones were made, and why, is in [What is actually in
+> `public/media/`](#what-is-actually-in-publicmedia) at the end.
+
+`MediaSlot` reserves the exact aspect ratio from `frontend/src/lib/media-manifest.ts`
+and draws a labelled placeholder when a file is missing, so the site stays presentable
+either way. Drop a replacement at the path given below and it appears on the next build:
+no code change, no manifest edit — but do keep the pixel size, or the test will say so.
 
 **Suggested tools.** Higgsfield for the photographic and cinematic stills, ChatGPT 2.5
 for the UI composites and the flat graphics, Seedance 2.5 for the two video loops. Each
@@ -689,3 +698,51 @@ while you are placing files.
 
 If a budget is exceeded the asset still works; the budget exists because the hero band
 is the first thing a visitor downloads on a free-tier deployment.
+
+
+---
+
+## What is actually in `public/media/`
+
+The sixteen files in the repository were not generated from the prompts above. They are
+built by `frontend/scripts/make-media.mjs`, and most of them are pictures of the product
+rather than illustrations of it:
+
+```bash
+# with the API on :8000 and `npx serve out -l 3002` running
+TOKEN=<jwt> node scripts/make-media.mjs              # all of them
+TOKEN=<jwt> node scripts/make-media.mjs --only og-default,feature-trace
+```
+
+| Asset | How it was made |
+|---|---|
+| `feature-trace.png` | Screenshot of the real derivation tree on the worked example, three nodes expanded, citations legible |
+| `feature-map.png` | Screenshot of the wizard's map step with all three volumes derived — flight geography, contingency volume, ground risk buffer |
+| `hero-poster.jpg` | Screenshot of the verdict at rest |
+| `hero-loop.mp4` | Screen recording: the operations list, into a determination, then a slow pass down the trace. 12 s |
+| `feature-dossier.png` | The OSO matrix page of the real generated PDF, rasterised at 160 dpi |
+| `dossier-preview.png` | The derivation appendix of the same PDF — a different page, so the two slots are not one picture twice |
+| `og-default.png`, `proof-logos.png`, `persona-1..3.jpg`, `feature-counterfactual.mp4` + `.jpg` | Built as HTML and rendered against the app's **own compiled stylesheet**, so the tokens, the type scale and the self-hosted Archivo and Outfit are the same objects the product uses |
+| `empty-*.svg` | Hand-authored line schematics. Source, not output — `make-media.mjs` does not touch them |
+
+Three of the prompts above were **not** used, and the reason is the same each time:
+
+- **The three segment cards.** The manifest asked for photographs of people. A
+  photograph of a "customer" who does not exist is a fabricated endorsement, and the copy
+  beside each one describes a segment — "Inspection company, Graz." — rather than quoting
+  a person, so there is nobody to depict. They show what each segment brings to the
+  product instead: the inputs a roof surveyor types, the inputs a corridor operator
+  types, and the trace a compliance officer reads. Inputs and a justification, never a
+  computed class, so no card can be read as a determination the engine did not make.
+- **The framework row.** Regulation names set as type, never a reproduction of an
+  authority's logo — which would read as endorsement directly beside a line saying none
+  is implied.
+- **The counterfactual loop.** A diagram rather than a screen recording, because the
+  advisor is a paid feature that answers 402 on the free plan: a capture would be a
+  picture of an upgrade panel. It is drawn with the app's own tokens and the real SAIL
+  ramp, and shows the mechanism — one input changes, the engine re-derives, the SAIL
+  plate steps.
+
+The prompts stay in this document because they are still the right brief for a
+replacement. If you generate one, keep the path and the pixel size and the test will
+confirm it landed.

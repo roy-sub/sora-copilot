@@ -108,6 +108,52 @@ try {
   const blank = slots.filter((s) => !s.painted).map((s) => s.id);
   check(blank.length === 0, "no media slot renders blank", blank.join(", "));
 
+  // "Not blank" is also true of the designed placeholder, which is the point of it —
+  // so the slot test above cannot tell a shipped asset from a missing one. This can:
+  // a real asset is an <img> or <video> under /media/ that the browser actually decoded.
+  //
+  // Everything below the fold is lazy, so the page has to be walked before asking;
+  // checking at the top reports three placeholders that are simply not loaded yet.
+  for (let y = 0; y < 6; y++) {
+    await page.evaluate((i) => window.scrollTo(0, (document.body.scrollHeight / 6) * i), y);
+    await page.waitForTimeout(450);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(800);
+
+  const real = await page.evaluate(async () => {
+    const slots = [...document.querySelectorAll("[data-slot]")];
+    return Promise.all(
+      slots.map(async (el) => {
+        const id = el.getAttribute("data-slot");
+        const img = el.querySelector("img");
+        if (img) {
+          const ok = /\/media\//.test(img.currentSrc || img.src) && img.naturalWidth > 0;
+          return { id, ok };
+        }
+        const video = el.querySelector("video");
+        if (!video) return { id, ok: false };
+        const src = video.currentSrc || video.src;
+        if (!/\/media\//.test(src)) return { id, ok: false };
+        // Decoding is not the test here. Playwright ships the open-source Chromium,
+        // which has no H.264 decoder — canPlayType("video/mp4; codecs=avc1") is "" —
+        // while H.264 is exactly what the product must ship for Safari and iOS. So the
+        // check is that the element points at a real video the server will serve;
+        // backend/tests/test_media_assets.py probes the codec and the frame size with
+        // ffprobe, where no browser is in the way.
+        const res = await fetch(src, { method: "GET", headers: { Range: "bytes=0-1023" } });
+        const type = res.headers.get("content-type") || "";
+        return { id, ok: (res.status === 200 || res.status === 206) && type.startsWith("video/") };
+      }),
+    );
+  });
+  const placeholders = real.filter((s) => !s.ok).map((s) => s.id);
+  check(
+    placeholders.length === 0,
+    `every media slot shows its real asset (${real.length})`,
+    placeholders.join(", "),
+  );
+
   // ---------------------------------------------------------------- the example
   step("the worked example");
   await page.goto(`${BASE}/app/`, { waitUntil: "networkidle" });

@@ -27,9 +27,17 @@ backend/app/engine/rulebase/**/generated/
 .env.*.local
 !.env.example
 
-# --- media the owner drops in later
-frontend/public/media/*
-!frontend/public/media/.gitkeep
+# --- media
+# The assets are IN the repository, not dropped in later: the three empty-state
+# illustrations are hand-authored source, and the other thirteen are built by
+# `frontend/scripts/make-media.mjs` from the real product and committed, so a clone
+# builds a complete site and backend/tests/test_media_assets.py can check them against
+# the manifest. 1.7 MB in total.
+#
+# The MapLibre worker is the exception: a build artefact of a pinned dependency, copied
+# into public/ by `npm run prebuild`. Committing it would be a version skew waiting to
+# happen.
+frontend/public/maplibre-gl-worker.mjs
 
 # --- os
 .DS_Store

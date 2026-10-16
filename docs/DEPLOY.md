@@ -128,18 +128,26 @@ twice answers `{"outcome": "duplicate"}`.
 The build is a static export (`output: 'export'`, `trailingSlash: true`,
 `images.unoptimized`). No SSR, no server actions, no route handlers — Pages serves files.
 
+`npm run prebuild` copies MapLibre's worker into `public/`. MapLibre 6 loads it from
+`new URL("./maplibre-gl-worker.mjs", import.meta.url)`, which webpack cannot analyse, so
+no worker chunk is emitted and the map renders nothing at all — no error, just an empty
+chart. The component calls `setWorkerUrl("/maplibre-gl-worker.mjs")` and the prebuild
+step puts the file there. It is deliberately not committed: it is a build artefact of a
+pinned dependency, and a stale copy would be a silent version skew.
+
 ## 5. Media
 
-Drop real assets into `frontend/public/media/` using the filenames in
-`frontend/src/lib/media-manifest.ts` and rebuild. No code change: `MediaSlot` probes for
-the file and falls back to the designed placeholder when it is missing, so the site is
-presentable without them. `?slots=1` overlays each slot's id and size budget.
+**Nothing to do.** All sixteen assets are in `frontend/public/media/` and ship with the
+build. `backend/tests/test_media_assets.py` checks each one against
+`frontend/src/lib/media-manifest.ts` for pixel size, byte budget and, for the two
+videos, H.264 in yuv420p — so a missing or drifted asset fails the build rather than
+falling back to a placeholder nobody notices in review.
 
-[Media Generation Guide](./Media%20Generation%20Guide.md) has a finished, copy-pasteable
-prompt for all sixteen, with the path and aspect ratio above each one. A test checks
-those paths and dimensions against the manifest, because a drifted filename would send
-every generated file somewhere the app never looks — and `MediaSlot` would fall back to
-its placeholder without complaining.
+To replace one, drop a file at the manifest's path at the manifest's size and rebuild;
+no code change. `?slots=1` overlays each slot's id and size budget. To rebuild them all
+from the product, run `frontend/scripts/make-media.mjs` — [Media Generation
+Guide](./Media%20Generation%20Guide.md) explains how each was made and carries a
+finished prompt for anything you want to generate instead.
 
 ## 6. Smoke test against production
 

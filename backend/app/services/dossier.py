@@ -35,11 +35,25 @@ from app.services.docwriter import Writer, writer_for
 DossierFormat = Literal["docx", "pdf"]
 FORMATS: tuple[DossierFormat, ...] = ("docx", "pdf")
 
-UNVERIFIED_BANNER = (
-    "UNVERIFIED RULEBASE — the regulatory tables behind this assessment have not been "
-    "checked against the published JARUS SORA 2.5 text. This document must not be "
-    "submitted to an authority."
-)
+def unverified_banner(n: int) -> str:
+    """The cover-and-every-page banner, counting the tables rather than condemning all.
+
+    Part of the rulebase is checked against the published SORA 2.5 text and part is not.
+    A blanket "none of this has been verified" would be false in the direction that
+    teaches a reader to skip the banner, and an authority reading the appendix can see
+    for itself which tables are named. The appendix lists them; this counts them.
+    """
+    tables = "table" if n == 1 else "tables"
+    verb = "has" if n == 1 else "have"
+    return (
+        f"UNVERIFIED RULEBASE — {n} of the regulatory {tables} behind this assessment "
+        f"{verb} not been checked against the published JARUS SORA 2.5 text. This "
+        f"document must not be submitted to an authority."
+    )
+
+
+#: Kept for callers that want the worst case without a count to hand.
+UNVERIFIED_BANNER = unverified_banner(1).replace("1 of the regulatory table has", "a regulatory table has")
 
 ENVIRONMENT_LABELS = {
     "controlled_ground_area": "controlled ground area",
@@ -105,7 +119,7 @@ def build(data: DossierInput, fmt: DossierFormat = "docx") -> bytes:
         fmt,
         disclaimer=DISCLAIMER,
         stamp=stamp,
-        banner=UNVERIFIED_BANNER if unverified else None,
+        banner=unverified_banner(len(d.get("warnings") or ())) if unverified else None,
     )
 
     # ---------------------------------------------------------------- cover
@@ -128,7 +142,7 @@ def build(data: DossierInput, fmt: DossierFormat = "docx") -> bytes:
 
     if unverified:
         w.heading("Verification status", 2)
-        w.warning(UNVERIFIED_BANNER)
+        w.warning(unverified_banner(len(d.get("warnings") or ())))
         for warning in d.get("warnings", []):
             w.bullet(str(warning))
 

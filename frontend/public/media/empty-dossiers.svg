@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480"
+     role="img" aria-label="An unbound document stack with corner registration marks">
+  <title>An unbound document stack with corner registration marks</title>
+  <g fill="none" stroke="#7d8894" stroke-linecap="square">
+    <!-- registration marks: the sheets are unbound, so the marks are what aligns them -->
+    <g stroke-width="1" opacity=".45">
+      <path d="M52 52h26M52 52v26M428 52h-26M428 52v26M52 428h26M52 428v-26M428 428h-26M428 428v-26"/>
+    </g>
+    <!-- three sheets, back to front, nothing on the back two -->
+    <rect x="132" y="92" width="228" height="296" stroke-width="1.25" opacity=".35"/>
+    <rect x="118" y="104" width="228" height="296" stroke-width="1.25" opacity=".55"/>
+    <rect x="104" y="116" width="228" height="296" stroke-width="2.5" fill="#7d8894" fill-opacity=".07"/>
+    <!-- ruled lines on the front sheet: a form, unfilled -->
+    <g stroke-width="1.25" opacity=".5">
+      <path d="M132 176h116M132 208h172M132 240h172M132 272h140M132 304h172M132 336h94"/>
+    </g>
+    <!-- the title block, empty -->
+    <rect x="132" y="140" width="64" height="12" stroke-width="2" opacity=".8"/>
+  </g>
+  <!-- the one accent mark: the signature line nobody has reached -->
+  <g transform="translate(132 368)">
+    <path d="M0 0h84" stroke="#caff01" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="84" cy="0" r="5" fill="#caff01" stroke="#0a0c0d" stroke-width="1.25"/>
+  </g>
+</svg>

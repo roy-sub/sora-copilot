@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480"
+     role="img" aria-label="An empty aircraft record card with unfilled dimension callouts">
+  <title>An empty aircraft record card with unfilled dimension callouts</title>
+  <g fill="none" stroke="#7d8894">
+    <!-- the record card -->
+    <rect x="68" y="92" width="344" height="296" stroke-width="2.5" fill="#7d8894" fill-opacity=".07"/>
+    <path d="M68 140h344" stroke-width="1.25" opacity=".55"/>
+    <!-- plan view of a quadrotor: arms and rotor discs, no mass, no registration -->
+    <g stroke-width="2.5" stroke-linecap="round">
+      <path d="M176 212l128 104M304 212L176 316"/>
+    </g>
+    <g stroke-width="1.25" opacity=".7">
+      <circle cx="176" cy="212" r="26"/><circle cx="304" cy="212" r="26"/>
+      <circle cx="176" cy="316" r="26"/><circle cx="304" cy="316" r="26"/>
+    </g>
+    <rect x="222" y="246" width="36" height="36" stroke-width="2" rx="2"/>
+    <!-- the dimension callout across the diagonal: the measure is drawn, the value is not -->
+    <g stroke-width="1.25" opacity=".8">
+      <path d="M150 360h180"/>
+      <path d="M150 353v14M330 353v14"/>
+    </g>
+    <!-- empty value fields on the card header -->
+    <g stroke-width="2" opacity=".5">
+      <path d="M92 116h72M196 116h56M284 116h104"/>
+    </g>
+  </g>
+  <!-- the one accent mark: the unfilled dimension -->
+  <g transform="translate(240 360)">
+    <rect x="-23" y="-11" width="46" height="22" rx="2" fill="#caff01"/>
+    <path d="M-9 0h18" stroke="#0a0c0d" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

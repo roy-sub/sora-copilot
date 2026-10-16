@@ -89,6 +89,9 @@ function vertexCollection(ring: LngLat[]) {
   };
 }
 
+/** Served from public/, copied there by prebuild. See setWorkerUrl below. */
+const WORKER_URL = "/maplibre-gl-worker.mjs";
+
 export function MapVolumeEditor({
   value,
   onChange,
@@ -126,14 +129,30 @@ export function MapVolumeEditor({
         if (cancelled) return;
         gl.current = maplibre;
 
+        // MapLibre 6 loads its worker from `new URL("./maplibre-gl-worker.mjs", base)`,
+        // where the base comes from `import.meta.url`. Webpack cannot analyse that, so
+        // it emits no worker chunk and the URL resolves to a file the export does not
+        // contain: the worker fails, no tile is ever parsed, and the map draws nothing
+        // but the graticule — in production as well as here. The file is copied into
+        // public/ by `npm run prebuild` and pointed at explicitly.
+        maplibre.setWorkerUrl(WORKER_URL);
+
         const centre = ring.length ? centroid(ring) : { lng: 15.44, lat: 47.12 };
         const instance = new maplibre.Map({
           container: node,
           // An empty style when no basemap is configured: the designed graticule and the
           // volume layers are added below, so the step works with no network.
+          //
+          // `glyphs` is OMITTED, not set to undefined. An object literal with
+          // `glyphs: undefined` still has the key, MapLibre's style validator sees a
+          // present-but-undefined value and rejects the style with "glyphs: string
+          // expected, undefined found" — and a rejected style never fires `load`, so
+          // `ready` stays false, the volume layers are never added and the fit never
+          // runs. The step then showed the designed graticule and nothing on it, which
+          // is exactly the documented no-basemap path silently not working.
           style: env.mapStyleUrl
             ? env.mapStyleUrl
-            : { version: 8, sources: {}, layers: [], glyphs: undefined },
+            : { version: 8, sources: {}, layers: [] },
           center: [centre.lng, centre.lat],
           zoom: 12,
           attributionControl: env.mapStyleUrl ? { compact: true } : false,
@@ -392,7 +411,12 @@ export function MapVolumeEditor({
   const localArea = ring.length >= 3 ? areaKm2(ring) : 0;
 
   return (
-    <div className={cn("relative bg-sheet-well rounded-md overflow-hidden", className)}>
+    // data-media is the capture hook for scripts/make-media.mjs. Selecting this panel by
+    // shape instead ("the first svg") picked up a loading skeleton and shipped it.
+    <div
+      data-media="map"
+      className={cn("relative bg-sheet-well rounded-md overflow-hidden", className)}
+    >
       <div
         ref={container}
         className="absolute inset-0"
