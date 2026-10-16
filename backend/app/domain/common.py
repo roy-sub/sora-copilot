@@ -64,18 +64,66 @@ class Country(StrEnum):
     EU = "EU"
 
 
-#: SORA keys the air-risk tree on 500 ft AGL, which is 152.4 m — not the round 150 m the
-#: design copy used. PLAN.md §0 records the decision to use the regulation's threshold
-#: and relabel the UI "above 500 ft (152 m)".
-ALTITUDE_BAND_THRESHOLD_M = 152.4
+#: Annex C Table C.1 writes every altitude row as "150 m (~500 ft) AGL": 150 m is the
+#: figure, 500 ft the approximation of it. PLAN.md §0 had recorded the opposite reading
+#: and used 152.4 m, which gave an operation between 150.0 m and 152.4 m the lower air
+#: risk band. The adopted text settles it.
+ALTITUDE_BAND_THRESHOLD_M = 150.0
 
-AltitudeBand = Literal["below_500ft", "above_500ft"]
+#: Flight level 600, in metres AGL. Above it the airspace is AEC 11 and the initial ARC
+#: is b. No specific-category operation reaches it, but the band exists in the table and
+#: the engine is not in the business of leaving rows out.
+FLIGHT_LEVEL_600_M = 18288.0
+
+#: Annex C Table C.1 bands. The boundary is 150 m AGL, which the table writes as
+#: "150 m (~500 ft)" — 150 m is the figure and 500 ft the approximation of it. FL 600
+#: is the top of SORA's airspace: above it is AEC 11.
+AltitudeBand = Literal["below_150m", "above_150m", "above_fl600"]
+
+#: How each band is written wherever an operator reads it — the trace, the dossier, the
+#: wizard. One definition, because a dossier that describes a different band from the one
+#: the engine keyed on is the kind of inconsistency an authority notices.
+ALTITUDE_BAND_LABELS: dict[str, str] = {
+    "below_150m": "at or below 150 m (~500 ft) AGL",
+    "above_150m": "above 150 m (~500 ft) AGL",
+    "above_fl600": "above flight level 600",
+}
+
+
+def altitude_band_of(metres_agl: float) -> AltitudeBand:
+    """Table C.1's own split. The single place the boundary is applied."""
+    if metres_agl > FLIGHT_LEVEL_600_M:
+        return "above_fl600"
+    return "above_150m" if metres_agl > ALTITUDE_BAND_THRESHOLD_M else "below_150m"
 
 EvidenceStatus = Literal["none", "claimed", "documented", "verified"]
 
 FittedMitigation = Literal["parachute", "tether", "fts", "daa", "low_speed"]
 
-MitigationKind = Literal["m1_strategic", "m1_ers", "m2_impact", "strategic_air", "tactical_air"]
+#: Table 5 of AMC1 Article 11 names four ground mitigations. The identifiers below are
+#: the ones stored since the first release and are kept so that determinations already
+#: recorded keep meaning what they meant:
+#:
+#:   m1_strategic   M1(A) — strategic mitigations, sheltering
+#:   m1_operational M1(B) — strategic mitigations, operational restrictions
+#:   m1_ers         M1(C) — tactical mitigations, ground observation
+#:   m2_impact      M2    — effects of UA impact dynamics are reduced
+MitigationKind = Literal[
+    "m1_strategic",
+    "m1_operational",
+    "m1_ers",
+    "m2_impact",
+    "strategic_air",
+    "tactical_air",
+]
+
+#: Step #8 assesses outdoor assemblies within 1 km of the operational volume against
+#: the bands in Tables 8 to 13.
+AssemblySize = Literal["none", "under_40k", "40k_to_400k", "over_400k"]
+
+#: S.4.8.1(c) of AMC1 Article 11: "There are three possible levels of robustness for
+#: containment: low, medium and high." SORA 2.0's basic/enhanced pair is not this.
+ContainmentLevel = Literal["low", "medium", "high"]
 
 TraceNodeKind = Literal["fact", "rule", "override", "default"]
 

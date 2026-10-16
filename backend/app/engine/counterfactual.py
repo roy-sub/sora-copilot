@@ -31,16 +31,21 @@ from functools import lru_cache
 from typing import cast
 
 from app.domain import CounterfactualChange, CounterfactualSuggestion, Mission, MitigationClaim
-from app.domain.common import GroundEnvironment, MitigationKind, OperationType, Robustness
+from app.domain.common import (
+    ALTITUDE_BAND_THRESHOLD_M,
+    GroundEnvironment,
+    MitigationKind,
+    OperationType,
+    Robustness,
+)
 from app.domain.determination import Determination
 from app.engine.rulebase.loader import load_rulebase
 from app.engine.runner import UnsatisfiableMission, determine
-from app.engine.scale import ft_to_cm
 
 SAIL_INDEX = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "certified_category": 7}
 
-#: Just below 500 ft, so lowering the altitude actually crosses the band boundary.
-BELOW_BAND_ALTITUDE_M = round((ft_to_cm(500) - 100) / 100, 1)
+#: One metre under the band boundary, so a suggestion to "fly lower" actually crosses it.
+BELOW_BAND_ALTITUDE_M = ALTITUDE_BAND_THRESHOLD_M - 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,13 +100,33 @@ def _candidates(mission: Mission, aircraft: Aircraft) -> list[tuple[str, Mission
                     (f"mitigations.m2_impact.{level.value}", _with_mitigation(mission, "m2_impact", level))
                 )
 
-    # Strategic air risk mitigation.
-    if claimed("strategic_air") is Robustness.NONE:
-        out.append(
-            ("mitigations.strategic_air.claimed", _with_mitigation(mission, "strategic_air", Robustness.LOW))
-        )
+    # M1(B) operational restrictions: medium then high. Table 5's other strategic
+    # mitigation, and the one an operator can usually reach without new hardware.
+    for level in (Robustness.MEDIUM, Robustness.HIGH):
+        if claimed("m1_operational") is not level:
+            out.append(
+                (
+                    f"mitigations.m1_operational.{level.value}",
+                    _with_mitigation(mission, "m1_operational", level),
+                )
+            )
 
-    # Lower the altitude below the 500 ft band boundary.
+    # Strategic air risk mitigation. Annex C Table C.2 gives nothing for the claim on
+    # its own: the reduction is bought with a DEMONSTRATED local traffic density, so the
+    # suggestion has to carry one or it would promise a SAIL the engine will not give.
+    # Each rating is offered separately, because 2 is a much easier case to make to an
+    # authority than 1 and they do not always reach the same ARC.
+    for rating in (2, 1):
+        if (mission.demonstrated_air_density_rating or 6) > rating:
+            changed = _with_mitigation(mission, "strategic_air", Robustness.LOW)
+            out.append(
+                (
+                    f"air_density.demonstrated.{rating}",
+                    changed.model_copy(update={"demonstrated_air_density_rating": rating}),
+                )
+            )
+
+    # Lower the altitude below the 150 m band boundary.
     if mission.volume.max_altitude_agl_m > BELOW_BAND_ALTITUDE_M:
         volume = mission.volume.model_copy(update={"max_altitude_agl_m": BELOW_BAND_ALTITUDE_M})
         out.append(("volume.max_altitude_agl_m", mission.model_copy(update={"volume": volume})))

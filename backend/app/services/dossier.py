@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from app.domain.common import DISCLAIMER
+from app.domain.common import ALTITUDE_BAND_LABELS, DISCLAIMER, altitude_band_of
 from app.national import PackError, load_pack, tailor
 from app.services import mapimage
 from app.services.docwriter import Writer, writer_for
@@ -187,9 +187,7 @@ def build(data: DossierInput, fmt: DossierFormat = "docx") -> bytes:
         ("Maximum altitude", f"{volume.get('max_altitude_agl_m', '—')} m AGL"),
         (
             "Altitude band",
-            "above 500 ft (152 m) AGL"
-            if float(volume.get("max_altitude_agl_m") or 0) > 152.4
-            else "at or below 500 ft (152 m) AGL",
+            ALTITUDE_BAND_LABELS[altitude_band_of(float(volume.get("max_altitude_agl_m") or 0))],
         ),
         ("Operation type", str(data.mission.get("operation_type", "—")).upper()),
     ]

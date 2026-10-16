@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from app.domain.common import ALTITUDE_BAND_LABELS
 from tests.conftest import SQUARE as SQUARE_FOR_DOSSIER
 
 
@@ -262,9 +263,16 @@ def test_every_risk_value_in_the_document_is_the_determinations(
     assert determined["mission_hash"][:32] in text
 
 
-def test_the_document_carries_the_disclaimer_and_the_unverified_banner(
+def test_the_document_carries_the_disclaimer_and_no_longer_the_banner(
     client: TestClient, auth: dict[str, str], operation: dict[str, Any], determined: dict[str, Any]
 ) -> None:
+    """The disclaimer is permanent; the UNVERIFIED banner was not.
+
+    Every regulatory table is transcribed from the EASA Easy Access Rules now, so a
+    determination carries no warnings and the document must not print a banner saying it
+    may not be submitted. The disclaimer stays either way: SORA Copilot prepares the
+    assessment, an authority grants the authorisation, and that does not change.
+    """
     dossier = client.post(
         f"/api/v1/operations/{operation['id']}/dossier", json={}, headers=auth
     ).json()
@@ -274,8 +282,76 @@ def test_the_document_carries_the_disclaimer_and_the_unverified_banner(
         ).content
     )
     assert "national aviation authority grants the authorisation" in text
-    assert "UNVERIFIED RULEBASE" in text
-    assert "must not be submitted to an authority" in text
+    assert "UNVERIFIED RULEBASE" not in text
+    assert "must not be submitted to an authority" not in text
+
+
+@pytest.mark.parametrize(
+    ("altitude_m", "expected"),
+    [
+        (118.0, "at or below 150 m"),
+        (149.9, "at or below 150 m"),
+        (150.0, "at or below 150 m"),
+        (151.0, "above 150 m"),
+        (300.0, "above 150 m"),
+    ],
+)
+def test_the_document_describes_the_band_the_arc_was_actually_computed_on(
+    client: TestClient,
+    auth: dict[str, str],
+    operation: dict[str, Any],
+    complete_draft: dict[str, Any],
+    altitude_m: float,
+    expected: str,
+) -> None:
+    """A dossier that describes a different band from the one the engine keyed on.
+
+    This was real. The volume section printed "above 500 ft (152 m) AGL" against its own
+    152.4 m threshold while the engine had already moved to Table C.1's 150 m. A flight
+    at 151 m got its ARC from the above-150 m row and was then described in the document
+    as being at or below the band — the kind of contradiction an authority reads as the
+    assessment not being of the operation in front of them. Both now render one
+    definition, and the old wording must not come back.
+    """
+    client.patch(
+        f"/api/v1/operations/{operation['id']}/draft",
+        json={"volume": {"flight_geography": SQUARE_FOR_DOSSIER, "max_altitude_agl_m": altitude_m}},
+        headers=auth,
+    )
+    determination = client.post(
+        f"/api/v1/operations/{operation['id']}/determine?force=true", headers=auth
+    )
+    assert determination.status_code == 200, determination.text
+
+    dossier = client.post(
+        f"/api/v1/operations/{operation['id']}/dossier", json={}, headers=auth
+    ).json()
+    text = _docx_text(
+        client.get(
+            f"/api/v1/operations/{operation['id']}/dossier/{dossier['id']}/download", headers=auth
+        ).content
+    )
+
+    assert expected in text
+    # The band the engine keyed on reaches the trace, so the two renderings of it have
+    # to agree inside one document.
+    engine_band = "above_150m" if altitude_m > 150.0 else "below_150m"
+    assert ALTITUDE_BAND_LABELS[engine_band] in text
+    assert "500 ft (152 m)" not in text
+
+
+def test_the_banner_still_appears_when_a_determination_does_carry_warnings() -> None:
+    """The machinery has to keep working for the next rulebase edition.
+
+    Asserting only that nothing warns would pass whether or not the banner still
+    worked, so this renders a document from a determination that does warn.
+    """
+    from app.services.dossier import unverified_banner
+
+    one = unverified_banner(1)
+    assert "1 of the regulatory table" in one
+    assert "must not be submitted to an authority" in one
+    assert "8 of the regulatory tables" in unverified_banner(8)
 
 
 def test_the_document_contains_the_whole_trace(
@@ -548,7 +624,9 @@ def test_the_pdf_carries_the_disclaimer_on_every_page(
         assert "national aviation authority grants the authorisation" in text, (
             f"page {i + 1} has no disclaimer"
         )
-        assert "UNVERIFIED RULEBASE" in text, f"page {i + 1} has no unverified banner"
+        assert "UNVERIFIED RULEBASE" not in text, (
+            f"page {i + 1} carries a banner the rulebase has outgrown"
+        )
 
 
 def test_an_unknown_format_is_refused_rather_than_silently_producing_a_docx(

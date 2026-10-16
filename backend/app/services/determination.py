@@ -158,6 +158,9 @@ def derive_geo(repo: Repo, org_id: UUID, operation_id: UUID) -> dict[str, Any]:
         GeoJSONPolygon.model_validate(volume["flight_geography"]),
         max_altitude_agl_m=float(volume.get("max_altitude_agl_m") or 0) or 120.0,
         max_speed_ms=aircraft.max_speed_ms,
+        # The 1:1 ground risk buffer is H_CV + CD/2, so the aircraft's characteristic
+        # dimension is part of the geometry and not only of the iGRC column.
+        characteristic_dimension_m=aircraft.max_dimension_m,
     )
 
     volume.update(

@@ -45,7 +45,7 @@ def _determine(mission: Mission, aircraft: Aircraft, adjacent: bool):
 
 
 @pytest.mark.parametrize(
-    "name", ["powerline-corridor-no-mitigations", "roof-survey-populated", "above-500ft-controlled"]
+    "name", ["powerline-corridor-no-mitigations", "roof-survey-populated", "above-150m-controlled"]
 )
 def test_every_suggestion_actually_lowers_sail(name: str) -> None:
     """The whole point. A suggestion that does not lower SAIL is noise in a safety tool."""
@@ -60,7 +60,7 @@ def test_every_suggestion_actually_lowers_sail(name: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "name", ["powerline-corridor-no-mitigations", "roof-survey-populated", "above-500ft-controlled"]
+    "name", ["powerline-corridor-no-mitigations", "roof-survey-populated", "above-150m-controlled"]
 )
 def test_suggestions_are_ranked_best_first(name: str) -> None:
     mission, aircraft, adjacent = _case(name)
@@ -103,7 +103,7 @@ def test_a_suggestion_applied_reproduces_the_sail_it_promised() -> None:
 
 def test_pairs_are_searched_only_when_no_single_change_works() -> None:
     """ "Minimal" has to mean minimal: never offer two changes where one would do."""
-    mission, aircraft, adjacent = _case("above-500ft-controlled")
+    mission, aircraft, adjacent = _case("above-150m-controlled")
     out = suggest(mission, aircraft, adjacent_area_populated=adjacent)
     assert out
     assert all(s.change_count == 1 for s in out)
@@ -163,10 +163,21 @@ def test_no_suggestions_when_already_at_the_lowest_sail() -> None:
         assert SAIL_INDEX[str(s.resulting_sail)] < SAIL_INDEX[str(base.sail)]
 
 
-def test_a_target_sail_narrows_the_list() -> None:
-    mission, aircraft, adjacent = _case("above-500ft-controlled")
+def test_a_target_sail_filters_to_suggestions_that_reach_it() -> None:
+    """A target is a filter on the answer, not a cap on the number of answers.
+
+    This asserted len(narrow) <= len(everything), which held by accident. The search
+    only looks at pairs of changes when no single change reaches the goal, so a harder
+    target can legitimately return MORE suggestions than an easier one: three single
+    changes that each drop one SAIL, against four combinations that drop two.
+    """
+    mission, aircraft, adjacent = _case("above-150m-controlled")
     everything = suggest(mission, aircraft, adjacent_area_populated=adjacent)
     narrow = suggest(mission, aircraft, target_sail="II", adjacent_area_populated=adjacent)
-    assert len(narrow) <= len(everything)
+
+    assert narrow, "the target is reachable, so something should reach it"
     for s in narrow:
         assert SAIL_INDEX[str(s.resulting_sail)] <= SAIL_INDEX["II"]
+    # And the target changes the answer rather than being ignored: without it the
+    # advisor is happy to offer a change that stops one SAIL short.
+    assert any(SAIL_INDEX[str(s.resulting_sail)] > SAIL_INDEX["II"] for s in everything)

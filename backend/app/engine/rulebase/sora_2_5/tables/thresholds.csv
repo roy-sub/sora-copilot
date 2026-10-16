@@ -1,22 +1,28 @@
 # table: thresholds
-# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex C
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Scope thresholds and band boundaries
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: Three of the four rows are corroborated: the 250 g / 25 m/s provision fixing iGRC 1 regardless of population density, and the rule that a final GRC above 7 leaves SORA, both confirmed against the Main Body release. The fourth, altitude_band_500ft, is NOT: the ARC decision tree is Figure 4 of the Main Body and research could not establish whether its altitude branch is at 500 ft AGL. Open Figure 4 and confirm the boundary before flipping this table
+# section: AMC1 Article 11 — S.4.2 Step #2 (small-UA provision), S.4.3 Step #3 (certified-category ceiling), S.4.8 Step #8 (adjacent ground area), Annex C Table C.1 (altitude bands)
+# page: 63
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Each row transcribed from the page named in its description. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The one that moved is the altitude band: the seed used 500 ft converted to 152.4 m, and Table C.1 on page 128 writes every one of its altitude rows as '150 m (~500 ft) AGL' — 150 m is the figure and 500 ft is the approximation of it, not the other way round. The 250 g provision is on page 63 under Table 1, the certified-category ceiling on page 68, and the adjacent-area distances in S.4.8.3(b) on page 76
 # note: Regulatory numbers that are thresholds rather than table cells. They live here
-#       rather than in code so that the trace can cite them and a reviewer checks them in
-#       the same place as everything else.
-# note: altitude_band_500ft is 500 ft expressed in centimetres: 15240. The build spec
-#       keys the ARC tree on 500 ft, which is 152.4 m, not the round 150 m the design
-#       copy used. PLAN.md section 0 records that decision.
-# note: Units are centimetres, centimetres per second and grams, matching
+#       rather than in code so that the trace can cite them and a reviewer checks them
+#       in the same place as everything else.
+# note: Units are centimetres, centimetres per second, grams and seconds, matching
 #       app/engine/scale.py. The solver reasons over integers only.
+# note: PLAN.md section 0 recorded a decision to use 500 ft = 152.4 m over the design
+#       copy's 150 m. The adopted text settles it the other way: 150 m. An operation
+#       between 150.0 m and 152.4 m was being given the lower air risk band.
 key,value,unit,rule_id,description
-altitude_band_500ft,15240,cm,sora25.arc.altitude_band,Boundary between the below-500ft and above-500ft air risk bands
+altitude_band_150m,15000,cm,sora25.arc.altitude_band,Boundary between the below-150 m and above-150 m air risk bands (Table C.1 writes it as 150 m with ~500 ft as the approximation)
+altitude_fl600,1828800,cm,sora25.arc.altitude_band,Flight level 600 — above it the airspace is AEC 11 and the initial ARC is b
 small_ua_mtom,250,g,sora25.igrc.small_ua,Maximum take-off mass for the fixed iGRC 1 provision
 small_ua_speed,2500,cms,sora25.igrc.small_ua,Maximum speed for the fixed iGRC 1 provision
 grc_certified_ceiling,7,grc,sora25.sail.certified,Final GRC above this value leaves SORA for the certified category
+containment_small_ua_mtom,250,g,sora25.containment.small_ua,Below this take-off mass Step #8 applies low containment with no adjacent-area limitations
+adjacent_area_seconds,180,s,sora25.containment.adjacent_area,The adjacent ground area reaches as far as the UA flies in 3 minutes at maximum speed
+adjacent_area_min,500000,cm,sora25.containment.adjacent_area,Floor on that distance — 5 km
+adjacent_area_max,3500000,cm,sora25.containment.adjacent_area,Ceiling on that distance — 35 km
+assembly_radius,100000,cm,sora25.containment.assembly,Radius around the operational volume within which outdoor assemblies are assessed — 1 km

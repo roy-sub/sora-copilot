@@ -39,7 +39,7 @@ def _fact_text(name: str) -> str:
     [
         "powerline-corridor-aerodrome",
         "quarry-controlled-ground",
-        "above-500ft-controlled",
+        "above-150m-controlled",
         "assembly-of-people",
     ],
 )
@@ -52,21 +52,21 @@ def test_exactly_one_answer_set(name: str) -> None:
 def test_the_same_mission_hashes_the_same() -> None:
     case = json.loads((GOLDEN / "powerline-corridor-aerodrome.json").read_text(encoding="utf-8"))
     mission = Mission.model_validate(case["mission"])
-    assert mission_hash(mission, "2.5.0-rc2") == mission_hash(mission, "2.5.0-rc2")
+    assert mission_hash(mission, "2.5.1") == mission_hash(mission, "2.5.1")
 
 
 def test_a_different_rulebase_version_hashes_differently() -> None:
     """Idempotency is per (mission, rulebase): a new rulebase means a new determination."""
     case = json.loads((GOLDEN / "powerline-corridor-aerodrome.json").read_text(encoding="utf-8"))
     mission = Mission.model_validate(case["mission"])
-    assert mission_hash(mission, "2.5.0-rc1") != mission_hash(mission, "2.5.0-rc2")
+    assert mission_hash(mission, "2.5.0-rc1") != mission_hash(mission, "2.5.1")
 
 
 def test_a_changed_mitigation_hashes_differently() -> None:
     case = json.loads((GOLDEN / "powerline-corridor-aerodrome.json").read_text(encoding="utf-8"))
     mission = Mission.model_validate(case["mission"])
     changed = mission.model_copy(update={"mitigations": []})
-    assert mission_hash(mission, "2.5.0-rc2") != mission_hash(changed, "2.5.0-rc2")
+    assert mission_hash(mission, "2.5.1") != mission_hash(changed, "2.5.1")
 
 
 # ------------------------------------------------------------------ scaling
@@ -113,19 +113,17 @@ def test_the_generated_facts_contain_no_zero_igrc_cell() -> None:
 
 def test_the_generator_marks_every_unverified_table() -> None:
     text = generate.render()
-    for table in ("oso", "arc", "containment", "tmpr", "m1_m2", "thresholds"):
-        assert f"table_unverified({table})." in text
-    # ...and does not mark the ones that have been checked, or a determination would
-    # carry a warning it has outgrown.
-    for table in ("igrc", "igrc_columns", "sail"):
-        assert f"table_unverified({table})." not in text
+    # Nothing is unverified any more, so nothing is marked. A stale marker here would
+    # put an UNVERIFIED banner on a determination that has outgrown it.
+    assert "table_unverified(" not in text
 
 
 def test_boolean_cells_are_emitted_as_constants_not_strings() -> None:
     """A string here and a constant in 00_core.lp would ground cleanly and match nothing."""
     text = generate.render()
-    assert "arc_rule(1, true," in text
-    assert 'arc_rule(1, "true",' not in text
+    # arc_rule(priority, aec, atypical, ...) — the AEC sits between the two.
+    assert "arc_rule(1, 12, true," in text
+    assert 'arc_rule(1, 12, "true",' not in text
 
 
 def test_regenerating_is_byte_identical() -> None:

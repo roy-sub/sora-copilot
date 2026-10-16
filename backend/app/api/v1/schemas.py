@@ -16,6 +16,7 @@ from app.domain import (
     ARC,
     SAIL,
     AirspaceClass,
+    AssemblySize,
     Citation,
     ContainmentRequirement,
     CounterfactualSuggestion,
@@ -199,6 +200,11 @@ class MissionDraftPatch(BaseModel):
     near_aerodrome: bool | None = None
     controlled_airspace: bool | None = None
     atypical_airspace: bool | None = None
+    transponder_mandatory_zone: bool | None = None
+    demonstrated_air_density_rating: int | None = Field(default=None, ge=1, le=5)
+    adjacent_area_density_per_km2: float | None = Field(default=None, ge=0)
+    adjacent_assembly_size: AssemblySize | None = None
+    sheltering_applicable: bool | None = None
     country: Country | None = None
     mitigations: dict[str, Robustness] | None = None
     geo_zones: list[str] | None = None

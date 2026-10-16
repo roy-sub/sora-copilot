@@ -34,16 +34,23 @@ class GeoError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class BufferParams:
-    """The transcribed derivation parameters, with the note each one came with."""
+    """The transcribed derivation parameters, with the note each one came with.
 
+    Annex A A.5.2 of AMC1 Article 11. The names are the ones the annex uses, so a
+    reviewer can read the CSV, this file and the regulation in the same vocabulary.
+    """
+
+    gnss_accuracy_m: float
+    position_holding_error_m: float
+    map_error_m: float
     reaction_time_s: float
-    bank_angle_deg: float
-    position_error_m: float
-    vertical_contingency_m: float
+    pitch_angle_max_deg: float
+    bank_angle_max_deg: float
+    altitude_error_baro_m: float
+    altitude_error_gnss_m: float
+    vertical_reaction_factor: float
     grb_method: str
-    grb_multiplier: float
-    adjacent_area_method: str
-    adjacent_area_distance_m: float
+    grb_dimension_term: float
     verified: bool
     notes: dict[str, str] = field(default_factory=dict)
 
@@ -60,14 +67,17 @@ def buffer_params(version_dir: str = "sora_2_5") -> BufferParams:
             raise GeoError(f"buffers.csv is missing a usable {key}") from exc
 
     return BufferParams(
+        gnss_accuracy_m=num("gnss_accuracy"),
+        position_holding_error_m=num("position_holding_error"),
+        map_error_m=num("map_error"),
         reaction_time_s=num("reaction_time"),
-        bank_angle_deg=num("bank_angle"),
-        position_error_m=num("position_error"),
-        vertical_contingency_m=num("vertical_contingency"),
+        pitch_angle_max_deg=num("pitch_angle_max"),
+        bank_angle_max_deg=num("bank_angle_max"),
+        altitude_error_baro_m=num("altitude_error_baro"),
+        altitude_error_gnss_m=num("altitude_error_gnss"),
+        vertical_reaction_factor=num("vertical_reaction_factor"),
         grb_method=rows["grb_method"]["value"],
-        grb_multiplier=num("grb_multiplier"),
-        adjacent_area_method=rows["adjacent_area_method"]["value"],
-        adjacent_area_distance_m=num("adjacent_area_distance"),
+        grb_dimension_term=num("grb_dimension_term"),
         verified=table.verified,
         notes={k: v["note"] for k, v in rows.items()},
     )
@@ -151,46 +161,135 @@ def _to_geojson(poly: Polygon, rev: Transformer) -> GeoJSONPolygon:
 
 
 def contingency_lateral(max_speed_ms: float, params: BufferParams) -> Derivation:
-    """Reaction distance + half the turn radius at the assumed bank + position error."""
+    """S_CV = S_GNSS + S_Pos + S_K + S_R + S_CM, per Annex A A.5.2.3.
+
+    A.5.2.3 gives two forms for the contingency manoeuvre, and which applies depends on
+    the airframe: a multirotor stops, a fixed-wing aircraft turns. The aircraft type is
+    not recorded anywhere in the mission, so the LARGER of the two is used and the
+    derivation says so — a fixed-wing turn at 30 degrees of bank is several times a
+    multirotor's stopping distance, and guessing the smaller one would shrink the
+    operational volume on an assumption nobody made.
+    """
     reaction = max_speed_ms * params.reaction_time_s
-    turn_radius = (max_speed_ms**2) / (GRAVITY * tan(radians(params.bank_angle_deg)))
-    value = reaction + turn_radius / 2 + params.position_error_m
+    stopping = (max_speed_ms**2) / (2 * GRAVITY * tan(radians(params.pitch_angle_max_deg)))
+    turning = (max_speed_ms**2) / (GRAVITY * tan(radians(params.bank_angle_max_deg)))
+    manoeuvre = max(stopping, turning)
+    shape = "fixed-wing 180° turn" if turning >= stopping else "multirotor stop"
+    fixed = params.gnss_accuracy_m + params.position_holding_error_m + params.map_error_m
+    value = fixed + reaction + manoeuvre
     return Derivation(
         value_m=round(value, 1),
         rule=(
-            f"Reaction distance {reaction:.1f} m at {max_speed_ms:g} m/s over "
-            f"{params.reaction_time_s:g} s, plus half the {turn_radius:.1f} m turn radius at "
-            f"{params.bank_angle_deg:g}° bank, plus {params.position_error_m:g} m position error."
+            f"{params.gnss_accuracy_m:g} m GNSS accuracy + {params.position_holding_error_m:g} m "
+            f"position holding + {params.map_error_m:g} m map error + {reaction:.1f} m reaction "
+            f"distance at {max_speed_ms:g} m/s over {params.reaction_time_s:g} s + "
+            f"{manoeuvre:.1f} m contingency manoeuvre. The manoeuvre is the larger of the two "
+            f"forms in Annex A A.5.2.3 — here the {shape} — because the airframe type is not "
+            f"recorded."
         ),
         inputs={
             "max_speed_ms": max_speed_ms,
+            "gnss_accuracy_m": params.gnss_accuracy_m,
+            "position_holding_error_m": params.position_holding_error_m,
+            "map_error_m": params.map_error_m,
             "reaction_time_s": params.reaction_time_s,
-            "bank_angle_deg": params.bank_angle_deg,
-            "position_error_m": params.position_error_m,
+            "pitch_angle_max_deg": params.pitch_angle_max_deg,
+            "bank_angle_max_deg": params.bank_angle_max_deg,
         },
     )
 
 
-def ground_risk_buffer(altitude_m: float, contingency_m: float, params: BufferParams) -> Derivation:
-    """The 1:1 rule as the conservative default, stated as the assumption it is."""
+def contingency_height(altitude_m: float, max_speed_ms: float, params: BufferParams) -> Derivation:
+    """H_CV = H_FG + H_AM + H_R + H_CM, per Annex A A.5.2.3.
+
+    The altitude error is the GNSS figure rather than the barometric one, and the
+    contingency manoeuvre is again the larger of the two forms — which on this axis is
+    the multirotor's, not the fixed-wing's.
+    """
+    altitude_error = max(params.altitude_error_baro_m, params.altitude_error_gnss_m)
+    reaction = max_speed_ms * params.vertical_reaction_factor * params.reaction_time_s
+    multirotor = 0.5 * (max_speed_ms**2) / GRAVITY
+    fixed_wing = 0.3 * (max_speed_ms**2) / GRAVITY
+    manoeuvre = max(multirotor, fixed_wing)
+    value = altitude_m + altitude_error + reaction + manoeuvre
+    return Derivation(
+        value_m=round(value, 1),
+        rule=(
+            f"{altitude_m:g} m flight geography + {altitude_error:g} m altitude measurement "
+            f"error (the GNSS figure, not the barometric one) + {reaction:.1f} m reaction "
+            f"climb + {manoeuvre:.1f} m contingency manoeuvre."
+        ),
+        inputs={
+            "altitude_m": altitude_m,
+            "altitude_error_m": altitude_error,
+            "vertical_reaction_factor": params.vertical_reaction_factor,
+            "reaction_time_s": params.reaction_time_s,
+            "max_speed_ms": max_speed_ms,
+        },
+    )
+
+
+def ground_risk_buffer(
+    contingency_height_m: float, characteristic_dimension_m: float, params: BufferParams
+) -> Derivation:
+    """S_GRB = H_CV + CD/2 — the 1:1 rule of Annex A A.5.2.4.
+
+    The annex offers three alternatives that are smaller: a ballistic approach for
+    rotorcraft, a parachute termination, and a fixed-wing glide. Each needs evidence the
+    engine does not hold, so the conservative one is used and the derivation says which.
+    """
     if params.grb_method != "one_to_one":
         raise GeoError(
             f"buffers.csv asks for the {params.grb_method!r} ground-risk-buffer method, "
             "which is not implemented. Transcribe the method before using it."
         )
-    value = (altitude_m + params.vertical_contingency_m) * params.grb_multiplier
+    dimension_term = characteristic_dimension_m * params.grb_dimension_term
+    value = contingency_height_m + dimension_term
     return Derivation(
         value_m=round(value, 1),
         rule=(
-            f"1:1 rule — the buffer equals the contingency volume height: {altitude_m:g} m "
-            f"plus {params.vertical_contingency_m:g} m vertical contingency, × "
-            f"{params.grb_multiplier:g}. Conservative default, not a ballistic computation."
+            f"1:1 rule — the buffer is the contingency volume height plus half the "
+            f"characteristic dimension: {contingency_height_m:g} m + {dimension_term:.2f} m. "
+            f"Conservative default, not a ballistic, parachute or glide computation."
         ),
         inputs={
-            "altitude_m": altitude_m,
-            "vertical_contingency_m": params.vertical_contingency_m,
-            "grb_multiplier": params.grb_multiplier,
+            "contingency_height_m": contingency_height_m,
+            "characteristic_dimension_m": characteristic_dimension_m,
+            "grb_dimension_term": params.grb_dimension_term,
         },
+    )
+
+
+def adjacent_area(max_speed_ms: float, version_dir: str = "sora_2_5") -> Derivation:
+    """Step #8's adjacent ground area: 3 minutes at maximum speed, floored and capped.
+
+    S.4.8.3(b)(i): "the distance flown by the UA in 3 minutes at maximum speed", not
+    below 5 km and not above 35 km. The seed used a flat 1 km ring, which is under the
+    floor for every aircraft.
+    """
+    rows = {r["key"]: r for r in load_rulebase(version_dir)["thresholds"].rows}
+
+    def metres(key: str) -> float:
+        return float(rows[key]["value"]) / 100.0
+
+    seconds = float(rows["adjacent_area_seconds"]["value"])
+    low, high = metres("adjacent_area_min"), metres("adjacent_area_max")
+    flown = max_speed_ms * seconds
+    value = min(max(flown, low), high)
+    if value == low:
+        why = f"{flown:.0f} m is below the {low / 1000:g} km floor"
+    elif value == high:
+        why = f"{flown:.0f} m is above the {high / 1000:g} km cap"
+    else:
+        why = "between the 5 km floor and the 35 km cap"
+    return Derivation(
+        value_m=round(value, 1),
+        rule=(
+            f"{seconds / 60:g} minutes at {max_speed_ms:g} m/s is {flown:.0f} m — {why}, "
+            f"so the adjacent ground area reaches {value / 1000:g} km beyond the "
+            f"operational volume."
+        ),
+        inputs={"max_speed_ms": max_speed_ms, "seconds": seconds, "min_m": low, "max_m": high},
     )
 
 
@@ -199,6 +298,7 @@ def derive(
     *,
     max_altitude_agl_m: float,
     max_speed_ms: float,
+    characteristic_dimension_m: float = 0.0,
     version_dir: str = "sora_2_5",
 ) -> DerivedVolumes:
     """Everything the map step shows, derived from the drawn outline."""
@@ -212,18 +312,20 @@ def derive(
     fg, _fwd, rev = _project(fg_wgs)
 
     lateral = contingency_lateral(max_speed_ms, params)
-    grb = ground_risk_buffer(max_altitude_agl_m, lateral.value_m, params)
+    height = contingency_height(max_altitude_agl_m, max_speed_ms, params)
+    grb = ground_risk_buffer(height.value_m, characteristic_dimension_m, params)
+    adj = adjacent_area(max_speed_ms, version_dir)
 
     cv = fg.buffer(lateral.value_m, quad_segs=24, join_style=2)
     buffer_ring = cv.buffer(grb.value_m, quad_segs=24, join_style=2)
-    adjacent = buffer_ring.buffer(params.adjacent_area_distance_m, quad_segs=24, join_style=2)
+    adjacent = buffer_ring.buffer(adj.value_m, quad_segs=24, join_style=2)
 
     km2 = 1_000_000.0
     return DerivedVolumes(
         contingency_lateral_m=lateral.value_m,
-        contingency_vertical_m=params.vertical_contingency_m,
+        contingency_vertical_m=round(height.value_m - max_altitude_agl_m, 1),
         ground_risk_buffer_m=grb.value_m,
-        adjacent_area_m=params.adjacent_area_distance_m,
+        adjacent_area_m=adj.value_m,
         flight_geography_km2=round(fg.area / km2, 4),
         contingency_volume_km2=round(cv.area / km2, 4),
         ground_risk_buffer_km2=round(buffer_ring.area / km2, 4),
@@ -231,7 +333,7 @@ def derive(
         contingency_volume=_to_geojson(cv, rev),
         ground_risk_buffer=_to_geojson(buffer_ring, rev),
         adjacent_area=_to_geojson(adjacent, rev),
-        derivations=[lateral, grb],
+        derivations=[lateral, height, grb, adj],
         unverified=not params.verified,
     )
 

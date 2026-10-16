@@ -3,12 +3,17 @@
 **Status: all eight phases implemented.** See §10 for the phase-by-phase state and how
 each Definition of Done was checked.
 
-What remains is not code. No regulatory table has been verified against its published
-source (§8), and no national annex has been transcribed — the engine's
-`90_national_*.lp` files deliberately assert nothing, and the country packs under
-`backend/app/national/packs/` are marked UNVERIFIED item by item. Until you supply those
-documents the product is a working engine with honest labels on it, which is the right
-state to be in, but not something an operator should file with an authority.
+What remains is not code. **All fourteen regulatory tables are now transcribed from the
+adopted text** — the EASA *Easy Access Rules for Unmanned Aircraft Systems*, revision of
+June 2026, carrying SORA 2.5 as AMC and GM to (EU) 2019/947 per ED Decision 2025/018/R —
+with a page number on each, so determinations carry no UNVERIFIED warning and the dossier
+is submittable. §9a's third pass records the seven corrections that transcription found.
+
+What is still open is the **national annex**: the engine's `90_national_*.lp` files
+deliberately assert nothing, and the country packs under `backend/app/national/packs/`
+are marked UNVERIFIED item by item (§8b). That pack is an operator's checklist for their
+authority, not part of the risk determination — nothing in it can change an iGRC, a GRC,
+an ARC, a SAIL, an OSO or a containment level — so it does not hold the product back.
 
 ---
 
@@ -18,7 +23,7 @@ state to be in, but not something an operator should file with an authority.
 |---|---|---|
 | §5.1 Map | **MapLibre GL, keep the SVG renderer for the dossier** | Wizard map becomes MapLibre with a keyless basemap and the designed layers as style layers. `MapVolumeEditor`'s SVG renderer is retained as the static map render for the DOCX. Needs `NEXT_PUBLIC_MAP_STYLE_URL`. Phase 4. |
 | §5.2 Derivation tree | **React Flow + dagre, rebuild the motion** | Custom node/edge components reproduce the design's node anatomy and the `edge-draw` / `node-settle` timings; the existing mobile outline stays as the `<480px` treatment. The hand-laid SVG tree is replaced. Phase 5. |
-| §6.3 Altitude threshold | **500 ft = 152.4 m, correct the UI copy** | Engine keys ARC on 500 ft AGL. Approved design text "above 150 m AGL" is relabelled "above 500 ft (152 m)" wherever it appears. Signed off as a deliberate edit to design copy. |
+| §6.3 Altitude threshold | **500 ft = 152.4 m, correct the UI copy** — ~~applied~~, then **reversed on 16 Oct 2026** | This decision was wrong, and the source says so. Table C.1 of Annex C writes every altitude row as "150 m (~500 ft) AGL": 150 m is the figure and 500 ft is the approximation of it, not the other way round. The engine keys on **150 m**, and the design's original "above 150 m AGL" copy was restored — the edit to approved design text is withdrawn. An operation between 150.0 m and 152.4 m had been given the lower air risk band. |
 | §6.5 Interim SAIL in the UI | **Keep the checker and verdict working, labelled** | Both kept computing client-side through phases 1–6 behind a "preliminary estimate — computed in your browser, not a determination" label. **Done:** the verdict cut over at Phase 3, the checker at Phase 7, and `frontend/src/engine/` was deleted with the labels in the same commit. Nothing in the UI computes a risk value any more. |
 
 Proceeding on my stated recommendations, reversible on request: **Tailwind v4 CSS-first**
@@ -327,12 +332,22 @@ the current generation is Claude 5 (`claude-sonnet-5-5`, `claude-opus-5-5`). The
 is already env-driven, so this is just a default. I propose defaulting to
 `claude-sonnet-5-5`. Confirm, or give me the id you want.
 
-### 7.4 The official SORA 2.5 source documents *(blocks verification, not Phase 1)*
-Your hard rule 3 forbids inventing regulatory values, and I will not. To transcribe the
-seven tables I need the **JARUS SORA 2.5 main body** plus **Annexes B, C and D**, and
-the **Austrian national annex** for `90_national_at.lp`. Until you provide them every
-table ships `verified: false`, surfaces in `Determination.warnings`, and shows the
-UNVERIFIED banner in the verdict UI. Exact files in §8.
+### 7.4 The official SORA 2.5 source documents *(closed 16 Oct 2026)*
+**Closed.** Two hostnames were added to the container's network policy, and the source
+was read directly: the EASA *Easy Access Rules for Unmanned Aircraft Systems*, revision
+of June 2026 (617 pages), downloaded over a verified TLS connection and extracted with
+`pdftotext`. All fourteen tables are transcribed from it, each citing the book's own
+printed page.
+
+`jarus-rpas.org` was deliberately **not** used. Its TLS certificate did not match the
+site — self-signed, issued to `C=CN, CN=unknown, emailAddress=unknown@wts` — and a
+document fetched over a connection like that cannot be trusted to be the document, which
+is the entire point of transcribing from a primary source. EASA is the better source in
+any case: in the EU the AMC is the normative text and "JARUS recommends" is the weaker
+citation.
+
+Still outstanding: the **Austrian national annex** for `90_national_at.lp` and the
+country pack (§8b).
 
 ### 7.5 Population density raster
 Spec §7.1 wants a downsampled GHSL / Eurostat GEOSTAT 1 km raster for AT + DE bundled
@@ -354,35 +369,26 @@ noting it here so there is no ambiguity later.
 
 ## 8. Files you will need to fill in
 
-### 8a. The rulebase (UNVERIFIED)
+### 8a. The rulebase — closed
 
-All under `backend/app/engine/rulebase/sora_2_5/tables/`. Each ships with a header block
-naming document / version / section / page and `verified: false`, and seed values taken
-from the spec §6.3 matrix and the existing TypeScript rulebase — **never from guesswork**.
+Nothing here is outstanding any more. All fourteen tables under
+`backend/app/engine/rulebase/sora_2_5/tables/` report `verified: true`, each with a
+`page:` and a `basis:` line naming what was checked against what;
+`make rulebase --strict` passes. The source for every regulatory table is the EASA Easy
+Access Rules, revision of June 2026 — see the page-by-page map in
+[docs/RULEBASE.md](docs/RULEBASE.md).
 
-| File | Needs | Source to transcribe from |
-|---|---|---|
-| `igrc.csv` | dimension+speed columns × density rows → iGRC | SORA 2.5 main body, iGRC table |
-| `m1_m2.csv` | mitigation × robustness → GRC delta, + preconditions | SORA 2.5 Annex B |
-| `arc.csv` | airspace class × altitude band × environment → initial ARC | SORA 2.5 Annex C |
-| `sail.csv` | final GRC × residual ARC → SAIL | SORA 2.5 main body, SAIL matrix |
-| `oso.csv` | SAIL × OSO → required robustness, + title and citation | SORA 2.5 main body, OSO matrix |
-| `containment.csv` | SAIL / GRC conditions → containment level | SORA 2.5 containment section |
-| `tmpr.csv` | residual ARC → TMPR | SORA 2.5 Annex D |
-| `buffers.csv` | contingency + ground-risk-buffer parameters | SORA 2.5 / Annex B buffer method |
-| `citations.csv` | rule id → document, section, page, url | the same documents |
-| `cf_costs.csv` | effort cost per counterfactual parameter | **mine, not regulatory** — needs your review, not a source |
+Three of the fourteen are **ours, not regulatory**, and their `basis:` says so in those
+words so the flag can never be mistaken for a transcription: `cf_costs.csv` (effort
+weights that only rank advisor suggestions), `density_environment_hint.csv` (a prefill
+the operator confirms, which never suggests `controlled` or `assembly`) and
+`citations.csv` (an index). None can change an iGRC, a GRC, an ARC, a SAIL, an OSO or a
+containment result.
 
-Four more tables were added during Phase 2 and are in the same state:
-`igrc_columns.csv` (the dimension/speed column bands, which the spec's matrix dropped),
-`thresholds.csv`, `arc_residual.csv` and `density_environment_hint.csv`. The last is
-**ours, not regulatory** — it maps a population density to a *suggested* ground
-environment that the operator confirms, and it never suggests `controlled` or
-`assembly`. `make rulebase` prints the live list.
-
-One known content question: the rulebase uses **17 OSOs** (#01–09, 13, 16–20, 23, 24)
-because that is SORA 2.5; the design copy says "~24 OSOs", which is SORA 2.0. The count
-is derived from the table rather than written anywhere.
+One content question raised here is settled by the source: the rulebase uses **17 OSOs**
+(#01–09, 13, 16–20, 23, 24) because that is Table 14 of the adopted AMC. The design copy
+saying "~24 OSOs" is SORA 2.0 and was corrected. The count is derived from the table
+rather than written anywhere.
 
 ### 8b. The country packs (UNVERIFIED)
 
@@ -455,6 +461,23 @@ why. Each is reversible; none invents a regulatory value.
 | **Build the media from the product** | Generating sixteen assets | The connector available in the session is read-only and says so. A screenshot of the derivation tree is also truer than an illustration of one, and cannot depict a feature the product does not have. |
 | **Segment cards, not portraits** | Photographs of "customers" | A photograph of a person who does not exist is a fabricated endorsement, and the copy describes a segment rather than quoting anybody. The cards show the inputs each segment brings and a trace excerpt — never a computed class. |
 | **Commit the assets** | `public/media/*` in `.gitignore` | A clone should build a complete site, and `test_media_assets.py` can only check files that exist. 1.7 MB. |
+
+### Third pass (16 Oct 2026) — the adopted text, read directly
+
+The two hostnames were allowed, so the question "what does the table actually say?"
+became answerable. These are the calls made while answering it.
+
+| Decision | Instead of | Why |
+|---|---|---|
+| **Transcribe from EASA, not JARUS** | The JARUS release PDFs the plan asked for | `jarus-rpas.org` served a certificate issued to `C=CN, CN=unknown, emailAddress=unknown@wts`. A document fetched over that connection cannot be trusted to be the document. The EASA Easy Access Rules carry the same text as the adopted AMC, which is the stronger citation to an EU authority anyway. |
+| **Reverse §0's altitude decision to 150 m** | Keeping 500 ft = 152.4 m | Table C.1 writes "150 m (~500 ft) AGL" on every altitude row. The earlier reading had it backwards. The design copy that was edited to say "above 500 ft (152 m)" is restored. |
+| **Extract each table twice and compare** | One `pdftotext` pass | Table 14's column headers span columns, so the layout-preserving pass merges "MH" out of adjacent medium and high cells. Raw reading order disambiguates it. Reading one pass alone would have been a guess dressed as a transcription — and that is how OSO#04 was found to be wrong. |
+| **Align Tables 8–13 by character position** | Reading cells in order | The density and assembly limits do not line up one-to-one, so reading in order pairs the wrong ones. 156 cells, aligned by column position in the layout-preserved text. |
+| **Containment chooses the *more stringent* column** | The least restrictive column that qualifies | S.4.8.3(d): take the worse of the adjacent density and the adjacent assembly. The first implementation took `#min` over qualifying columns, which is the opposite; it was caught by hand-walking all five columns of Table 11 and is now `#max` per input then `#min` of the two. |
+| **No containment level without the inputs** | Letting the unlimited column answer | The widest column qualifies even when nothing has been measured, so a missing measurement silently produced a *low* requirement. `cont_level` is gated on the inputs being present, and Step #8 says "assessment required" instead. |
+| **Strategic air mitigation needs a demonstrated density** | Crediting the claim | Table C.2 sells the reduction for a demonstrated local density rating, not for claiming a mitigation. This moved the worked example from SAIL III to SAIL IV until the demonstration was supplied — a real change to the headline number, taken because the table says so. |
+| **Three new mission inputs rather than inferring them** | Deriving the adjacent area from the operating area | Tables 8–13 are keyed on the *adjacent* area's density and largest assembly, and on whether sheltering applies. Inferring any of them would be inventing a regulatory input. The wizard asks; the engine says "assessment required" until it is answered. |
+| **Rewrite the golden cases from the source, not around the engine** | Patching the engine to keep cases green | Four cases encoded the seed's mistakes. Each expected value was re-derived from the adopted table before anything was touched, per `docs/RULEBASE.md` step 6. Four more cases were added for paths that could not be reached before: a Table C.2 reduction, a TMZ below 150 m, a computed containment level, and containment out of scope. |
 
 ---
 

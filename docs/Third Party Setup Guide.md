@@ -342,31 +342,29 @@ export the DOCX, and reopen the operation to check it persisted.
 ## What is *still* missing after all of this
 
 Configuring every service above gives you a working product that people can sign up to,
-use, and pay for. It does not give you a *verified* one. Two things remain, and neither
-can be bought.
+use, and pay for. One thing remains, and it cannot be bought.
 
-1. **Eight of the fourteen regulatory tables are still transcribed from seeds.** Six are
-   verified: `igrc`, `igrc_columns` and `sail` against the JARUS SORA 2.5 Main Body
-   release cross-checked with the Norwegian CAA's own SORA 2.5 calculator, plus the
-   three tables that are the product's own data rather than transcriptions. A
-   determination that reads one of the remaining eight carries a warning naming it, the
-   verdict screen shows a strip counting them, and the dossier says on its cover that it
-   must not be submitted to an authority.
+**The Austria pack is this project's reading of the process, not a transcription of
+anything Austro Control published.** Every one of its 14 items is marked UNVERIFIED in
+the UI and in the dossier's Appendix C, and each says where to check it. Deliberately,
+no item quotes a fee, a lead time or a sum insured — a plausible-looking number in a
+compliance product is worse than an honest gap. The file to fill in is
+`backend/app/national/packs/at.json`; set an item's `provenance` to `official` and its
+`source` to the clause once you have confirmed it.
 
-   `GET /api/v1/rulebase/current` lists exactly which tables are open and which document
-   closes each, and the settings screen shows the same list under "What is still
-   needed". [Final Manual Task](./Final%20Manual%20Task.md) explains the one-minute
-   action that lets this be finished.
+The pack is an operator's *checklist for their authority*, not part of the risk
+determination: nothing in it can change an iGRC, a GRC, an ARC, a SAIL, an OSO or a
+containment level, which is why the product is submittable without it.
 
-2. **The Austria pack is this project's reading of the process, not a transcription of
-   anything Austro Control published.** Every one of its 14 items is marked UNVERIFIED in
-   the UI and in the dossier's Appendix C, and each says where to check it. Deliberately,
-   no item quotes a fee, a lead time or a sum insured — a plausible-looking number in a
-   compliance product is worse than an honest gap. The file to fill in is
-   `backend/app/national/packs/at.json`; set an item's `provenance` to `official` and its
-   `source` to the clause once you have confirmed it.
+**The regulatory tables are done.** All fourteen are transcribed from the EASA *Easy
+Access Rules for Unmanned Aircraft Systems*, revision of June 2026, which carries the
+SORA 2.5 AMC adopted by ED Decision 2025/018/R, with a page number on every one. No
+determination carries an UNVERIFIED warning and the dossier no longer prints the
+"must not be submitted" cover. `GET /api/v1/rulebase/current` reports the live state,
+and the settings screen shows the same list.
+[Final Manual Task](./Final%20Manual%20Task.md) records what that transcription changed —
+four corrections move a verdict, so read it before you demonstrate the app to anyone who
+saw the old numbers.
 
-Until both are done the product is a working engine with honest labels on it, which is
-the right state to be in — but the output is not yet something an operator should file
-with an authority. Nothing else on this page is outstanding: once the credentials above
-are in place, every feature the product offers is live.
+Nothing else on this page is outstanding: once the credentials above are in place, every
+feature the product offers is live.

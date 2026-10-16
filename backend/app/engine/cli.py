@@ -42,7 +42,7 @@ EXAMPLE: dict[str, Any] = {
         "population_density_per_km2": 84,
         "airspace_class": "g",
         "near_aerodrome": True,
-        "altitude_band": "below_500ft",
+        "altitude_band": "below_150m",
         "controlled_airspace": False,
         "atypical_airspace": False,
         "mitigations": [{"kind": "m1_strategic", "robustness": "low", "evidence_status": "claimed"}],

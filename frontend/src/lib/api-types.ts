@@ -1653,11 +1653,15 @@ export interface components {
         };
         /**
          * ContainmentRequirement
-         * @description Containment is computed from the transcribed containment table.
+         * @description Step #8's answer, computed from Tables 8 to 13 of AMC1 Article 11.
          *
-         *     Until that table is verified against the official text the level stays ``None`` and
-         *     ``assessment_required`` is true, so the UI says "assessment required" rather than
-         *     showing a number we cannot source.
+         *     S.4.8.1(c): "There are three possible levels of robustness for containment: low,
+         *     medium and high." SORA 2.0's two-tier basic/enhanced is gone, and where a national
+         *     AltMoC still uses those words it is an exemption rather than the method.
+         *
+         *     ``level`` is ``None`` with ``assessment_required`` true in exactly two cases, and
+         *     ``note`` says which: the tables answered "Out of scope", or an input Step #8 needs
+         *     has not been supplied.
          */
         ContainmentRequirement: {
             /**
@@ -1667,7 +1671,7 @@ export interface components {
             assessment_required: boolean;
             citation?: components["schemas"]["Citation"] | null;
             /** Level */
-            level?: ("basic" | "enhanced") | null;
+            level?: ("low" | "medium" | "high") | null;
             /**
              * Note
              * @default
@@ -2255,6 +2259,10 @@ export interface components {
          * @description One wizard step's worth of the draft. Every field optional; nothing is required.
          */
         MissionDraftPatch: {
+            /** Adjacent Area Density Per Km2 */
+            adjacent_area_density_per_km2?: number | null;
+            /** Adjacent Assembly Size */
+            adjacent_assembly_size?: ("none" | "under_40k" | "40k_to_400k" | "over_400k") | null;
             /** Aerodrome Distance Km */
             aerodrome_distance_km?: number | null;
             /** Aerodrome Icao */
@@ -2265,6 +2273,8 @@ export interface components {
             /** Controlled Airspace */
             controlled_airspace?: boolean | null;
             country?: components["schemas"]["Country"] | null;
+            /** Demonstrated Air Density Rating */
+            demonstrated_air_density_rating?: number | null;
             /** Drone Id */
             drone_id?: string | null;
             /** Geo Zones */
@@ -2279,6 +2289,10 @@ export interface components {
             operation_type?: components["schemas"]["OperationType"] | null;
             /** Population Density Per Km2 */
             population_density_per_km2?: number | null;
+            /** Sheltering Applicable */
+            sheltering_applicable?: boolean | null;
+            /** Transponder Mandatory Zone */
+            transponder_mandatory_zone?: boolean | null;
             volume?: components["schemas"]["MissionVolumePatch"] | null;
         };
         /** MissionVolumePatch */

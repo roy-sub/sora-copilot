@@ -10,6 +10,10 @@ Where a table has not been transcribed yet, the seed values stay in place and ar
 UNVERIFIED **everywhere**: in the CSV header, in `Determination.warnings`, and as a
 banner on the verdict screen.
 
+**As of rulebase 2.5.1 no table is a seed any more.** All fourteen are transcribed from
+the adopted text, so no determination carries an UNVERIFIED warning. The machinery above
+stays, because the next amendment will arrive before its transcription does.
+
 ## The pipeline
 
 ```
@@ -94,44 +98,78 @@ transcription is done.
 ## The source documents
 
 SORA 2.5 is not merely a JARUS guideline in the EU any more. **EASA ED Decision
-2025/018/R of 29 September 2025** issues the whole SORA 2.5 package as AMC and GM to
-Regulation (EU) 2019/947 (Issue 1, Amendment 3), consolidated in the *Easy Access Rules
-for Unmanned Aircraft Systems*, revision of June 2026. Every regulatory table records
-that in `adopted_by:`, because a dossier is read by an EU authority and "JARUS says so"
-is a weaker citation than "this is the AMC".
+2025/018/R of 30 September 2025** issues the whole SORA 2.5 package as AMC and GM to
+Regulation (EU) 2019/947 (Issue 1, Amendment 4), consolidated in the *Easy Access Rules
+for Unmanned Aircraft Systems*, revision of June 2026. That consolidated book is the
+source every regulatory table is transcribed from, and `adopted_by:` records the ED
+Decision that adopted it, because a dossier is read by an EU authority and "JARUS says
+so" is a weaker citation than "this is the AMC".
 
-| Document | Id | Verifies |
+The book was downloaded over a verified TLS connection, extracted with `pdftotext`, and
+read page by page. Every page number in a `page:` field and in a `basis:` sentence is the
+book's own printed page, so a reviewer can open the PDF at that page and see the table.
+
+| Section of the Easy Access Rules | Page | Transcribed into |
 |---|---|---|
-| JARUS SORA 2.5 Main Body, Release | `JAR_doc_25` | `igrc`, `igrc_columns`, `sail`, `oso`, `containment`, `thresholds`, `m1_m2` (Table 5), `arc` (Figure 4) |
-| JARUS SORA 2.5 Annex A, Release | `JAR_doc_26` | `buffers` |
-| JARUS SORA 2.5 Annex C | — | `arc`, `arc_residual` |
-| JARUS SORA 2.5 Annex D | — | `tmpr` |
-| JARUS SORA 2.5 Annex E, Release | `JAR_doc_28` | `oso` integrity and assurance criteria |
-| JARUS SORA 2.5 Annex F, Release | `JAR_doc_29` | `igrc` trade-off options |
+| AMC1 Article 11, S.4.2 Step #2 — Table 1 | 63 | `igrc`, `igrc_columns`, and the 250 g row of `thresholds` |
+| AMC1 Article 11, S.4.3 Step #3 — Table 5 | 67 | `m1_m2` |
+| AMC1 Article 11, S.4.3 Step #3 — certified-category ceiling | 68 | `thresholds` |
+| AMC1 Article 11, S.4.6 Step #6 — Table 6 | 73 | `tmpr` |
+| AMC1 Article 11, S.4.7 Step #7 — Table 3 | 75 | `sail` |
+| AMC1 Article 11, S.4.8 Step #8 — adjacent area, S.4.8.3(b) | 76 | `thresholds` |
+| AMC1 Article 11, S.4.8 Step #8 — Tables 8 to 13 | 77–78 | `containment` |
+| AMC1 Article 11, S.4.9 Step #9 — Table 14 | 81–82 | `oso` |
+| AMC1 Article 11 Annex A — A.5.2 | 104–107 | `buffers` |
+| AMC1 Article 11 Annex C — Table C.1 | 128 | `arc`, and the altitude bands of `thresholds` |
+| AMC1 Article 11 Annex C — Table C.2 | 129 | `arc_residual` |
 | Austro Control publication | — | `90_national_at.lp` |
+
+Annexes B and E carry the robustness criteria behind the mitigations and the OSOs. The
+engine does not model those criteria — it reports which objective is required at which
+robustness, and the operator's evidence is what satisfies it — so no table transcribes
+them, and `OSO_TEXT` in the frontend is explicitly labelled as our summary rather than
+the clause.
 
 ## What is still a seed
 
-Six of fourteen tables are verified; run `make rulebase` for the live list. Three of
-those six are regulatory — `igrc`, `igrc_columns`, `sail` — checked against the Main Body
-release and cross-checked against the Norwegian CAA's own
-[SORA 2.5 calculator](https://training.caa.no/SORA-2.5-calculator/), an authority
-implementation of the same tables.
+Nothing. All fourteen tables report `verified: true`; run `make rulebase` for the live
+list, and `make rulebase --strict` passes.
 
-The other three are verified for a different reason and must never be read as a
-regulatory claim. `cf_costs.csv`, `density_environment_hint.csv` and `citations.csv` are
-**ours, not the regulation's**: effort weights that only rank counterfactual suggestions,
-thresholds that only prefill a form field the operator then confirms, and an index. None
-of them can change an iGRC, a GRC, an ARC, a SAIL, an OSO or a containment result, all of
-which come from the clingo rules and the regulatory tables alone. Their `basis:` says
-exactly that, in those words, so the flag cannot later be mistaken for a transcription.
+Eleven of the fourteen are regulatory, transcribed from the pages above. Eight of those
+eleven had not been checked before 2.5.1, and **seven of the eight were wrong** — six of
+them in ways that change a determination, the seventh in the volumes drawn on the map:
 
-No table cites a `page`. The release PDFs are hosted on `jarus-rpas.org` and
-`easa.europa.eu`, which this project's cloud container cannot reach — its network policy
-denies both — so the documents were read through search rather than opened, and sections
-and table numbers are cited instead of pages. Each `basis:` says so rather than implying
-a page was read. Allowing those two domains in the environment's network settings is
-what unblocks the remaining eight tables and the page references.
+- `arc` had ten branches where Table C.1 has twelve. The Mode-S Veil / transponder
+  mandatory zone classes (AEC 2 and AEC 7) and the above-FL600 class (AEC 11) were
+  missing outright, so an operation in a TMZ was given the wrong initial ARC.
+- `arc_residual` lowered any ARC by one class for any claimed strategic mitigation.
+  Table C.2 sells a reduction for a *demonstrated* local density rating, not for a
+  claim, and ARC-d can fall two classes rather than one. The worked example moved from
+  SAIL III to SAIL IV until a demonstrated rating was supplied.
+- `containment` was a two-tier guess recorded with an open conflict. S.4.8.1(c) names
+  three levels — low, medium and high — so the Netherlands ILT AltMoC's basic/enhanced
+  was a national exemption, not SORA 2.5. Step #8 now computes a level.
+- `oso` matched the SORA 2.0 grid on sixteen of seventeen rows; OSO#04 read
+  low/medium/high at SAIL IV/V/VI where Table 14 says medium/high/high.
+- `m1_m2` was missing M1(B) operational restrictions entirely — the gap its own note
+  flagged — which is a −1 at medium and a −2 at high robustness.
+- `buffers` had the reaction time and the bank angle right and the rest wrong: the
+  horizontal contingency volume is the sum of five terms, not one position error, and
+  the ground risk buffer is H_CV + CD/2, not H_CV alone.
+- `thresholds` moved the altitude band from 152.4 m to **150 m**. Table C.1 writes every
+  altitude row as "150 m (~500 ft) AGL": 150 m is the figure and 500 ft is the
+  approximation of it, which is the opposite of what PLAN.md §0 had decided.
+
+`tmpr` was the one that had been right by luck; it is now the table's own four rows.
+
+The three non-regulatory tables are verified for a different reason and must never be
+read as a regulatory claim. `cf_costs.csv`, `density_environment_hint.csv` and
+`citations.csv` are **ours, not the regulation's**: effort weights that only rank
+counterfactual suggestions, thresholds that only prefill a form field the operator then
+confirms, and an index. None of them can change an iGRC, a GRC, an ARC, a SAIL, an OSO or
+a containment result, all of which come from the clingo rules and the regulatory tables
+alone. Their `basis:` says exactly that, in those words, so the flag cannot later be
+mistaken for a transcription.
 
 ## ASP conventions
 

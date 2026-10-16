@@ -70,6 +70,18 @@ DEMO_DRAFT: Row = {
     "near_aerodrome": True,
     "controlled_airspace": False,
     "atypical_airspace": False,
+    "transponder_mandatory_zone": False,
+    # Step #5: Annex C Table C.2 does not lower the ARC for a claimed mitigation, only
+    # for a demonstrated local traffic density. The example's operator has made that
+    # case to Austro Control — AEC 6 at rating 1 — which is what takes the residual ARC
+    # from c to b. Without it the same corridor is SAIL IV.
+    "demonstrated_air_density_rating": 1,
+    # Step #8: the two measurements that select a column in Tables 8 to 13. Farmland
+    # with scattered houses beyond the buffer, and no gathering of any size within 1 km
+    # of the corridor while the flight is on.
+    "adjacent_area_density_per_km2": 310.0,
+    "adjacent_assembly_size": "under_40k",
+    "sheltering_applicable": True,
     "mitigations": {"m1_strategic": "low", "strategic_air": "low"},
     "country": "AT",
 }

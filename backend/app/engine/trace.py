@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 
-from app.domain import Citation, Trace, TraceNode
+from app.domain import ALTITUDE_BAND_LABELS, Citation, Trace, TraceNode
 from app.engine.rulebase.loader import load_rulebase
 
 ROOT_CANDIDATES = ("sail", "certified_category")
@@ -151,10 +151,7 @@ def readable(atom: str) -> str:
     if pred == "ground_band":
         value = DENSITY_BAND_NAMES.get(value, value)
     if pred == "alt_band":
-        value = {
-            "below_500ft": "at or below 500 ft (152 m) AGL",
-            "above_500ft": "above 500 ft (152 m) AGL",
-        }.get(value, value)
+        value = ALTITUDE_BAND_LABELS.get(value, value)
     return f"{label} = {value}" if value else label
 
 

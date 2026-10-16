@@ -1,0 +1,88 @@
+{
+  "name": "containment-computed-from-table-11",
+  "description": "An 8 m UA with the adjacent ground area measured: 420 people/km2 and assemblies under 40 000 within 1 km. Table 11 then gives a containment robustness instead of 'assessment required'.",
+  "rulebase_version": "2.5.1",
+  "verified_against_official_text": true,
+  "note": "The first case that reaches a containment level. Step #8 selects the column from the more stringent of the adjacent-area density and the assembly size, then reads the cell at the operation's SAIL.",
+  "mission": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "org_id": "00000000-0000-0000-0000-000000000002",
+    "drone_id": "00000000-0000-0000-0000-000000000003",
+    "operation_type": "bvlos",
+    "volume": {
+      "flight_geography": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              15.4,
+              47.1
+            ],
+            [
+              15.5,
+              47.1
+            ],
+            [
+              15.5,
+              47.2
+            ],
+            [
+              15.4,
+              47.2
+            ],
+            [
+              15.4,
+              47.1
+            ]
+          ]
+        ]
+      },
+      "max_altitude_agl_m": 118
+    },
+    "ground_environment": "sparsely_populated",
+    "population_density_per_km2": 84,
+    "airspace_class": "g",
+    "near_aerodrome": false,
+    "altitude_band": "below_150m",
+    "controlled_airspace": false,
+    "atypical_airspace": false,
+    "mitigations": [
+      {
+        "kind": "m1_strategic",
+        "robustness": "low"
+      },
+      {
+        "kind": "strategic_air",
+        "robustness": "low"
+      }
+    ],
+    "country": "AT",
+    "adjacent_area_density_per_km2": 420.0,
+    "adjacent_assembly_size": "under_40k",
+    "sheltering_applicable": false
+  },
+  "aircraft": {
+    "max_dimension_m": 7.5,
+    "mtom_kg": 90.0,
+    "max_speed_ms": 70.0,
+    "fitted": [
+      "parachute",
+      "fts"
+    ]
+  },
+  "adjacent_area_populated": false,
+  "expect": {
+    "igrc": 6,
+    "final_grc": 5,
+    "initial_arc": "b",
+    "residual_arc": "b",
+    "sail": "IV",
+    "tmpr": "low",
+    "osos_required": 17,
+    "osos_total": 17,
+    "containment_assessment_required": false,
+    "containment_level": "low",
+    "trace_node_count": 62,
+    "root_rule_id": "at.baseline"
+  }
+}

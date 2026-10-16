@@ -81,8 +81,8 @@ export function OsoDrawer({
             />
             {!oso.citation.verified && (
               <span className="t-cap text-sail-3 pretty">
-                UNVERIFIED — the OSO matrix has not been checked against the official
-                text, so this robustness level must be confirmed before you rely on it.
+                UNVERIFIED — this robustness level comes from a table that has not been
+                checked against the official text, so confirm it before you rely on it.
               </span>
             )}
           </div>

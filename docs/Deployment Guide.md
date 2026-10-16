@@ -274,8 +274,12 @@ Then in a browser, the build spec's definition of done:
 4. Export the DOCX dossier and reopen the operation — it persisted.
 5. Hit a plan limit on purpose (a fourth operation on the free plan) and check the 402
    renders as an upgrade panel with the right numbers.
-6. Check that the UNVERIFIED banner is visible wherever a risk value appears. If it is
-   not, something is claiming verification it does not have.
+6. Check that **no** UNVERIFIED banner appears on the verdict, and that
+   `/api/v1/rulebase/current` reports `version: "2.5.1"` and `verified: true`. Every
+   regulatory table is transcribed from the adopted EASA text, so a banner here would
+   mean a table regressed to a seed — `make rulebase --strict` is the check that catches
+   it before a deploy. The *country pack* warnings on `/app/authority/` are a different
+   thing and should still be there: that annex has not been transcribed.
 
 `scripts/smoke.sh` runs steps 1–5 against a deployed host from the command line:
 

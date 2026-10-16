@@ -1,24 +1,42 @@
 # table: arc
-# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex C
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #4 — initial air risk class, decision tree (Figure 4)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-Annex-C-v1.0.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: This table is not merely unchecked, it is structurally short. SORA 2.5 aggregates the airspace into THIRTEEN collision risk categories and assigns the initial ARC from the decision tree at Figure 4 of the Main Body; these ten ordered rows are a ten-branch reconstruction. Transcribe all thirteen branches from Figure 4, in the tree's own precedence order, before flipping this table. Also record the alternative route Step #4 allows: where a competent authority, ANSP or U-space provider publishes a collision risk map, that map sets the initial ARC and the tree is not used at all
-# note: Rows are ordered; 30_arc.lp applies the first whose conditions all hold, which
-#       is how the decision tree's precedence is preserved. "*" is a wildcard.
-# note: altitude_band splits on 500 ft AGL = 152.4 m (PLAN.md §0), not the round 150 m
-#       the design copy used.
-priority,atypical,altitude_band,controlled_airspace,near_aerodrome,airspace_class,environment,arc,rule_id
-1,true,*,*,*,*,*,a,sora25.arc.atypical
-2,false,above_500ft,true,*,*,*,d,sora25.arc.above500.controlled
-3,false,above_500ft,false,*,*,*,c,sora25.arc.above500.uncontrolled
-4,false,below_500ft,*,true,b,*,d,sora25.arc.aerodrome.classb
-5,false,below_500ft,*,true,c,*,d,sora25.arc.aerodrome.classc
-6,false,below_500ft,*,true,d,*,d,sora25.arc.aerodrome.classd
-7,false,below_500ft,*,true,*,*,c,sora25.arc.aerodrome.uncontrolled
-8,false,below_500ft,true,false,*,*,c,sora25.arc.below500.controlled
-9,false,below_500ft,false,false,*,urban,c,sora25.arc.below500.urban
-10,false,below_500ft,false,false,*,rural,b,sora25.arc.below500.rural
+# section: AMC1 Article 11 Annex C — Table C.1, initial air risk class assessment; the same twelve categories are the decision tree at Figure 6 of S.4.4 Step #4
+# page: 128
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table C.1 on page 128 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. Table C.1 is the text form of the Figure 6 decision tree, which is an image and cannot be extracted; S.4.4.4(a) on page 70 says the categories 'correspond to the airspace encounter classes (AECs)' elaborated in Annex C, so the two are the same twelve rows and the table is the citable one. The seed had ten branches and was missing the Mode-S Veil / transponder mandatory zone categories (AEC 2 and AEC 7) and the above-FL600 category (AEC 11) entirely
+# note: Rows are ORDERED; 30_arc.lp applies the first whose conditions all hold, which
+#       is how the tree's precedence survives being flattened. '*' is a wildcard.
+# note: Precedence follows Table C.1's own order of headings: atypical first, then
+#       above FL 600, then the airport/heliport environment (which Table C.1 qualifies
+#       by airspace class and not by altitude), then the two altitude bands.
+# note: Class A at an aerodrome matches no airport row — Table C.1 lists B, C, D and
+#       E, F, G — so it falls through to the controlled-airspace rows, which is correct
+#       because class A is controlled. The integrity constraint in 30_arc.lp makes any
+#       genuinely unmatched combination unsatisfiable rather than defaulting.
+# note: density_rating is Table C.1's 'initial generalised density rating', 1 (very low)
+#       to 5 (very high). It is not used to pick the ARC — the arc column is — but it is
+#       the key into Table C.2 in arc_residual.csv, and the dossier cites it.
+# note: S.4.4.3(b): where a competent authority, ANSP or U-space provider publishes an
+#       air collision risk map, that map determines the initial ARC and this tree is not
+#       used at all. The engine does not model that route; an operator who has one
+#       records the result as an override.
+priority,aec,atypical,altitude_band,tmz,controlled,near_aerodrome,airspace_class,environment,arc,density_rating,rule_id
+1,12,true,*,*,*,*,*,*,a,1,sora25.arc.aec12.atypical
+2,11,false,above_fl600,*,*,*,*,*,b,1,sora25.arc.aec11.above_fl600
+3,1,false,*,*,*,true,b,*,d,5,sora25.arc.aec1.aerodrome.class_bcd
+4,1,false,*,*,*,true,c,*,d,5,sora25.arc.aec1.aerodrome.class_bcd
+5,1,false,*,*,*,true,d,*,d,5,sora25.arc.aec1.aerodrome.class_bcd
+6,6,false,*,*,*,true,e,*,c,3,sora25.arc.aec6.aerodrome.class_efg
+7,6,false,*,*,*,true,f,*,c,3,sora25.arc.aec6.aerodrome.class_efg
+8,6,false,*,*,*,true,g,*,c,3,sora25.arc.aec6.aerodrome.class_efg
+9,2,false,above_150m,true,*,*,*,*,d,5,sora25.arc.aec2.above150.tmz
+10,3,false,above_150m,false,true,*,*,*,d,5,sora25.arc.aec3.above150.controlled
+11,4,false,above_150m,false,false,*,*,urban,c,3,sora25.arc.aec4.above150.urban
+12,5,false,above_150m,false,false,*,*,rural,c,2,sora25.arc.aec5.above150.rural
+13,7,false,below_150m,true,*,*,*,*,c,3,sora25.arc.aec7.below150.tmz
+14,8,false,below_150m,false,true,*,*,*,c,3,sora25.arc.aec8.below150.controlled
+15,9,false,below_150m,false,false,*,*,urban,c,2,sora25.arc.aec9.below150.urban
+16,10,false,below_150m,false,false,*,*,rural,b,1,sora25.arc.aec10.below150.rural

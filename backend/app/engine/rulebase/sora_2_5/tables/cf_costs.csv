@@ -1,6 +1,6 @@
 # table: cf_costs
 # document: SORA Copilot — counterfactual effort weights
-# version: 0.1
+# version: 0.2
 # section: Advisor ranking weights
 # page: 
 # url: 
@@ -18,7 +18,11 @@ mitigations.m1_ers.low,3,Claim ground observation at low robustness,Ground obser
 mitigations.m2_impact.medium,5,Claim impact reduction at medium robustness,Deployment test report and maintenance log
 mitigations.m2_impact.high,8,Claim impact reduction at high robustness,Qualified deployment test report to a recognised standard
 mitigations.strategic_air.claimed,3,Claim strategic air risk mitigation,Operational restriction procedure and NOTAM
+mitigations.m1_operational.medium,4,Claim M1(B) operational restrictions at medium robustness,Operational restriction and evidence that it reduces the people at risk (Annex B)
+mitigations.m1_operational.high,7,Claim M1(B) operational restrictions at high robustness,The Annex B integrity and assurance criteria for M1(B)
 volume.max_altitude_agl_m,1,Lower the maximum altitude,No equipment change; confirm corridor coverage at the lower height
 near_aerodrome.false,6,Route outside the aerodrome environment,Re-run the map step to confirm the new corridor
 ground_environment.sparsely_populated,7,Move to a less populated ground environment,New site survey and population evidence
 operation_type.vlos,9,Reduce the operation to VLOS,Loses the beyond-line-of-sight capability the mission needs
+air_density.demonstrated.2,5,Demonstrate a local air traffic density of 2,"An airspace density study for the operational volume, accepted by the competent authority"
+air_density.demonstrated.1,8,Demonstrate a local air traffic density of 1,"An airspace density study showing the AEC 10 reference rate, accepted by the competent authority"

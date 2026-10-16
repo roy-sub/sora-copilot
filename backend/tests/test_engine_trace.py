@@ -93,10 +93,15 @@ def test_operator_facts_are_distinguished_from_table_rows(determination) -> None
         assert node.citation.document != "Operator input"
 
 
-def test_unverified_tables_are_reported_to_the_user(determination) -> None:
-    assert determination.warnings
-    assert any("UNVERIFIED" in w for w in determination.warnings)
-    assert determination.is_verified is False
+def test_a_determination_on_a_transcribed_rulebase_carries_no_warning(determination) -> None:
+    """Every table is transcribed from the adopted AMC, so there is nothing to warn about.
+
+    This test asserted the opposite while the tables were seeds. The flag it reads is
+    what the verdict screen and the dossier cover key off, so it is the one that decides
+    whether an operator is told the document may not be submitted.
+    """
+    assert determination.warnings == []
+    assert determination.is_verified is True
 
 
 def test_a_rule_id_with_no_citation_is_refused() -> None:

@@ -1,32 +1,38 @@
 # table: oso
-# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex E (JAR_doc_28)
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #9 — OSO assignment by SAIL (was Step #8 in SORA 2.0)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Annex-E-Release.JAR_doc_28pdf.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: The seventeen OSO rows and their ids are correct for SORA 2.5 — the count fell from 24 by merging, OSO#10 folding into OSO#05 — but the robustness grid is the SORA 2.0 grid restricted to the surviving seventeen. That restriction is a guess. Transcribe the Step #9 table from the Main Body release, where 'NR' marks an OSO not required at a SAIL, and check the per-SAIL integrity and assurance criteria in Annex E (JAR_doc_28), which groups some OSOs as SAIL II / III / IV-to-VI rather than one level per SAIL
-# note: SORA 2.5 defines 17 OSOs: #01-09, 13, 16-20, 23, 24. The design copy said
-#       "~24 OSOs", which is SORA 2.0. The count shown in the UI is always derived from
-#       the number of rows here, never written down.
-# note: robustness "none" means not required at that SAIL. It is rendered as
-#       "not applicable", never omitted, so the operator can see it was considered.
+# section: AMC1 Article 11, S.4.9 Step #9 — Table 14, recommended operational safety objectives (OSOs); integrity and assurance criteria per OSO in Annex E
+# page: 81
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table 14, pages 81 to 82 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The grid was extracted twice, once with layout preserved and once in raw reading order, and the two agree row for row — the layout pass merges adjacent columns ('MH' for medium then high), so one extraction alone would have been a guess. Sixteen of the seventeen rows matched the SORA 2.0 grid the seed carried; OSO#04 did not, and read low/medium/high at SAIL IV/V/VI where the adopted table says medium/high/high
+# note: SORA 2.5 defines 17 OSOs: #01-09, 13, 16-20, 23 and 24. The count fell from 24
+#       by merging — OSO#10 folded into OSO#05 — and the surviving objectives kept
+#       their old numbers rather than being renumbered. The count shown in the UI is
+#       derived from the rows here, never written down.
+# note: S.4.9.4(c): 'NR' is the table's 'not required to show compliance to the
+#       competent authority'; the applicant is still encouraged to consider the
+#       objective at a low integrity level. It renders as 'not applicable', never
+#       omitted, so the operator can see it was considered.
+# note: Table 14 also records which organisation each OSO's evidence may come from —
+#       operator, training organisation or designer — and the Annex E criteria
+#       references. Not transcribed here because nothing reads it yet.
 oso_id,title,sail_i,sail_ii,sail_iii,sail_iv,sail_v,sail_vi
-OSO#01,Operator is competent and/or proven,none,low,medium,high,high,high
-OSO#02,UAS manufactured by a competent and/or proven entity,none,none,low,medium,high,high
-OSO#03,UAS maintained by a competent and/or proven entity,low,low,medium,medium,high,high
-OSO#04,UAS components essential to safe operations are designed to an airworthiness design standard,none,none,none,low,medium,high
+OSO#01,Ensure that the UAS operator is a competent and/or proven organisation,none,low,medium,high,high,high
+OSO#02,UAS designed and produced by a competent and/or proven organisation,none,none,low,medium,high,high
+OSO#03,UAS maintenance,low,low,medium,medium,high,high
+OSO#04,UAS components essential to safe operations are designed to an airworthiness design standard,none,none,none,medium,high,high
 OSO#05,UAS is designed considering system safety and reliability,none,none,low,medium,high,high
-OSO#06,C3 link characteristics are appropriate for the operation,none,low,low,medium,high,high
+OSO#06,C3 link characteristics (e.g. performance spectrum use) are appropriate for the UAS operation,none,low,low,medium,high,high
 OSO#07,Conformity check of the UAS configuration,low,low,medium,medium,high,high
-OSO#08,Operational procedures are defined validated and adhered to,low,medium,high,high,high,high
-OSO#09,Remote crew is trained and current,low,low,medium,medium,high,high
-OSO#13,External services adequate to the operation,low,low,medium,high,high,high
+OSO#08,"Operational procedures are defined, validated and adhered to",low,medium,high,high,high,high
+OSO#09,Remote crew trained and current,low,low,medium,medium,high,high
+OSO#13,External services supporting UAS operations are adequate for the UAS operation,low,low,medium,high,high,high
 OSO#16,Multi-crew coordination,low,low,medium,medium,high,high
 OSO#17,Remote crew is fit to operate,low,low,medium,medium,high,high
-OSO#18,Automatic protection of the flight envelope from human error,none,none,low,medium,high,high
+OSO#18,Automatic protection of the flight envelope from human errors,none,none,low,medium,high,high
 OSO#19,Safe recovery from human error,none,none,low,medium,medium,high
-OSO#20,Human factors evaluation performed and HMI found appropriate,none,low,low,medium,medium,high
-OSO#23,Environmental conditions defined measurable and adhered to,low,low,medium,medium,high,high
-OSO#24,UAS designed and qualified for adverse environmental conditions,none,none,medium,high,high,high
+OSO#20,A human factors evaluation has been performed and the HMI found appropriate for the intended UAS operation,none,low,low,medium,medium,high
+OSO#23,Environmental conditions for safe operations defined and measurable,low,low,medium,medium,high,high
+OSO#24,UAS designed and qualified to operate in adverse environmental conditions,none,none,medium,high,high,high

@@ -1,18 +1,187 @@
 # table: containment
-# document: JARUS SORA 2.5 Main Body (JAR_doc_25)
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #7 — containment requirements (moved ahead of the OSOs in 2.5)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: Research found a genuine conflict in the published material and so this table deliberately computes no level. Several sources state SORA 2.5 replaced the two-tier basic/enhanced classification with three tiers, low, medium and high; the Netherlands ILT AltMoC of 6 September 2024, written against SORA 2.5, says the levels remain basic and enhanced. One of those is wrong and the primary text settles it. Two anchors ARE established and should survive transcription: basic containment is 'no probable failure of the UAS or any external system supporting the operation shall lead to operation outside of the operational volume', and the loss-of-control-of-operation rate the containment argument must meet is 10^-SAIL per flight hour. Until the tiers are settled every row yields assessment_required and NO level, which is a correct answer rather than a blank
-# note: The build spec wants containment computed from this table; the design phase
-#       deliberately returned "assessment required" and computed nothing, because
-#       containment depends on the adjacent area. PLAN.md §6.4 records the resolution:
-#       follow the spec, but while verified is false every row yields
-#       assessment_required and NO level, so the UI never shows a level we cannot source.
-# note: Fill in the real conditions and levels from the official text before flipping
-#       verified to true. Do not guess "basic" or "enhanced" from the SAIL alone.
-condition_id,min_sail,max_sail,adjacent_area_populated,level,assessment_required,rule_id
-seed.all,I,VI,*,,true,sora25.containment.assessment_required
+# section: AMC1 Article 11, S.4.8 Step #8 — Tables 8 to 13, containment requirements, one table per UA characteristic dimension; the requirements themselves are in Annex E Section 4
+# page: 77
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Tables 8 to 13 on pages 77 and 78 of the June 2026 Easy Access Rules, read from the EASA PDF over a verified TLS connection. The column headers span columns, so each table was extracted with layout preserved and the columns aligned by character position rather than by reading order — the density and assembly limits do not line up one-to-one and a naive read pairs the wrong ones. This settles the conflict the seed recorded: S.4.8.1(c) says 'There are three possible levels of robustness for containment: low, medium and high', so the Netherlands ILT AltMoC's basic/enhanced was a national exemption and not SORA 2.5
+# note: A row is one CELL: a table (chosen by the UA's characteristic dimension and,
+#       at 3 m, by whether sheltering applies), a column (a pair of limits), and a SAIL.
+# note: max_density is the average population density allowed in the adjacent ground
+#       area, in people/km2; empty means the column has no upper limit. max_assembly is
+#       the largest outdoor assembly allowed within 1 km of the operational volume;
+#       empty means the column allows more than 400 000.
+# note: S.4.8.3(d): the column is chosen 'considering the most stringent between the
+#       value of the average population density and the outdoor assembly of people'.
+#       60_containment.lp takes the leftmost of the two columns the operation
+#       qualifies for, which is that rule.
+# note: 'out_of_scope' is the table's 'Out of scope' — the combination is outside what
+#       SORA supports, not a containment level. It is reported as such.
+# note: Tables 8 and 11 to 13 state an assumption rather than ask a question —
+#       sheltering is assumed applicable for a 1 m UA and not applicable from 8 m up —
+#       so shelter is a wildcard there. Only at 3 m does the operator's sheltering case
+#       select between two tables, 9 and 10.
+# note: S.4.8.3(a): a UA under 250 g gets low containment with no adjacent-area
+#       limitations at all, which is a rule in 60_containment.lp reading the
+#       containment_small_ua_mtom threshold, not a row here.
+# note: A UA above 40 m is beyond Table 13 and beyond the iGRC table; such an
+#       operation does not reach containment.
+table_no,page,max_dimension_cm,shelter,col,max_density,max_assembly,sail,level,rule_id
+8,77,100,*,1,,,I,high,sora25.containment.t8
+8,77,100,*,1,,,II,high,sora25.containment.t8
+8,77,100,*,1,,,III,medium,sora25.containment.t8
+8,77,100,*,1,,,IV,low,sora25.containment.t8
+8,77,100,*,1,,,V,low,sora25.containment.t8
+8,77,100,*,1,,,VI,low,sora25.containment.t8
+8,77,100,*,2,,400000,I,medium,sora25.containment.t8
+8,77,100,*,2,,400000,II,medium,sora25.containment.t8
+8,77,100,*,2,,400000,III,low,sora25.containment.t8
+8,77,100,*,2,,400000,IV,low,sora25.containment.t8
+8,77,100,*,2,,400000,V,low,sora25.containment.t8
+8,77,100,*,2,,400000,VI,low,sora25.containment.t8
+8,77,100,*,3,50000,40000,I,low,sora25.containment.t8
+8,77,100,*,3,50000,40000,II,low,sora25.containment.t8
+8,77,100,*,3,50000,40000,III,low,sora25.containment.t8
+8,77,100,*,3,50000,40000,IV,low,sora25.containment.t8
+8,77,100,*,3,50000,40000,V,low,sora25.containment.t8
+8,77,100,*,3,50000,40000,VI,low,sora25.containment.t8
+9,77,300,true,1,,,I,out_of_scope,sora25.containment.t9
+9,77,300,true,1,,,II,out_of_scope,sora25.containment.t9
+9,77,300,true,1,,,III,out_of_scope,sora25.containment.t9
+9,77,300,true,1,,,IV,medium,sora25.containment.t9
+9,77,300,true,1,,,V,low,sora25.containment.t9
+9,77,300,true,1,,,VI,low,sora25.containment.t9
+9,77,300,true,2,,400000,I,high,sora25.containment.t9
+9,77,300,true,2,,400000,II,high,sora25.containment.t9
+9,77,300,true,2,,400000,III,medium,sora25.containment.t9
+9,77,300,true,2,,400000,IV,low,sora25.containment.t9
+9,77,300,true,2,,400000,V,low,sora25.containment.t9
+9,77,300,true,2,,400000,VI,low,sora25.containment.t9
+9,77,300,true,3,50000,40000,I,medium,sora25.containment.t9
+9,77,300,true,3,50000,40000,II,medium,sora25.containment.t9
+9,77,300,true,3,50000,40000,III,low,sora25.containment.t9
+9,77,300,true,3,50000,40000,IV,low,sora25.containment.t9
+9,77,300,true,3,50000,40000,V,low,sora25.containment.t9
+9,77,300,true,3,50000,40000,VI,low,sora25.containment.t9
+9,77,300,true,4,5000,40000,I,low,sora25.containment.t9
+9,77,300,true,4,5000,40000,II,low,sora25.containment.t9
+9,77,300,true,4,5000,40000,III,low,sora25.containment.t9
+9,77,300,true,4,5000,40000,IV,low,sora25.containment.t9
+9,77,300,true,4,5000,40000,V,low,sora25.containment.t9
+9,77,300,true,4,5000,40000,VI,low,sora25.containment.t9
+10,77,300,false,1,,,I,out_of_scope,sora25.containment.t10
+10,77,300,false,1,,,II,out_of_scope,sora25.containment.t10
+10,77,300,false,1,,,III,out_of_scope,sora25.containment.t10
+10,77,300,false,1,,,IV,medium,sora25.containment.t10
+10,77,300,false,1,,,V,low,sora25.containment.t10
+10,77,300,false,1,,,VI,low,sora25.containment.t10
+10,77,300,false,2,50000,400000,I,high,sora25.containment.t10
+10,77,300,false,2,50000,400000,II,high,sora25.containment.t10
+10,77,300,false,2,50000,400000,III,medium,sora25.containment.t10
+10,77,300,false,2,50000,400000,IV,low,sora25.containment.t10
+10,77,300,false,2,50000,400000,V,low,sora25.containment.t10
+10,77,300,false,2,50000,400000,VI,low,sora25.containment.t10
+10,77,300,false,3,5000,40000,I,medium,sora25.containment.t10
+10,77,300,false,3,5000,40000,II,medium,sora25.containment.t10
+10,77,300,false,3,5000,40000,III,low,sora25.containment.t10
+10,77,300,false,3,5000,40000,IV,low,sora25.containment.t10
+10,77,300,false,3,5000,40000,V,low,sora25.containment.t10
+10,77,300,false,3,5000,40000,VI,low,sora25.containment.t10
+10,77,300,false,4,500,40000,I,low,sora25.containment.t10
+10,77,300,false,4,500,40000,II,low,sora25.containment.t10
+10,77,300,false,4,500,40000,III,low,sora25.containment.t10
+10,77,300,false,4,500,40000,IV,low,sora25.containment.t10
+10,77,300,false,4,500,40000,V,low,sora25.containment.t10
+10,77,300,false,4,500,40000,VI,low,sora25.containment.t10
+11,78,800,*,1,,,I,out_of_scope,sora25.containment.t11
+11,78,800,*,1,,,II,out_of_scope,sora25.containment.t11
+11,78,800,*,1,,,III,out_of_scope,sora25.containment.t11
+11,78,800,*,1,,,IV,out_of_scope,sora25.containment.t11
+11,78,800,*,1,,,V,medium,sora25.containment.t11
+11,78,800,*,1,,,VI,low,sora25.containment.t11
+11,78,800,*,2,50000,400000,I,out_of_scope,sora25.containment.t11
+11,78,800,*,2,50000,400000,II,out_of_scope,sora25.containment.t11
+11,78,800,*,2,50000,400000,III,out_of_scope,sora25.containment.t11
+11,78,800,*,2,50000,400000,IV,medium,sora25.containment.t11
+11,78,800,*,2,50000,400000,V,low,sora25.containment.t11
+11,78,800,*,2,50000,400000,VI,low,sora25.containment.t11
+11,78,800,*,3,5000,40000,I,high,sora25.containment.t11
+11,78,800,*,3,5000,40000,II,high,sora25.containment.t11
+11,78,800,*,3,5000,40000,III,medium,sora25.containment.t11
+11,78,800,*,3,5000,40000,IV,low,sora25.containment.t11
+11,78,800,*,3,5000,40000,V,low,sora25.containment.t11
+11,78,800,*,3,5000,40000,VI,low,sora25.containment.t11
+11,78,800,*,4,500,40000,I,medium,sora25.containment.t11
+11,78,800,*,4,500,40000,II,medium,sora25.containment.t11
+11,78,800,*,4,500,40000,III,low,sora25.containment.t11
+11,78,800,*,4,500,40000,IV,low,sora25.containment.t11
+11,78,800,*,4,500,40000,V,low,sora25.containment.t11
+11,78,800,*,4,500,40000,VI,low,sora25.containment.t11
+11,78,800,*,5,50,40000,I,low,sora25.containment.t11
+11,78,800,*,5,50,40000,II,low,sora25.containment.t11
+11,78,800,*,5,50,40000,III,low,sora25.containment.t11
+11,78,800,*,5,50,40000,IV,low,sora25.containment.t11
+11,78,800,*,5,50,40000,V,low,sora25.containment.t11
+11,78,800,*,5,50,40000,VI,low,sora25.containment.t11
+12,78,2000,*,1,,,I,out_of_scope,sora25.containment.t12
+12,78,2000,*,1,,,II,out_of_scope,sora25.containment.t12
+12,78,2000,*,1,,,III,out_of_scope,sora25.containment.t12
+12,78,2000,*,1,,,IV,out_of_scope,sora25.containment.t12
+12,78,2000,*,1,,,V,out_of_scope,sora25.containment.t12
+12,78,2000,*,1,,,VI,medium,sora25.containment.t12
+12,78,2000,*,2,50000,400000,I,out_of_scope,sora25.containment.t12
+12,78,2000,*,2,50000,400000,II,out_of_scope,sora25.containment.t12
+12,78,2000,*,2,50000,400000,III,out_of_scope,sora25.containment.t12
+12,78,2000,*,2,50000,400000,IV,out_of_scope,sora25.containment.t12
+12,78,2000,*,2,50000,400000,V,medium,sora25.containment.t12
+12,78,2000,*,2,50000,400000,VI,low,sora25.containment.t12
+12,78,2000,*,3,5000,40000,I,out_of_scope,sora25.containment.t12
+12,78,2000,*,3,5000,40000,II,out_of_scope,sora25.containment.t12
+12,78,2000,*,3,5000,40000,III,out_of_scope,sora25.containment.t12
+12,78,2000,*,3,5000,40000,IV,medium,sora25.containment.t12
+12,78,2000,*,3,5000,40000,V,low,sora25.containment.t12
+12,78,2000,*,3,5000,40000,VI,low,sora25.containment.t12
+12,78,2000,*,4,500,40000,I,high,sora25.containment.t12
+12,78,2000,*,4,500,40000,II,high,sora25.containment.t12
+12,78,2000,*,4,500,40000,III,medium,sora25.containment.t12
+12,78,2000,*,4,500,40000,IV,low,sora25.containment.t12
+12,78,2000,*,4,500,40000,V,low,sora25.containment.t12
+12,78,2000,*,4,500,40000,VI,low,sora25.containment.t12
+12,78,2000,*,5,50,40000,I,medium,sora25.containment.t12
+12,78,2000,*,5,50,40000,II,medium,sora25.containment.t12
+12,78,2000,*,5,50,40000,III,low,sora25.containment.t12
+12,78,2000,*,5,50,40000,IV,low,sora25.containment.t12
+12,78,2000,*,5,50,40000,V,low,sora25.containment.t12
+12,78,2000,*,5,50,40000,VI,low,sora25.containment.t12
+13,78,4000,*,1,,,I,out_of_scope,sora25.containment.t13
+13,78,4000,*,1,,,II,out_of_scope,sora25.containment.t13
+13,78,4000,*,1,,,III,out_of_scope,sora25.containment.t13
+13,78,4000,*,1,,,IV,out_of_scope,sora25.containment.t13
+13,78,4000,*,1,,,V,out_of_scope,sora25.containment.t13
+13,78,4000,*,1,,,VI,out_of_scope,sora25.containment.t13
+13,78,4000,*,2,50000,400000,I,out_of_scope,sora25.containment.t13
+13,78,4000,*,2,50000,400000,II,out_of_scope,sora25.containment.t13
+13,78,4000,*,2,50000,400000,III,out_of_scope,sora25.containment.t13
+13,78,4000,*,2,50000,400000,IV,out_of_scope,sora25.containment.t13
+13,78,4000,*,2,50000,400000,V,out_of_scope,sora25.containment.t13
+13,78,4000,*,2,50000,400000,VI,medium,sora25.containment.t13
+13,78,4000,*,3,5000,40000,I,out_of_scope,sora25.containment.t13
+13,78,4000,*,3,5000,40000,II,out_of_scope,sora25.containment.t13
+13,78,4000,*,3,5000,40000,III,out_of_scope,sora25.containment.t13
+13,78,4000,*,3,5000,40000,IV,out_of_scope,sora25.containment.t13
+13,78,4000,*,3,5000,40000,V,medium,sora25.containment.t13
+13,78,4000,*,3,5000,40000,VI,low,sora25.containment.t13
+13,78,4000,*,4,500,40000,I,out_of_scope,sora25.containment.t13
+13,78,4000,*,4,500,40000,II,out_of_scope,sora25.containment.t13
+13,78,4000,*,4,500,40000,III,out_of_scope,sora25.containment.t13
+13,78,4000,*,4,500,40000,IV,medium,sora25.containment.t13
+13,78,4000,*,4,500,40000,V,low,sora25.containment.t13
+13,78,4000,*,4,500,40000,VI,low,sora25.containment.t13
+13,78,4000,*,5,50,40000,I,high,sora25.containment.t13
+13,78,4000,*,5,50,40000,II,high,sora25.containment.t13
+13,78,4000,*,5,50,40000,III,medium,sora25.containment.t13
+13,78,4000,*,5,50,40000,IV,low,sora25.containment.t13
+13,78,4000,*,5,50,40000,V,low,sora25.containment.t13
+13,78,4000,*,5,50,40000,VI,low,sora25.containment.t13

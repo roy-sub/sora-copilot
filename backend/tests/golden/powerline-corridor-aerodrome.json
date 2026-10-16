@@ -1,9 +1,9 @@
 {
   "name": "powerline-corridor-aerodrome",
   "description": "Alta X on a 110 kV line south of Gratkorn: sparsely populated, inside the LOWG aerodrome environment, M1 sheltering at low and a strategic air risk mitigation claimed.",
-  "rulebase_version": "2.5.0-rc2",
-  "verified_against_official_text": false,
-  "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
+  "rulebase_version": "2.5.1",
+  "verified_against_official_text": true,
+  "note": "Residual ARC, SAIL, TMPR and the OSO count all moved when the ARC tables were transcribed from the adopted text, and the engine is now right where this case was wrong. The mission claims a strategic air mitigation but demonstrates no local density rating. Annex C Table C.2 does not sell a class reduction for a claim: it sells one for a demonstrated local density lower than the generalised rating its AEC carries. With nothing demonstrated there is no row, the residual ARC stays at the initial c, and the SAIL is IV rather than III — one level of assurance that the seed was giving away.",
   "mission": {
     "id": "00000000-0000-0000-0000-000000000001",
     "org_id": "00000000-0000-0000-0000-000000000002",
@@ -43,7 +43,7 @@
     "population_density_per_km2": 84,
     "airspace_class": "g",
     "near_aerodrome": true,
-    "altitude_band": "below_500ft",
+    "altitude_band": "below_150m",
     "controlled_airspace": false,
     "atypical_airspace": false,
     "mitigations": [
@@ -72,14 +72,14 @@
     "igrc": 5,
     "final_grc": 4,
     "initial_arc": "c",
-    "residual_arc": "b",
-    "sail": "III",
-    "tmpr": "low",
-    "osos_required": 16,
+    "residual_arc": "c",
+    "sail": "IV",
+    "tmpr": "medium",
+    "osos_required": 17,
     "osos_total": 17,
     "containment_assessment_required": true,
     "containment_level": null,
-    "trace_node_count": 61,
+    "trace_node_count": 60,
     "root_rule_id": "sora25.sail.lookup"
   }
 }

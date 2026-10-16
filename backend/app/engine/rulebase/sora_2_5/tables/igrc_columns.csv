@@ -1,12 +1,12 @@
 # table: igrc_columns
-# document: JARUS SORA 2.5 Main Body, Release (JAR_doc_25)
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #2 — iGRC table column headers (max characteristic dimension / max speed)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
+# section: AMC1 Article 11, S.4.2 Step #2 — Table 1 column headers, maximum UA characteristic dimension and maximum speed
+# page: 63
+# url: https://www.easa.europa.eu/en/downloads/110913/en
 # verified: true
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# basis: The five dimension/speed pairs 1 m / 25 m/s, 3 m / 35 m/s, 8 m / 75 m/s, 20 m / 120 m/s and 40 m / 200 m/s confirmed against the SORA 2.5 Main Body release and the Norwegian CAA SORA 2.5 calculator (https://training.caa.no/SORA-2.5-calculator/). The 6 m / 250 m/s columns that circulate in some write-ups are from an earlier draft and were rejected. Annex F's alternative breakpoints (0.5/1.5/4/10/20 m) are a trade-off option needing competent-authority acceptance, not this table
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from the header rows of Table 1 on page 63 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The five pairs read 1 m / 25 m/s, 3 m / 35 m/s, 8 m / 75 m/s, 20 m / 120 m/s and 40 m / 200 m/s. S.4.2.3(e): for a UA above 40 m the iGRC is calculated per Appendices A and B to JARUS Annex F, which the engine does not model — such an operation is out of this table's range
 # note: SORA 2.5's iGRC columns are dimension AND max-speed pairs. An aircraft falls in
 #       the FIRST column where both limits hold, which is why the columns are ordered and
 #       carry an index. The build spec described rows by dimension alone; PLAN.md section

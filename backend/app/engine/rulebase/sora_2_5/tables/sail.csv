@@ -1,12 +1,12 @@
 # table: sail
-# document: JARUS SORA 2.5 Main Body, Release (JAR_doc_25)
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #8 — SAIL determination (Table 7)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
+# section: AMC1 Article 11, S.4.7 Step #7 — Table 3, SAIL determination
+# page: 75
+# url: https://www.easa.europa.eu/en/downloads/110913/en
 # verified: true
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# basis: The matrix is Table 7 of the SORA 2.5 Main Body release, confirmed by its table of contents and by two independent published reproductions, which agree with these rows for final GRC 2 to 7. The rule that a final GRC above 7 leaves SORA for the certified category is confirmed by the Norwegian CAA SORA 2.5 calculator (https://training.caa.no/SORA-2.5-calculator/)
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table 3 on page 75 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The matrix matches the earlier corroboration cell for cell. The first row is printed as final GRC '<= 2', not '2', so a GRC driven below 2 by mitigations still lands on it; the last row is '> 7 — Operation classified in the certified category'
 # note: Seed values taken from the build spec §6.3 matrix. Final GRC above 7 leaves SORA
 #       and yields the certified category; that case is a rule, not a row.
 final_grc,arc_a,arc_b,arc_c,arc_d

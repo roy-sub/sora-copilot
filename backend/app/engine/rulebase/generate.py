@@ -108,15 +108,19 @@ def _m1_m2(t: Table) -> list[str]:
 
 
 def _arc(t: Table) -> list[str]:
+    """Annex C Table C.1, as ordered rows. The AEC travels with the row: it is what
+    keys the reduction table, and the dossier cites it."""
     out: list[str] = []
     for r in t.rows:
         out.append(
             _atom(
                 "arc_rule",
                 _int(r, "priority", t),
+                _int(r, "aec", t),
                 r["atypical"] or "*",
                 r["altitude_band"] or "*",
-                r["controlled_airspace"] or "*",
+                r["tmz"] or "*",
+                r["controlled"] or "*",
                 r["near_aerodrome"] or "*",
                 r["airspace_class"] or "*",
                 r["environment"] or "*",
@@ -124,12 +128,22 @@ def _arc(t: Table) -> list[str]:
                 r["rule_id"],
             )
         )
+        out.append(_atom("arc_density_rating", _int(r, "aec", t), _int(r, "density_rating", t)))
     return out
 
 
 def _arc_residual(t: Table) -> list[str]:
+    """Annex C Table C.2: keyed on the AEC and the demonstrated local density rating,
+    because AEC 1 and AEC 3 are both ARC-d and reduce on different ratings."""
     return [
-        _atom("arc_residual_rule", r["initial_arc"], r["strategic_claimed"], r["residual_arc"], r["rule_id"])
+        _atom(
+            "arc_residual_rule",
+            _int(r, "aec", t),
+            r["initial_arc"],
+            _int(r, "demonstrated_rating", t),
+            r["residual_arc"],
+            r["rule_id"],
+        )
         for r in t.rows
     ]
 
@@ -155,17 +169,45 @@ def _oso(t: Table) -> list[str]:
 
 
 def _containment(t: Table) -> list[str]:
+    """Tables 8 to 13: one atom per cell, plus the column's two limits.
+
+    The limits are emitted once per (table, column) rather than once per cell, so the
+    column-selection rule in 60_containment.lp does not have to range over the SAILs to
+    find out what a column allows.
+    """
     out: list[str] = []
+    cols: set[tuple[int, int]] = set()
+    tables: set[int] = set()
     for r in t.rows:
+        table_no, col = _int(r, "table_no", t), _int(r, "col", t)
+        if table_no not in tables:
+            tables.add(table_no)
+            out.append(
+                _atom(
+                    "containment_table",
+                    table_no,
+                    _int(r, "max_dimension_cm", t),
+                    r["shelter"] or "*",
+                )
+            )
+        if (table_no, col) not in cols:
+            cols.add((table_no, col))
+            out.append(
+                _atom(
+                    "containment_col",
+                    table_no,
+                    col,
+                    _int(r, "max_density", t) if r["max_density"] else "unlimited",
+                    _int(r, "max_assembly", t) if r["max_assembly"] else "unlimited",
+                )
+            )
         out.append(
             _atom(
                 "containment_rule",
-                r["condition_id"],
-                r["min_sail"],
-                r["max_sail"],
-                r["adjacent_area_populated"] or "*",
-                r["level"] or "none",
-                r["assessment_required"],
+                table_no,
+                col,
+                r["sail"],
+                r["level"],
                 r["rule_id"],
             )
         )

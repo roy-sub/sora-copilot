@@ -1,14 +1,16 @@
 # table: tmpr
-# document: JARUS SORA 2.5 Annex D
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #6 — tactical mitigation performance requirements by residual ARC
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: The mapping here is the obvious monotone one, which is exactly why it must come from Annex D rather than from plausibility. Annex D also carries the detect-and-avoid performance criteria behind each level, which the dossier should cite alongside the level. Transcribe both
-# note: Keyed on the residual ARC. The seed mapping is the obvious monotone one and is
-#       exactly the kind of plausible guess that must be replaced from Annex D.
+# section: AMC1 Article 11, S.4.6 Step #6 — Table 6, tactical mitigation performance requirements (TMPR) and assignment of the TMPR level of robustness
+# page: 73
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table 6 on page 73 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The seed's monotone mapping turned out to be exactly right, which is luck rather than method — it is now the table's own four rows
+# note: Keyed on the residual ARC. 'none' is the table's 'No requirement'; it is #       rendered as such rather than omitted, so an operator can see it was considered.
+# note: The TMPR applies to BVLOS. VLOS, and BVLOS with airspace observers, are an
+#       acceptable tactical mitigation at every ARC level (S.4.6.3), which is a rule in
+#       30_arc.lp rather than a row here.
 residual_arc,tmpr,rule_id
 a,none,sora25.tmpr.arc_a
 b,low,sora25.tmpr.arc_b

@@ -302,6 +302,8 @@ export function Wizard({ operationId }: { operationId: string | null }) {
                   value={(get(mission, "ground_environment") as GroundEnvironment) ?? null}
                   density={(get(mission, "population_density_per_km2") as number) ?? null}
                   adjacentPopulated={Boolean(get(mission, "adjacent_area_populated"))}
+                  mission={mission}
+                  onPatch={(patch: Record<string, unknown>) => save(patch)}
                   busy={sampleDensity.isPending}
                   onChange={(v) => save({ ground_environment: v })}
                   onDensity={(density, adjacent) =>
@@ -559,7 +561,7 @@ function OperationStep({
   altitude: number;
   onChange: (patch: Record<string, unknown>) => void;
 }) {
-  const aboveBand = altitude > 152.4;
+  const aboveBand = altitude > 150;
   return (
     <div className="flex flex-col gap-5 max-w-[620px]">
       <div>
@@ -590,13 +592,14 @@ function OperationStep({
         />
       </FieldLabel>
       <p className="m-0 t-body-sm text-ink-mid pretty">
-        The air risk tree splits at <strong className="text-ink-hi font-semibold">500 ft</strong>,
-        which is 152 m AGL — not the round 150 m. This flight is{" "}
+        The air risk tree splits at <strong className="text-ink-hi font-semibold">150 m</strong>{" "}
+        AGL, which Annex C Table C.1 writes as &ldquo;150 m (~500 ft)&rdquo; — 150 m is the
+        figure and 500 ft the approximation. This flight is{" "}
         {aboveBand ? "above" : "at or below"} that boundary.
       </p>
       {aboveBand && (
         <div className="p-3 bg-sheet-well border-l-[3px] border-sail-3 rounded-sm">
-          <span className="t-micro-10 text-sail-3">Above 500 ft</span>
+          <span className="t-micro-10 text-sail-3">Above 150 m</span>
           <p className="m-0 mt-1.5 t-cap text-ink-mid pretty">
             Above the band boundary the air risk class rises, and in controlled airspace or
             a Mode-S veil it reaches ARC d. The airspace step is where that is settled.
@@ -656,23 +659,39 @@ function MapStep({
   );
 }
 
+//: Step #8 assesses outdoor assemblies within 1 km of the operational volume against
+//: the bands in Tables 8 to 13.
+const ASSEMBLY_BANDS = [
+  ["none", "None expected"],
+  ["under_40k", "Under 40 000 people"],
+  ["40k_to_400k", "40 000 to 400 000 people"],
+  ["over_400k", "More than 400 000 people"],
+] as const;
+
 function GroundStep({
   value,
   density,
   adjacentPopulated,
+  mission,
   busy,
   onChange,
   onDensity,
+  onPatch,
 }: {
   value: GroundEnvironment | null;
   density: number | null;
   adjacentPopulated: boolean;
+  mission: Mission;
   busy: boolean;
   onChange: (v: GroundEnvironment) => void;
   onDensity: (density: number, adjacent: boolean) => void;
+  onPatch: (patch: Record<string, unknown>) => void;
 }) {
   const [entered, setEntered] = useState(density ?? 84);
   const [adjacent, setAdjacent] = useState(adjacentPopulated);
+  const adjacentDensity = get(mission, "adjacent_area_density_per_km2") as number | null;
+  const assembly = (get(mission, "adjacent_assembly_size") as string | null) ?? "";
+  const sheltering = get(mission, "sheltering_applicable") as boolean | null;
 
   return (
     <div className="flex flex-col gap-5 max-w-[720px]">
@@ -728,6 +747,59 @@ function GroundStep({
           </span>
         )}
       </div>
+
+      <div className="p-4 bg-sheet-well rounded-sm flex flex-col gap-3">
+        <span className="t-micro text-ink-low">The adjacent ground area — Step #8</span>
+        <p className="m-0 t-cap text-ink-mid pretty">
+          Containment is read from a column of Tables 8 to 13, and the column is the more
+          stringent of these two. Without both, the engine reports that it needs them
+          rather than assuming the least restrictive column. The area itself is derived:
+          three minutes at the aircraft's maximum speed, never under 5 km and never over
+          35 km.
+        </p>
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+          <FieldLabel label="Average density beyond the buffer (ppl/km²)">
+            <Input
+              type="number"
+              min={0}
+              value={adjacentDensity ?? ""}
+              placeholder="not measured"
+              onChange={(e) =>
+                onPatch({
+                  adjacent_area_density_per_km2: e.target.value ? Number(e.target.value) : null,
+                })
+              }
+              className="tnum"
+            />
+          </FieldLabel>
+          <FieldLabel label="Largest assembly within 1 km">
+            <Select
+              value={assembly}
+              onChange={(e) => onPatch({ adjacent_assembly_size: e.target.value || null })}
+            >
+              <option value="">Not assessed</option>
+              {ASSEMBLY_BANDS.map(([v, label]) => (
+                <option key={v} value={v}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </FieldLabel>
+        </div>
+        <label className="flex items-center gap-2.5 min-h-11 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={sheltering === true}
+            onChange={(e) => onPatch({ sheltering_applicable: e.target.checked })}
+            className="size-[18px]"
+          />
+          <span className="t-body-sm text-ink-mid pretty">
+            People in the adjacent area are sheltered by structures this aircraft is not
+            expected to penetrate. Only a 3 m aircraft is asked: below that the tables
+            assume sheltering applies, and from 8 m up they assume it does not.
+          </span>
+        </label>
+      </div>
     </div>
   );
 }
@@ -741,11 +813,15 @@ function AirspaceStep({
   altitude: number;
   onChange: (patch: Record<string, unknown>) => void;
 }) {
-  const aboveBand = altitude > 152.4;
+  // Annex C Table C.1 writes every altitude row as "150 m (~500 ft) AGL": 150 m is the
+  // figure and 500 ft the approximation of it, not the other way round.
+  const aboveBand = altitude > 150;
   const cls = (get(mission, "airspace_class") as AirspaceClass) ?? "g";
   const controlled = Boolean(get(mission, "controlled_airspace"));
   const aerodrome = Boolean(get(mission, "near_aerodrome"));
   const atypical = Boolean(get(mission, "atypical_airspace"));
+  const tmz = Boolean(get(mission, "transponder_mandatory_zone"));
+  const demonstrated = get(mission, "demonstrated_air_density_rating") as number | null;
 
   return (
     <div className="flex flex-col gap-5 max-w-[760px]">
@@ -764,7 +840,7 @@ function AirspaceStep({
           <span className="t-micro text-ink-low">Altitude band</span>
           <div className="min-h-11 px-3 flex items-center bg-sheet-well rounded-sm">
             <span className="t-data-13 text-ink-hi">
-              {aboveBand ? "Above 500 ft (152 m) AGL" : "At or below 500 ft (152 m) AGL"}
+              {aboveBand ? "Above 150 m (~500 ft) AGL" : "At or below 150 m (~500 ft) AGL"}
             </span>
           </div>
           <span className="t-cap text-ink-low">
@@ -779,7 +855,7 @@ function AirspaceStep({
           checked={controlled}
           onChange={(v) => onChange({ controlled_airspace: v })}
           title="Controlled airspace"
-          body="A CTR, TMA or any class A–E volume. Above 500 ft this reaches ARC d."
+          body="A CTR, TMA or any class A–E volume. Above 150 m this is AEC 3 and reaches ARC d; below it, AEC 8 and ARC c."
         />
         <Checkbox
           checked={aerodrome}
@@ -788,15 +864,57 @@ function AirspaceStep({
           body="Confirm against your national definition — proximity alone is not the same thing. In the aerodrome environment, class B, C or D reaches ARC d."
         />
         <Checkbox
+          checked={tmz}
+          onChange={(v) => onChange({ transponder_mandatory_zone: v })}
+          title="Mode-S Veil or transponder mandatory zone"
+          body="Its own category in Table C.1 at both altitude bands — AEC 2 above 150 m, AEC 7 below — and it reaches a higher ARC than the uncontrolled airspace around it."
+        />
+        <Checkbox
           checked={atypical}
           onChange={(v) => onChange({ atypical_airspace: v })}
           title="Atypical or segregated airspace"
           body="A reserved or danger area where other traffic is excluded. This short-circuits the air risk tree to ARC a."
         />
       </div>
+
+      <div className="flex flex-col gap-2">
+        <FieldLabel label="Demonstrated local air traffic density">
+          <Select
+            value={demonstrated == null ? "" : String(demonstrated)}
+            onChange={(e) =>
+              onChange({
+                demonstrated_air_density_rating: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          >
+            <option value="">Not demonstrated</option>
+            {[5, 4, 3, 2, 1].map((r) => (
+              <option key={r} value={r}>
+                {r} — {DENSITY_RATING[r]}
+              </option>
+            ))}
+          </Select>
+        </FieldLabel>
+        <span className="t-cap text-ink-low pretty">
+          Annex C Table C.2 lowers the air risk class in exchange for a demonstrated
+          local density, not for claiming a strategic mitigation. Leave this at "not
+          demonstrated" unless a competent authority has accepted an airspace density
+          study for this volume — without it, a claimed strategic air mitigation earns no
+          reduction.
+        </span>
+      </div>
     </div>
   );
 }
+
+//: Table C.1's 1-to-5 density rating, in the words the annex uses for it.
+const DENSITY_RATING: Record<number, string> = {
+  5: "very high",
+  4: "high",
+  3: "medium",
+  2: "low",
+  1: "very low (the AEC 10 reference)",
+};
 
 function Checkbox({
   checked,

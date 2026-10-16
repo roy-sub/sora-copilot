@@ -1,32 +1,36 @@
 # table: m1_m2
-# document: JARUS SORA 2.5 Annex B
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #3 — final ground risk class, mitigations (Main Body Table 5)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: The credits here are a seed. SORA 2.5 restructured the ground mitigations and the Main Body carries them as Table 5, 'Mitigations for Final GRC determination'; the per-robustness credit values were not established by research. Transcribe Table 5 and Annex B. The open modelling question below stands: there is still no slot for M1(B)
+# section: AMC1 Article 11, S.4.3 Step #3 — Table 5, mitigations for the determination of the final GRC; robustness criteria in Annex B
+# page: 67
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table 5 on page 67 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. Three of the four mitigations matched the seed; the fourth, M1(B) operational restrictions, was missing entirely — the gap the seed's own note flagged — and is now present with the credits the table gives it
 # note: grc_delta is the change applied to the intrinsic GRC. An empty grc_delta means
 #       the mitigation cannot be claimed at that robustness — the UI shows the level
 #       disabled rather than hiding it, so the path to it stays visible.
-# note: The final GRC is floored at the controlled-ground-area value for the aircraft's
-#       column; that floor is a rule in 20_mitigations.lp, not a row here.
-# note: OPEN QUESTION FOR THE OWNER. SORA 2.5's ground mitigations are M1(A)
-#       sheltering, M1(B) operational restrictions, M1(C) ground observation and M2
-#       impact reduction. The build spec's MitigationClaim.kind enumerates only
-#       m1_strategic, m1_ers, m2_impact, strategic_air and tactical_air — there is no
-#       slot for M1(B). An operator therefore cannot claim a mitigation the
-#       regulation offers, which lowers the GRC they can reach. Adding it means
-#       extending the spec's domain model, so it is flagged rather than done. See
-#       PLAN.md section 6.
+# note: S.4.3.3(a): 'All mitigations should be applied in numerical sequence.' The order
+#       is M1(A), M1(B), M1(C), M2, which is the order of the rows below.
+# note: S.4.3.4(f): when applying all the M1 mitigations, the final GRC cannot be
+#       reduced below the lowest value in the applicable column of the iGRC table —
+#       the controlled-ground-area row — because the number of people at risk cannot
+#       go below that of a controlled ground area. That floor is a rule in
+#       20_mitigations.lp, not a row here.
+# note: S.4.3.4(e): 'In rare situations, iGRC reductions greater than the ones shown in
+#       Table 5 may be possible', and a competent authority may accept additional
+#       mitigations and correction factors. The engine computes the table; an authority
+#       accepting more than this is an override, which the operator records as one.
 kind,robustness,grc_delta,precondition,evidence_required
-m1_strategic,low,-1,,Sheltering analysis of the ground risk buffer
-m1_strategic,medium,-2,,Sheltering analysis plus a signed operational procedure
+m1_strategic,low,-1,,M1(A) sheltering — evidence that people overflown are protected by structures the UA is not expected to penetrate (Annex B Table B.2)
+m1_strategic,medium,-2,,M1(A) sheltering at medium robustness — the Annex B integrity and assurance criteria
 m1_strategic,high,,not_claimable,
-m1_ers,low,-1,,Ground observation procedure
+m1_operational,low,,not_claimable,
+m1_operational,medium,-1,,M1(B) operational restrictions — evidence that the restriction reduces the people at risk (Annex B)
+m1_operational,high,-2,,M1(B) operational restrictions at high robustness — the Annex B integrity and assurance criteria
+m1_ers,low,-1,,M1(C) ground observation — the ground observation procedure (Annex B)
 m1_ers,medium,,not_claimable,
 m1_ers,high,,not_claimable,
 m2_impact,low,,not_claimable,
-m2_impact,medium,-1,impact_reduction_fitted,Deployment test report and maintenance log
-m2_impact,high,-2,impact_reduction_fitted,Qualified deployment test report to a recognised standard
+m2_impact,medium,-1,impact_reduction_fitted,M2 — deployment test report and maintenance log
+m2_impact,high,-2,impact_reduction_fitted,M2 at high robustness — qualified deployment test report to a recognised standard

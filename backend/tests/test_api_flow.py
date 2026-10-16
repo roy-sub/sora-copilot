@@ -90,13 +90,16 @@ def test_the_full_flow_produces_a_pinned_determination(
     assert d["initial_arc"] == "c"
     assert d["residual_arc"] == "b"
     assert d["sail"] == "III"
-    assert d["rulebase_version"] == "2.5.0-rc2"
+    assert d["rulebase_version"] == "2.5.1"
     assert d["mission_hash"]
     assert d["freshly_computed"] is True
     assert len(d["osos"]) == 17
     assert d["trace"], "a determination with no trace is a bug, not a degraded result"
-    assert d["is_verified"] is False
-    assert any("UNVERIFIED" in w for w in d["warnings"])
+    # Every table is transcribed from the EASA Easy Access Rules, so a determination
+    # comes back verified and carries no warnings. This asserted the opposite while the
+    # tables were seeds; it is the flag the verdict banner and the dossier cover read.
+    assert d["is_verified"] is True
+    assert d["warnings"] == []
 
 
 def test_every_trace_node_carries_a_citation_over_the_api(
@@ -209,8 +212,14 @@ def test_geo_derivation_produces_volumes_and_says_how(
     assert body["contingency_volume_km2"] > body["flight_geography_km2"]
     assert body["ground_risk_buffer_km2"] > body["contingency_volume_km2"]
     assert body["adjacent_area_km2"] > body["ground_risk_buffer_km2"]
-    assert body["unverified"] is True
-    assert len(body["derivations"]) == 2
+    # buffers.csv is transcribed from Annex A A.5.2 now, so the derivation is not
+    # flagged as resting on a seed.
+    assert body["unverified"] is False
+    # Four derivations now, not two: Annex A A.5.2 computes the lateral contingency,
+    # the contingency volume height, the ground risk buffer from that height, and the
+    # adjacent ground area from three minutes at maximum speed.
+    assert len(body["derivations"]) == 4
+    assert {d["value_m"] > 0 for d in body["derivations"]} == {True}
     for d in body["derivations"]:
         assert d["rule"], "a derived number must say what produced it"
 

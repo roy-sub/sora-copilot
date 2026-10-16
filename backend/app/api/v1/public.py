@@ -172,7 +172,7 @@ def _mission(body: CategoryCheckIn) -> Mission:
         population_density_per_km2=ASSUMED_DENSITY[body.ground_environment.value],
         airspace_class=AirspaceClass.G,
         near_aerodrome=False,
-        altitude_band="below_500ft",
+        altitude_band="below_150m",
         controlled_airspace=False,
         atypical_airspace=False,
         mitigations=[],

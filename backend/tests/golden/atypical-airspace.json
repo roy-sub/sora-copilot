@@ -1,8 +1,8 @@
 {
   "name": "atypical-airspace",
   "description": "Atypical or segregated airspace short-circuits the air risk tree to ARC a.",
-  "rulebase_version": "2.5.0-rc2",
-  "verified_against_official_text": false,
+  "rulebase_version": "2.5.1",
+  "verified_against_official_text": true,
   "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
   "mission": {
     "id": "00000000-0000-0000-0000-000000000001",
@@ -43,7 +43,7 @@
     "population_density_per_km2": 84,
     "airspace_class": "g",
     "near_aerodrome": false,
-    "altitude_band": "below_500ft",
+    "altitude_band": "below_150m",
     "controlled_airspace": false,
     "atypical_airspace": true,
     "mitigations": [],
@@ -70,7 +70,7 @@
     "osos_total": 17,
     "containment_assessment_required": true,
     "containment_level": null,
-    "trace_node_count": 59,
+    "trace_node_count": 58,
     "root_rule_id": "sora25.sail.lookup"
   }
 }

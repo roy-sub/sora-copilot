@@ -1,23 +1,37 @@
 # table: buffers
-# document: JARUS SORA 2.5 Main Body (JAR_doc_25) and Annex A (JAR_doc_26)
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #1 — operational volume, contingency volume and ground risk buffer
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: The 1:1 ground risk buffer IS sourced: the Main Body states an initial buffer may use the 1-to-1 principle, and that a UA leaving the contingency volume is expected to end its flight within the buffer, with the buffer driven by the UA's flight characteristics and the containment requirements. What is NOT sourced is every contingency-volume parameter below — reaction time, bank angle, position error, vertical margin — and the adjacent-area ring, where one secondary source says the adjacent area is at least 5 km with an assembly-of-people check within 1 km against the seed's 1 km ring. Transcribe the method from Annex A
-# note: Read by services/geo.py, not by the rulebase. The ground risk buffer seed is the
-#       1:1 rule (buffer = altitude), which is the conservative MVP default and is
-#       flagged as such in the UI rather than presented as the ballistic method.
-# note: Values are a method, not a lookup: each row is a named parameter the derivation
-#       uses, so the derivation can cite where each term came from.
+# section: AMC1 Article 11 Annex A — A.5.2, computation of the flight geography, the contingency volume and the ground risk buffer
+# page: 104
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from A.5.2.2 to A.5.2.4, pages 104 to 107 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The seed had the reaction time and the bank angle right and the rest wrong: the horizontal contingency volume is the sum of FIVE terms, not one position error — GNSS accuracy 3 m, position holding error 3 m, map error 1 m, the reaction distance and the contingency manoeuvre — and the vertical margin is 1 m barometric or 4 m GNSS, not a flat 10 m. The 1:1 ground risk buffer is confirmed, but it is H_CV + CD/2 and the seed omitted the half-dimension term
+# note: Read by services/geo.py, not by the rulebase: these are the parameters of a
+#       method, so each row is a named term the derivation can cite rather than a
+#       lookup. The formulae that combine them are in geo.py, with the same names.
+# note: S_CV = S_GNSS + S_Pos + S_K + S_R + S_CM, where S_R = V0 * t_R and S_CM is the
+#       stopping distance for a multirotor, (V0^2) / (2 g tan Theta), or the turn radius
+#       for a fixed-wing aircraft, (V0^2) / (g tan Phi).
+# note: H_CV = H_FG + H_AM + H_R + H_CM, where H_CM for a multirotor is (V0^2) / (2 g):
+#       the forward kinetic energy converted entirely into height.
+# note: A.5.2.4 gives three alternatives to the 1:1 rule, each needing evidence the
+#       engine does not hold: a ballistic approach (rotorcraft and multirotors only), a
+#       parachute termination, and a fixed-wing glide at ratio E. The 1:1 rule is the
+#       conservative one and is what the UI states it used.
+# note: The adjacent ground area is NOT here. It is Step #8's, not Annex A's: the
+#       distance flown in 3 minutes at maximum speed, floored at 5 km and capped at
+#       35 km, and those three numbers are rows in thresholds.csv.
 parameter,value,unit,applies_to,note
-reaction_time,1.0,s,contingency_volume,Pilot reaction time used for the lateral contingency margin
-bank_angle,30,deg,contingency_volume,Assumed bank angle for the turn radius term
-position_error,3.0,m,contingency_volume,GNSS position-keeping error
-vertical_contingency,10.0,m,contingency_volume,Vertical contingency margin above the flight geography
-grb_method,one_to_one,,ground_risk_buffer,1:1 rule — buffer equals the contingency volume height
-grb_multiplier,1.0,ratio,ground_risk_buffer,Multiplier applied to the contingency height under the 1:1 rule
-adjacent_area_method,fixed_ring,,adjacent_area,Adjacent area ring measured outward from the ground risk buffer
-adjacent_area_distance,1000.0,m,adjacent_area,Seed ring width; must be replaced with the method from the official text
+gnss_accuracy,3.0,m,contingency_volume,S_GNSS — GNSS accuracy (A.5.2.3)
+position_holding_error,3.0,m,contingency_volume,S_Pos — position holding error (A.5.2.3)
+map_error,1.0,m,contingency_volume,S_K — map error (A.5.2.3)
+reaction_time,1.0,s,contingency_volume,t_R — manual initiation of measures; may be smaller in a fully automatic system such as a geofence
+pitch_angle_max,45,deg,contingency_volume,Theta — maximum pitch angle assumed for a multirotor stopping manoeuvre
+bank_angle_max,30,deg,contingency_volume,Phi — roll angle assumed for a fixed-wing 180-degree turn
+altitude_error_baro,1.0,m,contingency_volume,H_AM for barometric altitude measurement
+altitude_error_gnss,4.0,m,contingency_volume,H_AM for GNSS-based altitude measurement
+vertical_reaction_factor,0.7,ratio,contingency_volume,H_R = V0 * 0.7 * t_R — the vertical component of the reaction distance
+flight_geography_min_dimensions,3,ratio,flight_geography,S_FG and H_FG are each at least 3 characteristic dimensions; smaller is considered unrealistic
+grb_method,one_to_one,,ground_risk_buffer,Simplified approach — S_GRB = H_CV + CD/2
+grb_dimension_term,0.5,ratio,ground_risk_buffer,The CD/2 term the 1:1 rule adds to the contingency volume height

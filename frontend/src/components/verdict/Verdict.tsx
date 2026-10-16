@@ -345,12 +345,29 @@ function VerdictView({
 
         {!certified && (
           <div className="bg-sheet px-4 md:px-6 py-4 flex gap-3 items-start">
-            <span className="t-micro text-sail-3 flex-none pt-0.5">Containment</span>
+            <span
+              className={cn(
+                "t-micro flex-none pt-0.5",
+                determination.containment.level ? "text-ink-low" : "text-sail-3",
+              )}
+            >
+              Containment
+            </span>
             <p className="m-0 t-cap text-ink-mid pretty">
-              {determination.containment.note ||
-                (determination.containment.level
-                  ? `Containment: ${determination.containment.level}.`
-                  : "Containment has not been established for this operation.")}{" "}
+              {determination.containment.level ? (
+                <>
+                  <span className="t-data-sm text-ink-hi">
+                    {determination.containment.level} robustness
+                  </span>{" "}
+                  — from Step #8&apos;s tables, by the aircraft&apos;s characteristic
+                  dimension, the adjacent ground area and this SAIL.
+                </>
+              ) : (
+                // Two different answers wear this shape: the tables said "out of scope",
+                // or an input Step #8 needs is missing. The note says which.
+                determination.containment.note ||
+                "Containment has not been established for this operation."
+              )}{" "}
               <Link href="/legal#changelog">See the rulebase changelog</Link>.
             </p>
           </div>

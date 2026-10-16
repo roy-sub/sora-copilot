@@ -1,157 +1,94 @@
-# Final Manual Task
+# Final Manual Task — done
 
-**Time needed:** about one minute.
-**What it is:** ticking two boxes in a settings page so I can read two websites.
-**Is the app broken without it?** No. It works, it is honest, and you can launch. This
-closes the last gap between "working" and "verified".
+**Status: complete.** You added `jarus-rpas.org` and `easa.europa.eu` to the cloud
+environment's allowed domains, I transcribed the remaining tables from the official
+text, and the app no longer carries an UNVERIFIED warning anywhere.
+
+This file is kept as the record of what that one minute of settings bought, and of the
+one thing I decided differently from the plan once I could read the source.
 
 ---
 
-## 1. The problem, in plain words
+## 1. What the task was
 
-SORA Copilot's job is to answer a regulatory question: given a drone, a place and a
-flight, what is the risk class, and what must the operator prove? Those answers come
-from tables of numbers that are published by two organisations:
+SORA Copilot answers a regulatory question from **14 tables of numbers**. Six of them
+had been checked against the published documents. Eight had not, because the cloud
+container I work in could not open the two websites those documents live on, and I will
+not guess a number in a compliance product — a plausible wrong number is worse than a
+visible gap, because somebody flies a drone on it.
 
-- **JARUS** — the people who wrote the SORA 2.5 method. Their documents live at
-  **jarus-rpas.org**.
-- **EASA** — the EU aviation regulator, who formally adopted SORA 2.5 into EU law in
-  September 2025. Their documents live at **easa.europa.eu**.
+You added the two domains. That is all it needed.
 
-The app has **14 of these tables**. Think of each one as a page out of a rulebook.
+## 2. What I did with the access
 
-- **6 are finished.** I checked their numbers against the published documents and
-  against the Norwegian aviation authority's own calculator, which implements the same
-  tables. They agree, line for line.
-- **8 are not.** They currently hold sensible placeholder numbers.
+I did **not** use jarus-rpas.org. When I opened it, its TLS certificate did not match
+the site: it was self-signed, issued to `C=CN, CN=unknown, emailAddress=unknown@wts`.
+That is not a JARUS certificate, and a document fetched over a connection like that
+cannot be trusted to be the document — which is the whole point of transcribing from a
+primary source. So I left it alone and told you rather than quietly using it.
 
-Those 8 are not finished because **this computer I am working on is not allowed to open
-those two websites.** It runs in a locked-down cloud container, and its network settings
-only permit a short list of sites. jarus-rpas.org and easa.europa.eu are not on the
-list, so when I try to download the PDFs, the connection is refused.
+Everything came from EASA instead, which is the better source anyway:
 
-I could not guess the missing numbers. In a compliance product, a plausible-looking
-number that is wrong is worse than an obvious gap: someone could fly a drone on it. So
-the app says, out loud and in writing, which tables are unfinished.
+- **EASA ED Decision 2025/018/R of 30 September 2025** adopted the whole SORA 2.5
+  package as AMC and GM to Regulation (EU) 2019/947.
+- It is consolidated into the **Easy Access Rules for Unmanned Aircraft Systems,
+  revision of June 2026** — a 617-page book, downloaded over a verified TLS connection.
 
-## 2. What the app does about it today
+In the EU this is not a secondary source. "JARUS recommends" is a weaker citation to an
+EU authority than "this is the AMC to the Regulation", so every table now cites the
+Easy Access Rules and records the ED Decision that adopted it.
 
-Nothing is hidden. Right now:
+## 3. What changed
 
-- The **verdict screen** shows a strip saying how many of the tables behind *that*
-  determination are unfinished, with a button that names each one.
-- The **exported dossier** repeats it on the cover and on every page, and says the
-  document must not be submitted to an authority.
-- The **settings screen** lists exactly which tables are outstanding and which document
-  would close each one.
-
-This is the correct behaviour, and you can ship it. A drone operator can use the app to
-plan, to explore options and to see the reasoning — they just cannot file the output
-with their aviation authority yet.
-
-## 3. What I need you to do
-
-You are going to add two website addresses to a list of sites this cloud container is
-allowed to visit.
-
-### Step by step
-
-1. Open **claude.ai** in your browser and open this project's Claude Code session —
-   the same place you are reading my messages.
-2. Look at the **title bar at the top of the session**. There is a menu there for the
-   **cloud environment** this session runs in. Click it.
-3. Click **Edit**.
-4. Find the setting called **Network access**.
-5. You will see a list called **Allowed domains**. (If the access level is set to
-   something stricter, choose **Limited** or **Custom** first — "Allowed domains" only
-   appears on those levels.)
-6. Add these two lines, one at a time:
-
-   ```
-   jarus-rpas.org
-   easa.europa.eu
-   ```
-
-7. Leave the box **"Allow package managers"** ticked if it is there. Unticking it would
-   break the build.
-8. Save.
-
-The official instructions, if the screen looks different from the above:
-https://code.claude.com/docs/en/cloud-environments#network-access
-
-### Then tell me
-
-Send me a message saying it is done — "domains added" is enough. I will:
-
-1. Download the official JARUS SORA 2.5 documents and the EASA decision text.
-2. Transcribe the remaining 8 tables from them, with a page reference on each.
-3. Re-run the engine's worked examples to make sure nothing changed that should not have.
-4. Push the result and tell you what moved.
-
-It is one working session, not a project.
-
-## 4. What changes when it is done
-
-| | Today | After |
+| | Before | Now |
 |---|---|---|
-| Tables verified | 6 of 14 | 14 of 14 |
+| Tables verified | 6 of 14 | **14 of 14** |
 | Verdict screen | "8 of the regulatory tables… are still transcribed from a seed" | No banner |
 | Exported dossier | "must not be submitted to an authority" on every page | Submittable |
 | Citations | Document and section | Document, section **and page number** |
+| Rulebase version | 2.5.0-rc.2 | **2.5.1** |
 
-## 5. "Can I launch without doing this?"
+Seven of the eight unchecked tables turned out to be wrong, and six of those change an
+answer the product gives. If you demonstrated the app to anyone on the old numbers,
+these four are the ones worth mentioning:
 
-Yes — with one caveat you should decide on deliberately.
+1. **A flight in a transponder mandatory zone got the wrong air risk class.** The air
+   risk table had ten branches; the official Table C.1 has twelve. The Mode-S Veil /
+   TMZ classes and the above-FL600 class were missing outright.
+2. **Strategic air-risk mitigation was too generous.** The old table lowered the air
+   risk by one class for anyone who *claimed* a mitigation. Table C.2 sells that
+   reduction for a **demonstrated** local traffic density, not for a claim — and where
+   it does apply, it can be worth two classes rather than one. The worked example moved
+   from SAIL III to SAIL IV until a demonstrated density rating was supplied.
+3. **Step #8 now reaches an answer.** Containment was a two-tier guess with an open
+   question recorded against it. S.4.8.1(c) names three levels — low, medium, high —
+   so the Dutch regulator's basic/enhanced was a national exemption, not SORA 2.5. The
+   app computes a level now instead of telling the operator to assess it themselves.
+4. **OSO#04 was understated.** It read low/medium/high at SAIL IV/V/VI; the adopted
+   Table 14 says medium/high/high.
 
-**Safe to launch now:** the app as a planning and exploration tool. Everything works.
-Every number it shows is traceable to a rule, every unfinished table says so, and
-nothing claims to be verified when it is not.
+Also corrected, without moving a verdict on the worked example: M1(B) operational
+restrictions were missing from the mitigation table entirely (−1 at medium, −2 at high);
+the contingency volume is the sum of five terms rather than one position error, and the
+ground risk buffer is H_CV + CD/2; and the altitude band is **150 m**, not the 152.4 m
+that PLAN.md had decided by converting 500 ft — Table C.1 writes every altitude row as
+"150 m (~500 ft) AGL", so 150 m is the figure and 500 ft is the approximation of it.
 
-**Not safe to launch now:** the app as something a drone operator files with their
-aviation authority. The app already refuses to pretend otherwise — that is what the
-banners are for.
+One table, the TMPR mapping, was already right. That was luck rather than method, and
+it is now the table's own four rows rather than a monotone rule that happened to agree.
 
-If you would rather not touch the settings at all, the alternative is to send me the
-documents yourself: download the SORA 2.5 Main Body and Annexes A–F from jarus-rpas.org
-and upload them to a session. That works equally well. The domain allowance is simply
-quicker.
+## 4. What is actually left for you
 
----
+Three things, none of them code:
 
-## 6. The other sentence I wrote, explained
+1. **Fill in the `.env` files** — [ENV Example](./ENV%20Example.md) lists every
+   variable, and [Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) walks
+   through getting each value.
+2. **Deploy the backend to Render** — [Deployment Guide](./Deployment%20Guide.md),
+   Part 1.
+3. **Host the frontend on Cloudflare Pages or Hostinger** — Deployment Guide, Part 2,
+   which ends with the one command that produces the folder you upload.
 
-> *"A table can no longer claim `verified: true` without a `basis:`, and the loader
-> refuses an unverified table without a `needs:`."*
-
-In plain words: **each of the 14 tables is a small file, and each file now has to answer
-the question "how do you know?" in writing.**
-
-- A table that says *"I am verified"* must also carry a sentence saying **what was
-  checked, against which document**. If that sentence is missing, the app refuses to
-  start. Verification cannot be switched on by changing one word.
-- A table that says *"I am not verified yet"* must carry a sentence saying **what is
-  still missing** — which document, which figure, which open question. That sentence is
-  what the operator reads in the warning strip.
-
-The point of the second one: "something here is unverified" is not useful to anybody.
-"Figure 4 of the Main Body, all thirteen branches" tells you exactly what to go and get.
-
-> *"The verdict banner and the dossier banner now count the open tables instead of
-> condemning the whole rulebase."*
-
-The warning used to say *the regulatory tables have not been checked* — all of them.
-That became untrue once six were checked. A warning that is **more alarming than the
-truth** is dangerous in a specific way: people learn it is always on, and stop reading
-it. So it now counts: *"8 of the regulatory tables behind this determination are still
-transcribed from a seed."* When the number reaches zero, the banner disappears by
-itself — nobody has to remember to remove it.
-
----
-
-## That is the whole list
-
-After this, and the credentials in
-[Third Party Setup Guide](./Third%20Party%20Setup%20Guide.md) and the deployment in
-[Deployment Guide](./Deployment%20Guide.md), there is nothing else outstanding. The code
-is complete, the tests pass, the media ships with the build, and the engine computes
-every determination from rules rather than from a language model.
+The code is complete, the tests pass, the media ships with the build, every table is
+transcribed from the adopted text, and the engine computes every determination from
+rules rather than from a language model.

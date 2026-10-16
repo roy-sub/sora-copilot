@@ -1,0 +1,86 @@
+{
+  "name": "arc-reduced-by-demonstrated-density",
+  "description": "The same corridor, but the operator has demonstrated the local air traffic density to be rating 1 — the AEC 10 reference environment. Annex C Table C.2 then allows the reduction the claim alone does not.",
+  "rulebase_version": "2.5.1",
+  "verified_against_official_text": true,
+  "note": "Exercises the half of Table C.2 that the aerodrome case cannot reach. The AEC is 6 (airport/heliport environment in class G), initial ARC c, and a demonstrated rating of 1 takes the residual to b. Without the demonstration this same mission stays at c, which is what powerline-corridor-aerodrome pins.",
+  "mission": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "org_id": "00000000-0000-0000-0000-000000000002",
+    "drone_id": "00000000-0000-0000-0000-000000000003",
+    "operation_type": "bvlos",
+    "volume": {
+      "flight_geography": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              15.4,
+              47.1
+            ],
+            [
+              15.5,
+              47.1
+            ],
+            [
+              15.5,
+              47.2
+            ],
+            [
+              15.4,
+              47.2
+            ],
+            [
+              15.4,
+              47.1
+            ]
+          ]
+        ]
+      },
+      "max_altitude_agl_m": 118
+    },
+    "ground_environment": "sparsely_populated",
+    "population_density_per_km2": 84,
+    "airspace_class": "g",
+    "near_aerodrome": true,
+    "altitude_band": "below_150m",
+    "controlled_airspace": false,
+    "atypical_airspace": false,
+    "mitigations": [
+      {
+        "kind": "m1_strategic",
+        "robustness": "low"
+      },
+      {
+        "kind": "strategic_air",
+        "robustness": "low"
+      }
+    ],
+    "country": "AT",
+    "demonstrated_air_density_rating": 1
+  },
+  "aircraft": {
+    "max_dimension_m": 1.32,
+    "mtom_kg": 15.9,
+    "max_speed_ms": 22,
+    "fitted": [
+      "parachute",
+      "fts"
+    ]
+  },
+  "adjacent_area_populated": false,
+  "expect": {
+    "igrc": 5,
+    "final_grc": 4,
+    "initial_arc": "c",
+    "residual_arc": "b",
+    "sail": "III",
+    "tmpr": "low",
+    "osos_required": 16,
+    "osos_total": 17,
+    "containment_assessment_required": true,
+    "containment_level": null,
+    "trace_node_count": 62,
+    "root_rule_id": "at.baseline"
+  }
+}

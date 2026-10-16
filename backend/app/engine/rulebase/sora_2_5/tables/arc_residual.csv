@@ -1,21 +1,40 @@
 # table: arc_residual
-# document: JARUS SORA 2.5 Annex C
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #5 — strategic mitigation of the air risk, residual ARC
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-Annex-C-v1.0.pdf
-# verified: false
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# needs: The seed lowers the initial ARC by exactly one class for any claimed strategic mitigation. Annex C's actual residual-ARC rules, and whether more than one class can ever be claimed, were not established. Transcribe them from Annex C
-# note: A claimed strategic mitigation lowers the initial ARC by one class. Whether more
-#       than one class can ever be claimed is exactly the sort of thing that must come
-#       from the official text, so this table is one step only until verified.
-initial_arc,strategic_claimed,residual_arc,rule_id
-a,false,a,sora25.arc.residual.none
-b,false,b,sora25.arc.residual.none
-c,false,c,sora25.arc.residual.none
-d,false,d,sora25.arc.residual.none
-a,true,a,sora25.arc.residual.strategic
-b,true,a,sora25.arc.residual.strategic
-c,true,b,sora25.arc.residual.strategic
-d,true,c,sora25.arc.residual.strategic
+# section: AMC1 Article 11 Annex C — Table C.2, reduction of the initial ARC by strategic mitigation; S.4.5 Step #5 applies it
+# page: 129
+# url: https://www.easa.europa.eu/en/downloads/110913/en
+# verified: true
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table C.2 on page 129 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. The seed lowered any initial ARC by exactly one class for any claimed strategic mitigation. That is wrong in both directions: ARC-d can fall two classes to ARC-b when the demonstrated density is 2 or 1, and no reduction is available at all without a demonstrated local density rating, because what Table C.2 buys is the right to argue the local encounter rate is lower than the generalised one in Table C.1
+# note: Keyed on the AEC rather than on the ARC, because AEC 1 and AEC 3 are both
+#       ARC-d and reduce differently: AEC 1 needs a demonstrated 4 or 3 for ARC-c,
+#       AEC 3 needs 3 or 2.
+# note: demonstrated_rating is what the operator shows the competent authority the
+#       LOCAL density to be, on Table C.1's 1-to-5 scale. Absent that demonstration
+#       there is no row, and 30_arc.lp leaves the residual ARC equal to the initial.
+# note: AEC 10, 11 and 12 have no rows. Table C.2 excludes 10 and 11 because any
+#       reduction would land on ARC-a, which requires meeting the atypical or
+#       segregated airspace requirements in full — that is AEC 12, reached by being
+#       atypical rather than by arguing about density.
+# note: Table C.2's column A gives AEC 3 a density rating of 4 where Table C.1 gives it
+#       5. The reduction rows below follow C.2, which is the table that governs the
+#       reduction; arc.csv keeps C.1's rating, which is the one C.1 states.
+aec,initial_arc,demonstrated_rating,residual_arc,rule_id
+1,d,4,c,sora25.arc.residual.c2
+1,d,3,c,sora25.arc.residual.c2
+1,d,2,b,sora25.arc.residual.c2
+1,d,1,b,sora25.arc.residual.c2
+2,d,4,c,sora25.arc.residual.c2
+2,d,3,c,sora25.arc.residual.c2
+2,d,2,b,sora25.arc.residual.c2
+2,d,1,b,sora25.arc.residual.c2
+3,d,3,c,sora25.arc.residual.c2
+3,d,2,c,sora25.arc.residual.c2
+3,d,1,b,sora25.arc.residual.c2
+4,c,1,b,sora25.arc.residual.c2
+5,c,1,b,sora25.arc.residual.c2
+6,c,1,b,sora25.arc.residual.c2
+7,c,1,b,sora25.arc.residual.c2
+8,c,1,b,sora25.arc.residual.c2
+9,c,1,b,sora25.arc.residual.c2

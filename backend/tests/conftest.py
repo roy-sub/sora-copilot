@@ -138,6 +138,11 @@ def complete_draft(
             "near_aerodrome": True,
             "controlled_airspace": False,
             "atypical_airspace": False,
+            # Table C.2 trades a lower residual ARC for a DEMONSTRATED local density,
+            # not for the claim alone, so the fixture demonstrates one — otherwise the
+            # strategic air mitigation buys nothing and the flow tests would be
+            # exercising a path no operator would stop at.
+            "demonstrated_air_density_rating": 1,
             "mitigations": {"m1_strategic": "low", "strategic_air": "low"},
             "country": "AT",
         },

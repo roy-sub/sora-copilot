@@ -286,6 +286,34 @@ def mission_hash(mission: Mission, rulebase: str) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def _containment_note(result: EngineResult, required: bool) -> str:
+    """What the operator reads beside a containment answer that is not a level.
+
+    Two different things wear the same shape. "Out of scope" is the tables' own verdict
+    on a combination SORA does not support; a missing input is the engine saying it has
+    not been told enough to look anything up. Reporting both as "assessment required"
+    with one sentence would merge a regulatory conclusion with a gap in a form.
+    """
+    if not required:
+        return ""
+    missing = not any(
+        b.rule_id.startswith("sora25.containment.t") for b in result.becauses
+    )
+    if missing:
+        return (
+            "Step #8 selects a column in Tables 8 to 13 from the average population "
+            "density of the adjacent ground area and the largest outdoor assembly "
+            "expected within 1 km of the operational volume. Supply both and the "
+            "containment robustness follows from the table."
+        )
+    return (
+        "The tables give 'Out of scope' for this combination of UA size, adjacent-area "
+        "population and SAIL: it is outside what SORA supports, not a containment level. "
+        "Reducing the SAIL, or accepting tighter limits on the adjacent ground area, "
+        "brings it back into the table."
+    )
+
+
 def determine(
     mission: Mission,
     *,
@@ -322,17 +350,18 @@ def determine(
 
     if result.containment is not None:
         level, required = result.containment
+        # The rule id comes from the solver, not from a constant here: Step #8 has eight
+        # ways to answer — six tables, the small-UA shortcut, and the case where an input
+        # it needs has not been supplied — and each cites a different page.
+        rule_id = next(
+            (b.rule_id for b in result.becauses if b.conclusion.startswith("containment(")),
+            "sora25.containment.inputs_missing",
+        )
         containment = ContainmentRequirement(
             level=None if level == "none" else level,
             assessment_required=required,
-            note=(
-                "Containment robustness depends on the adjacent area. The containment "
-                "table has not been verified against the official text, so no level is "
-                "asserted."
-                if required
-                else ""
-            ),
-            citation=citation_for("sora25.containment.assessment_required", version_dir),
+            note=_containment_note(result, required),
+            citation=citation_for(rule_id, version_dir),
         )
     else:
         containment = ContainmentRequirement(

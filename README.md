@@ -63,29 +63,33 @@ deployed is in [docs/Deployment Guide.md](docs/Deployment%20Guide.md).
 ```bash
 cd backend  && make test      # pytest
 cd backend  && make lint      # ruff + mypy --strict
-cd backend  && make rulebase  # which regulatory tables are still unverified
+cd backend  && make rulebase  # provenance of every regulatory table
 cd frontend && npm run build  # static export to out/; also type-checks
 
 # the whole product, against a running backend
 BASE=http://127.0.0.1:8000 SUPABASE_JWT_SECRET=... backend/scripts/smoke.sh
 ```
 
-## ⚠ No regulatory table is verified yet
+## Every regulatory table is verified
 
-Every value in the rulebase is a **seed**, not a transcription from the official
-document. Determinations carry an `UNVERIFIED` warning, and the verdict screen shows a
-banner. This is deliberate: a plausible guess in a compliance product is worse than a
-visible gap.
+All fourteen tables are transcribed from the **EASA Easy Access Rules for Unmanned
+Aircraft Systems**, revision of June 2026, which carries the SORA 2.5 package as AMC and
+GM to Regulation (EU) 2019/947 (ED Decision 2025/018/R of 30 September 2025). Each table
+cites a page, and each carries a `basis:` line saying what was checked against what.
+Determinations carry no `UNVERIFIED` warning and the dossier is submittable.
 
-`make rulebase` lists exactly which files need filling in. Verifying them needs the JARUS
-SORA 2.5 main body, Annexes B, C and D, and the Austrian national annex. See
-[docs/RULEBASE.md](docs/RULEBASE.md) and [PLAN.md](PLAN.md) §8.
+`make rulebase` reports the live state; `make rulebase --strict` fails if any table ever
+regresses to a seed. The rule remains that a value is transcribed or absent — a plausible
+guess in a compliance product is worse than a visible gap. See
+[docs/RULEBASE.md](docs/RULEBASE.md), which lists the four corrections that moved a
+verdict.
 
-The same applies to the **country packs**. `backend/app/national/packs/at.json` is this
-project's reading of the Austrian process, not a transcription of anything Austro Control
-published. Every item is marked UNVERIFIED in the app and in the dossier's Appendix C,
-and none of them quotes a fee, a lead time or a sum insured — a plausible number in a
-compliance product is worse than an honest gap.
+The **country packs** are the exception, and say so. `backend/app/national/packs/at.json`
+is this project's reading of the Austrian process, not a transcription of anything Austro
+Control published. Every item is marked UNVERIFIED in the app and in the dossier's
+Appendix C, and none of them quotes a fee, a lead time or a sum insured. The pack is an
+operator's checklist for their authority; nothing in it can change an iGRC, a GRC, an
+ARC, a SAIL, an OSO or a containment level.
 
 ## Stack
 
@@ -118,8 +122,10 @@ PLAN.md     the plan, the open decisions, and what is still blocked
 
 ## Where the build is
 
-All eight phases of the build spec are implemented. What remains is not code: no
-regulatory table has been verified against its published source, and no national annex
-has been transcribed. [PLAN.md](PLAN.md) has the phase-by-phase state, the decisions
-taken, the conflicts between the build spec and the design, and exactly which files need
-filling in.
+All eight phases of the build spec are implemented and every regulatory table is
+transcribed from the adopted text. What remains is not code: the Austrian national annex
+has not been transcribed, and the deployment needs credentials.
+[PLAN.md](PLAN.md) has the phase-by-phase state, the decisions taken and the conflicts
+between the build spec and the design;
+[docs/Final Manual Task.md](docs/Final%20Manual%20Task.md) records what the
+transcription changed.

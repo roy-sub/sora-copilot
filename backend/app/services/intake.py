@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from app.db.repo import Repo, Row
 from app.domain import GeoJSONPolygon, Mission, MitigationClaim, OperationalVolume
-from app.domain.common import MitigationKind, Robustness
+from app.domain.common import MitigationKind, Robustness, altitude_band_of
 from app.domain.fields import (
     PROPOSABLE_FIELDS,
     REQUIRED_FIELDS,
@@ -151,12 +151,23 @@ def build_mission(
             population_density_per_km2=confirmed_draft.get("population_density_per_km2"),
             airspace_class=confirmed_draft["airspace_class"],
             near_aerodrome=bool(confirmed_draft.get("near_aerodrome", False)),
-            # Derived from the altitude against the transcribed 500 ft threshold, never
+            # Derived from the altitude against the transcribed 150 m threshold, never
             # taken from the draft: the engine computes the band itself and the mission
             # must not be able to disagree with it.
-            altitude_band="above_500ft" if altitude > 152.4 else "below_500ft",
+            altitude_band=altitude_band_of(altitude),
             controlled_airspace=bool(confirmed_draft.get("controlled_airspace", False)),
             atypical_airspace=bool(confirmed_draft.get("atypical_airspace", False)),
+            transponder_mandatory_zone=bool(
+                confirmed_draft.get("transponder_mandatory_zone", False)
+            ),
+            demonstrated_air_density_rating=confirmed_draft.get(
+                "demonstrated_air_density_rating"
+            ),
+            adjacent_area_density_per_km2=confirmed_draft.get(
+                "adjacent_area_density_per_km2"
+            ),
+            adjacent_assembly_size=confirmed_draft.get("adjacent_assembly_size"),
+            sheltering_applicable=confirmed_draft.get("sheltering_applicable"),
             mitigations=claims,
             country=confirmed_draft.get("country", "AT"),
         )

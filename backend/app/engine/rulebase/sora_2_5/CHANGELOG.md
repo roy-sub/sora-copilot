@@ -10,7 +10,74 @@ the loader refuses a table that claims verification without a `basis:` line sayi
 was checked and against which source, and refuses an unverified one without a `needs:`
 line saying what is still missing — see `docs/RULEBASE.md`.
 
-## 2.5.0-rc2 — unreleased
+## 2.5.1 — 16 October 2026
+
+**Every table is transcribed from the adopted text. No determination carries an
+UNVERIFIED warning any more.**
+
+The source is the **EASA Easy Access Rules for Unmanned Aircraft Systems**, revision of
+June 2026, which incorporates **ED Decision 2025/018/R of 30 September 2025** — the
+SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. That
+is the document an EU authority reads, so it is the one cited, with a page number on
+every rule. (The earlier note here said Amendment 3 and 29 September, from a search
+summary. The decision's own page says Amendment 4 and 30/9/2025.)
+
+The two tables already checked — `igrc` and `sail` — matched the adopted text cell for
+cell, which is a good sign for the corroboration method but not a substitute for it.
+Seven of the eight that had not been checked turned out to be wrong — six of them in
+ways that change a determination, the seventh in the volumes drawn on the map:
+
+- **`arc` was structurally short and is now Table C.1's twelve airspace encounter
+  classes.** The seed had ten branches and no row at all for a Mode-S Veil or
+  transponder mandatory zone (AEC 2 above 150 m, AEC 7 below) or for flight above
+  FL 600 (AEC 11). A TMZ operation over farmland was being scored ARC-b where the table
+  says ARC-c. `Mission` gains `transponder_mandatory_zone`.
+- **`arc_residual` was giving away a class.** The seed lowered the ARC by one for any
+  claimed strategic mitigation. Table C.2 does not sell a reduction for a claim: it
+  sells one for a *demonstrated* local traffic density lower than the generalised rating
+  the AEC carries, and ARC-d can fall two classes or none depending on what is
+  demonstrated. `Mission` gains `demonstrated_air_density_rating`. **The worked example's
+  SAIL moved from III to IV** until it was given the demonstration its narrative always
+  implied.
+- **`containment` is six tables, not one row.** Tables 8 to 13, keyed by the UA's
+  characteristic dimension, with the 3 m case split on whether sheltering applies. A
+  column is chosen from the adjacent ground area's average population density and the
+  largest outdoor assembly within 1 km — S.4.8.1(c) settles the open question the seed
+  recorded: the levels are **low, medium and high**, so the Netherlands ILT AltMoC's
+  basic/enhanced was a national exemption and not the method. `Mission` gains
+  `adjacent_area_density_per_km2`, `adjacent_assembly_size` and `sheltering_applicable`;
+  a UA under 250 g gets low containment and skips the tables entirely.
+- **`m1_m2` was missing M1(B) entirely.** Table 5 has four mitigations, not three:
+  M1(A) sheltering, M1(B) operational restrictions (medium −1, high −2), M1(C) ground
+  observation and M2. An operator could not claim a mitigation the regulation offers,
+  worth up to two GRC. The seed's own note had flagged the gap without being able to
+  close it.
+- **`oso` had OSO#04 wrong.** Sixteen of the seventeen rows matched; OSO#04 read
+  low/medium/high at SAIL IV/V/VI where Table 14 says medium/high/high.
+- **`thresholds`: the altitude band is 150 m, not 152.4 m.** PLAN.md §0 had recorded the
+  opposite reading — that 500 ft was the rule and 150 m a rounding of it. Table C.1
+  writes every altitude row as "150 m (~500 ft) AGL". An operation between 150.0 m and
+  152.4 m was being given the lower air risk band.
+- **`buffers` was a sketch of the method.** Annex A A.5.2: the horizontal contingency
+  volume is five terms (GNSS accuracy, position holding, map error, reaction distance,
+  contingency manoeuvre), the vertical is four, and the 1:1 ground risk buffer is
+  H_CV + CD/2 — the half-dimension term was missing. The adjacent ground area is three
+  minutes at maximum speed, floored at 5 km and capped at 35 km, where the seed used a
+  flat 1 km ring that is under the floor for every aircraft.
+
+`tmpr` was right, and is now Table 6 rather than a lucky guess.
+
+The counterfactual advisor gained the two levers these changes created: claiming M1(B),
+and demonstrating a local air traffic density of 2 or 1. Without the second it had
+nothing to offer on an air-risk-driven operation, because claiming a strategic
+mitigation alone no longer moves the ARC.
+
+Four golden cases were added for paths that could not be reached before: the Table C.2
+reduction, a TMZ operation, a containment level computed from Table 11, and the
+"Out of scope" answer — which is the tables' own verdict that a combination is outside
+SORA, not a containment level, and is reported as such.
+
+## 2.5.0-rc2 — superseded
 
 **Three regulatory tables verified, and every table now answers "how do you know?".**
 

@@ -269,7 +269,9 @@ organisation. Three consequences follow, and all three are the point:
 - It counts against the plan, and it can be edited, re-run and deleted. A free account
   that has used its three operations is refused rather than given a fourth through a
   side door.
-- It carries the same UNVERIFIED warnings as anything else.
+- It carries whatever warnings a real determination carries — which, since every
+  regulatory table is transcribed from the adopted text, is none. If the next amendment
+  lands with a table unverified, the example says so before any customer's does.
 
 A canned SAIL in a fixture would make the product *look* like it works without
 demonstrating that it does, which in a compliance tool is the wrong trade twice over.

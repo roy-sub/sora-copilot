@@ -49,7 +49,7 @@ def test_every_expected_table_loads() -> None:
 
 
 def test_version_file_matches_the_spec_seed() -> None:
-    assert rulebase_version() == "2.5.0-rc2"
+    assert rulebase_version() == "2.5.1"
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED_TABLES))
@@ -60,24 +60,17 @@ def test_table_declares_its_provenance(name: str) -> None:
     assert t.rows, f"{name} has no rows"
 
 
-#: Still seeds. Each one's header says what it is waiting for; see docs/RULEBASE.md.
-STILL_SEEDS = {
-    "arc",
-    "arc_residual",
-    "buffers",
-    "containment",
-    "m1_m2",
-    "oso",
-    "thresholds",
-    "tmpr",
-}
+#: Nothing. Every table is transcribed from the EASA Easy Access Rules, June 2026
+#: revision, which carries the SORA 2.5 package as adopted by ED Decision 2025/018/R.
+STILL_SEEDS: set[str] = set()
 
 
 def test_exactly_the_tables_we_have_checked_claim_verification() -> None:
     """Verification moves one table at a time, with a CHANGELOG entry and a basis.
 
-    This test is expected to change as tables are checked off. It exists so verification
-    cannot happen by accident, and so the set cannot quietly grow.
+    The set is empty now. It stays a test rather than being deleted because the next
+    rulebase edition starts the cycle again, and because a table that silently lost its
+    basis would otherwise reappear as a seed with nobody noticing.
     """
     assert unverified_tables() == sorted(STILL_SEEDS)
 
@@ -93,25 +86,30 @@ def test_a_table_answers_how_do_you_know(name: str) -> None:
         assert len(t.needs) > 60, f"{name}'s needs is too short to be actionable"
 
 
-def test_unverified_tables_produce_a_warning_the_user_will_see() -> None:
-    warnings = warnings_for(["arc", "oso"])
-    assert len(warnings) == 2
-    assert all(w.startswith("UNVERIFIED:") for w in warnings)
-    assert all("must not be submitted" in w for w in warnings)
+def test_no_table_produces_a_warning_any_more() -> None:
+    """The whole chain is transcribed, so a determination carries no UNVERIFIED note."""
+    assert warnings_for(sorted(EXPECTED_TABLES)) == []
 
 
-def test_a_verified_table_produces_no_warning() -> None:
-    assert warnings_for(["igrc", "igrc_columns", "sail"]) == []
+def test_an_unverified_table_would_still_warn(tmp_path) -> None:
+    """The machinery has to keep working for the next rulebase edition.
 
-
-def test_the_warning_names_the_tables_own_open_question() -> None:
-    """A generic "something is unverified" is not actionable; the specifics are."""
-    (arc,) = warnings_for(["arc"])
-    assert "thirteen" in arc.lower(), "the ARC warning should say the tree is short"
-    (oso,) = warnings_for(["oso"])
-    assert "Step #9" in oso
-    (containment,) = warnings_for(["containment"])
-    assert "10^-SAIL" in containment
+    Asserting "nothing warns" against a rulebase where nothing can warn would pass
+    whether or not the warning still worked, so this builds a seed table and reads the
+    sentence an operator would get.
+    """
+    seed = tmp_path / "seed.csv"
+    seed.write_text(
+        "# table: seed\n# document: Some document\n# version: 1\n# section: Some section\n"
+        "# verified: false\n# needs: The official text, which nobody has supplied, and in "
+        "particular its Figure 4.\nk,v\n1,2\n",
+        encoding="utf-8",
+    )
+    table = load_table(seed)
+    warning = table.warning() or ""
+    assert warning.startswith("UNVERIFIED:")
+    assert "must not be submitted" in warning
+    assert "Figure 4" in warning, "the warning carries the table's own open question"
 
 
 def test_every_regulatory_table_records_the_eu_adoption() -> None:
@@ -168,13 +166,22 @@ def test_exactly_one_igrc_band_is_unbounded() -> None:
     assert unbounded[0]["density_band"] == "over_50000"
 
 
-def test_thresholds_use_the_regulation_not_a_round_number() -> None:
-    """500 ft is 152.4 m, which is 15240 cm. The design copy's 150 m is not the rule."""
+def test_thresholds_use_the_figure_the_table_prints() -> None:
+    """Annex C Table C.1 writes "150 m (~500 ft) AGL" — 150 m is the figure.
+
+    This test used to assert the opposite, 15240 cm, on the reading that 500 ft was the
+    rule and 150 m the rounding. The adopted text settles it the other way.
+    """
     rows = {r["key"]: r for r in load_rulebase()["thresholds"].rows}
-    assert int(rows["altitude_band_500ft"]["value"]) == 15240
-    assert rows["altitude_band_500ft"]["unit"] == "cm"
+    assert int(rows["altitude_band_150m"]["value"]) == 15_000
+    assert rows["altitude_band_150m"]["unit"] == "cm"
+    assert int(rows["altitude_fl600"]["value"]) == 1_828_800
     assert int(rows["small_ua_mtom"]["value"]) == 250
     assert int(rows["grc_certified_ceiling"]["value"]) == 7
+    # Step #8's adjacent ground area: 3 minutes at maximum speed, floored and capped.
+    assert int(rows["adjacent_area_seconds"]["value"]) == 180
+    assert int(rows["adjacent_area_min"]["value"]) == 500_000
+    assert int(rows["adjacent_area_max"]["value"]) == 3_500_000
 
 
 def test_igrc_out_of_scope_cells_are_empty_not_zero() -> None:
@@ -225,19 +232,51 @@ def test_oso_robustness_never_decreases_as_sail_rises() -> None:
         assert levels == sorted(levels), f"{row['oso_id']} is not monotone: {levels}"
 
 
-def test_containment_yields_no_level_while_unverified() -> None:
-    """We will not show a containment level we cannot source (PLAN.md §6.4)."""
-    for row in load_rulebase()["containment"].rows:
-        assert row["level"] == ""
-        assert row["assessment_required"] == "true"
+def test_containment_is_three_tiered_and_covers_six_tables() -> None:
+    """S.4.8.1(c): low, medium and high. SORA 2.0's basic/enhanced is not this.
+
+    This test used to assert that every containment row had NO level, because the seed
+    could not source one. There are 156 cells now, across the six tables keyed by UA
+    characteristic dimension.
+    """
+    rows = load_rulebase()["containment"].rows
+    assert {r["level"] for r in rows} == {"low", "medium", "high", "out_of_scope"}
+    assert {int(r["table_no"]) for r in rows} == {8, 9, 10, 11, 12, 13}
+    assert {int(r["max_dimension_cm"]) for r in rows} == {100, 300, 800, 2000, 4000}
+    assert {r["sail"] for r in rows} == {"I", "II", "III", "IV", "V", "VI"}
+    # Only the 3 m pair asks the sheltering question; the rest state an assumption.
+    assert {r["shelter"] for r in rows if int(r["table_no"]) in (9, 10)} == {"true", "false"}
+    assert {r["shelter"] for r in rows if int(r["table_no"]) not in (9, 10)} == {"*"}
 
 
 def test_unclaimable_mitigation_levels_are_empty_and_marked() -> None:
     rows = {(r["kind"], r["robustness"]): r for r in load_rulebase()["m1_m2"].rows}
-    # M2 has no low level; M1 sheltering has no high level.
+    # Table 5: M2 has no low level; M1(A) sheltering has no high level.
     assert rows[("m2_impact", "low")]["grc_delta"] == ""
     assert rows[("m2_impact", "low")]["precondition"] == "not_claimable"
     assert rows[("m1_strategic", "high")]["grc_delta"] == ""
+
+
+def test_table_5_has_all_four_mitigations_including_m1b() -> None:
+    """M1(B), operational restrictions, was missing from the seed entirely.
+
+    An operator could not claim a mitigation the regulation offers, which cost them up
+    to two GRC — and the seed's own note said so without being able to fix it.
+    """
+    rows = {(r["kind"], r["robustness"]): r for r in load_rulebase()["m1_m2"].rows}
+    assert rows[("m1_operational", "low")]["precondition"] == "not_claimable"
+    assert rows[("m1_operational", "medium")]["grc_delta"] == "-1"
+    assert rows[("m1_operational", "high")]["grc_delta"] == "-2"
+
+
+def test_the_oso_grid_is_table_14_not_sora_2_0() -> None:
+    """OSO#04 is where the two differ, so it is the row worth pinning."""
+    rows = {r["oso_id"]: r for r in load_rulebase()["oso"].rows}
+    assert len(rows) == 17
+    oso4 = rows["OSO#04"]
+    assert [oso4[f"sail_{s}"] for s in ("i", "ii", "iii", "iv", "v", "vi")] == [
+        "none", "none", "none", "medium", "high", "high",
+    ]
 
 
 def test_every_rule_id_in_a_table_has_a_citation() -> None:

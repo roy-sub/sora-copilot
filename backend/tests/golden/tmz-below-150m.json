@@ -1,9 +1,9 @@
 {
-  "name": "above-500ft-controlled",
-  "description": "Above the 500 ft band in controlled airspace, which is the worst air risk the tree offers.",
-  "rulebase_version": "2.5.0-rc2",
-  "verified_against_official_text": false,
-  "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
+  "name": "tmz-below-150m",
+  "description": "A Mode-S Veil / transponder mandatory zone below 150 m AGL: AEC 7, which the ten-branch seed had no row for at all.",
+  "rulebase_version": "2.5.1",
+  "verified_against_official_text": true,
+  "note": "AEC 7 and AEC 2 are the two categories the seed was missing. A TMZ operation was previously scored as ordinary uncontrolled airspace — ARC-b over a rural area — where Table C.1 puts it at ARC-c.",
   "mission": {
     "id": "00000000-0000-0000-0000-000000000001",
     "org_id": "00000000-0000-0000-0000-000000000002",
@@ -37,17 +37,27 @@
           ]
         ]
       },
-      "max_altitude_agl_m": 300
+      "max_altitude_agl_m": 118
     },
     "ground_environment": "sparsely_populated",
     "population_density_per_km2": 84,
-    "airspace_class": "d",
+    "airspace_class": "g",
     "near_aerodrome": false,
-    "altitude_band": "below_500ft",
-    "controlled_airspace": true,
+    "altitude_band": "below_150m",
+    "controlled_airspace": false,
     "atypical_airspace": false,
-    "mitigations": [],
-    "country": "AT"
+    "mitigations": [
+      {
+        "kind": "m1_strategic",
+        "robustness": "low"
+      },
+      {
+        "kind": "strategic_air",
+        "robustness": "low"
+      }
+    ],
+    "country": "AT",
+    "transponder_mandatory_zone": true
   },
   "aircraft": {
     "max_dimension_m": 1.32,
@@ -61,16 +71,16 @@
   "adjacent_area_populated": false,
   "expect": {
     "igrc": 5,
-    "final_grc": 5,
-    "initial_arc": "d",
-    "residual_arc": "d",
-    "sail": "VI",
-    "tmpr": "high",
+    "final_grc": 4,
+    "initial_arc": "c",
+    "residual_arc": "c",
+    "sail": "IV",
+    "tmpr": "medium",
     "osos_required": 17,
     "osos_total": 17,
     "containment_assessment_required": true,
     "containment_level": null,
-    "trace_node_count": 59,
-    "root_rule_id": "sora25.sail.lookup"
+    "trace_node_count": 60,
+    "root_rule_id": "at.baseline"
   }
 }

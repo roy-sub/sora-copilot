@@ -67,7 +67,7 @@ fact_count(alt_cm, N)         :- N = #count{ V : alt_cm(V) }.
 %% ---------------------------------------------------------------- helpers
 
 %% A threshold that the tables did not define is a transcription gap, not a default.
-:- not threshold(altitude_band_500ft, _).
+:- not threshold(altitude_band_150m, _).
 :- not threshold(small_ua_mtom, _).
 :- not threshold(small_ua_speed, _).
 :- not threshold(grc_certified_ceiling, _).
@@ -87,6 +87,8 @@ flag_value(controlled, true)  :- controlled_airspace.
 flag_value(controlled, false) :- not controlled_airspace.
 flag_value(aerodrome, true)   :- near_aerodrome.
 flag_value(aerodrome, false)  :- not near_aerodrome.
+flag_value(tmz, true)         :- transponder_mandatory_zone.
+flag_value(tmz, false)        :- not transponder_mandatory_zone.
 flag_value(strategic, true)   :- strategic_claimed.
 flag_value(strategic, false)  :- not strategic_claimed.
 strategic_claimed :- mitigation(strategic_air, R), R != none.

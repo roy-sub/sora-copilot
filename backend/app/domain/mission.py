@@ -14,9 +14,9 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.common import (
-    ALTITUDE_BAND_THRESHOLD_M,
     AirspaceClass,
     AltitudeBand,
+    AssemblySize,
     Country,
     EvidenceStatus,
     FittedMitigation,
@@ -25,6 +25,7 @@ from app.domain.common import (
     MitigationKind,
     OperationType,
     Robustness,
+    altitude_band_of,
 )
 
 
@@ -62,8 +63,8 @@ class OperationalVolume(BaseModel):
 
     @property
     def altitude_band(self) -> AltitudeBand:
-        """The ARC tree's own split: 500 ft AGL, i.e. 152.4 m."""
-        return "above_500ft" if self.max_altitude_agl_m > ALTITUDE_BAND_THRESHOLD_M else "below_500ft"
+        """Annex C Table C.1's own split: 150 m AGL, and FL 600 above it."""
+        return altitude_band_of(self.max_altitude_agl_m)
 
 
 class MitigationClaim(BaseModel):
@@ -94,6 +95,50 @@ class Mission(BaseModel):
     altitude_band: AltitudeBand
     controlled_airspace: bool
     atypical_airspace: bool
+    transponder_mandatory_zone: bool = Field(
+        default=False,
+        description=(
+            "A Mode-S Veil or transponder mandatory zone. Annex C Table C.1 makes this "
+            "its own category at both altitude bands — AEC 2 above 150 m and AEC 7 below "
+            "— so without it a TMZ operation is scored as ordinary uncontrolled airspace."
+        ),
+    )
+    demonstrated_air_density_rating: int | None = Field(
+        default=None,
+        ge=1,
+        le=5,
+        description=(
+            "What the operator has demonstrated the LOCAL air traffic density to be, on "
+            "Table C.1's 1-to-5 scale. Table C.2 buys a lower residual ARC only in "
+            "exchange for this demonstration, so without it a claimed strategic air "
+            "mitigation earns no reduction."
+        ),
+    )
+    adjacent_area_density_per_km2: float | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Average population density between the outer limit of the ground risk "
+            "buffer and the outer limit of the adjacent ground area (Step #8). One of "
+            "the two inputs that select a column in Tables 8 to 13."
+        ),
+    )
+    adjacent_assembly_size: AssemblySize | None = Field(
+        default=None,
+        description=(
+            "The largest outdoor assembly expected within 1 km of the operational volume "
+            "while the flight takes place. The other column input for Tables 8 to 13."
+        ),
+    )
+    sheltering_applicable: bool | None = Field(
+        default=None,
+        description=(
+            "Whether people in the adjacent ground area are sheltered by structures the "
+            "UA is not expected to penetrate. Only a 3 m UA needs an answer: Table 8 "
+            "assumes sheltering applies below that, and Tables 11 to 13 assume it does "
+            "not from 8 m up."
+        ),
+    )
     mitigations: list[MitigationClaim] = Field(default_factory=list)
     country: Country = Country.AT
 

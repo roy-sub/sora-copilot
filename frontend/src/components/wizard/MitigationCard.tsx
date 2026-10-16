@@ -15,8 +15,12 @@
 import type { Robustness } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 
+//: The identifiers are the ones stored since the first release, so determinations
+//: already recorded keep meaning what they meant. Table 5 of AMC1 Article 11 names them
+//: M1(A), M1(B), M1(C) and M2, which is how they are labelled below.
 export type MitigationKind =
   | "m1_strategic"
+  | "m1_operational"
   | "m1_ers"
   | "m2_impact"
   | "strategic_air"
@@ -36,21 +40,29 @@ export interface MitigationSpec {
 export const MITIGATIONS: MitigationSpec[] = [
   {
     kind: "m1_strategic",
-    name: "M1 — Sheltering",
+    name: "M1(A) — Strategic: sheltering",
     delta: "GRC −1 at low, −2 at medium",
     claimable: ["low", "medium"],
     evidence: "Sheltering analysis of the ground risk buffer; a signed procedure at medium.",
   },
   {
+    kind: "m1_operational",
+    name: "M1(B) — Strategic: operational restrictions",
+    delta: "GRC −1 at medium, −2 at high",
+    claimable: ["medium", "high"],
+    evidence:
+      "Evidence that the restriction reduces the people at risk — a time window, a corridor, a closure.",
+  },
+  {
     kind: "m1_ers",
-    name: "M1 — Ground observation",
+    name: "M1(C) — Tactical: ground observation",
     delta: "GRC −1 at low",
     claimable: ["low"],
     evidence: "A ground observation procedure naming who watches and from where.",
   },
   {
     kind: "m2_impact",
-    name: "M2 — Impact reduction",
+    name: "M2 — Effects of impact dynamics reduced",
     delta: "GRC −1 at medium, −2 at high",
     claimable: ["medium", "high"],
     evidence: "Deployment test report and maintenance log; qualified to a standard at high.",
@@ -59,9 +71,10 @@ export const MITIGATIONS: MitigationSpec[] = [
   {
     kind: "strategic_air",
     name: "Strategic — air risk",
-    delta: "Lowers the ARC by one class",
+    delta: "Lowers the ARC only with a demonstrated local density",
     claimable: ["low"],
-    evidence: "Operational restriction procedure and a filed NOTAM.",
+    evidence:
+      "Annex C Table C.2 buys the reduction with a demonstrated local air traffic density, not with the claim. Record the rating on the airspace step, or this earns nothing.",
   },
 ];
 

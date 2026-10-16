@@ -1,9 +1,9 @@
 {
   "name": "small-ua-provision",
   "description": "Under 250 g and under 25 m/s: the small-UA provision pins iGRC to 1 whatever is underneath.",
-  "rulebase_version": "2.5.0-rc2",
-  "verified_against_official_text": false,
-  "note": "Pins the SEED rulebase, not verified regulatory truth. When a table is verified, re-derive these expectations from the official document before changing the engine.",
+  "rulebase_version": "2.5.1",
+  "verified_against_official_text": true,
+  "note": "Containment moved from 'assessment required' to low. S.4.8.3(a) of AMC1 Article 11 gives a UA under 250 g low containment with no operational limitations on the adjacent ground area at all, and sends it straight to Step #9. The seed had no such rule and asked for an assessment nobody owes.",
   "mission": {
     "id": "00000000-0000-0000-0000-000000000001",
     "org_id": "00000000-0000-0000-0000-000000000002",
@@ -43,7 +43,7 @@
     "population_density_per_km2": 2000,
     "airspace_class": "g",
     "near_aerodrome": false,
-    "altitude_band": "below_500ft",
+    "altitude_band": "below_150m",
     "controlled_airspace": false,
     "atypical_airspace": false,
     "mitigations": [],
@@ -65,9 +65,9 @@
     "tmpr": "medium",
     "osos_required": 17,
     "osos_total": 17,
-    "containment_assessment_required": true,
-    "containment_level": null,
-    "trace_node_count": 60,
+    "containment_assessment_required": false,
+    "containment_level": "low",
+    "trace_node_count": 59,
     "root_rule_id": "sora25.sail.lookup"
   }
 }

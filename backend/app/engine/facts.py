@@ -15,8 +15,17 @@ from app.domain import Mission
 from app.domain.common import GroundEnvironment
 from app.engine.scale import density_to_int, kg_to_g, m_to_cm, ms_to_cms
 
-#: Mitigation kinds the rulebase reasons about, in the order they read in a trace.
-MITIGATION_KINDS = ("m1_strategic", "m1_ers", "m2_impact", "strategic_air", "tactical_air")
+#: Mitigation kinds the rulebase reasons about, in the order Table 5 applies them —
+#: M1(A), M1(B), M1(C), then M2 — because S.4.3.3(a) says they are applied in numerical
+#: sequence, and the trace reads in the same order.
+MITIGATION_KINDS = (
+    "m1_strategic",
+    "m1_operational",
+    "m1_ers",
+    "m2_impact",
+    "strategic_air",
+    "tactical_air",
+)
 
 
 class FactError(ValueError):
@@ -80,8 +89,29 @@ def render(
         lines.append("near_aerodrome.")
     if mission.atypical_airspace:
         lines.append("atypical_airspace.")
+    if mission.transponder_mandatory_zone:
+        lines.append("transponder_mandatory_zone.")
     if adjacent_area_populated:
         lines.append("adjacent_area_populated.")
+
+    # Step #4: Table C.2 trades a lower residual ARC for a demonstrated local density.
+    # Absent the demonstration there is no row and the residual ARC equals the initial.
+    if mission.demonstrated_air_density_rating is not None:
+        lines.append(f"demonstrated_air_density({mission.demonstrated_air_density_rating}).")
+
+    # Step #8: the two column inputs for Tables 8 to 13, and the sheltering question
+    # that only a 3 m UA is asked.
+    if mission.adjacent_area_density_per_km2 is not None:
+        lines.append(
+            f"adjacent_density({density_to_int(mission.adjacent_area_density_per_km2)})."
+        )
+    if mission.adjacent_assembly_size is not None:
+        # Quoted: "40k_to_400k" starts with a digit and is not a valid ASP
+        # constant, and a band that parses only for three of its four values is
+        # the kind of thing that works until the day it does not.
+        lines.append(f'adjacent_assembly("{mission.adjacent_assembly_size}").')
+    if mission.sheltering_applicable is not None:
+        lines.append(f"sheltering({'true' if mission.sheltering_applicable else 'false'}).")
 
     lines.append("")
     for item in drone_fitted or []:

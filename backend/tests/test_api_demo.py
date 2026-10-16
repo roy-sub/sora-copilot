@@ -46,9 +46,15 @@ def test_the_worked_example_is_computed_by_the_engine_not_canned(
     assert all(node.get("rule_id") for node in d["trace"])
     assert d["rulebase_version"], "the example is pinned like any other determination"
 
-    # And it is honest about the rulebase it ran against.
-    assert d["is_verified"] is False
-    assert d["warnings"], "the UNVERIFIED warnings apply to the example too"
+    # And it is honest about the rulebase it ran against. Every table is transcribed
+    # from the adopted AMC now, so the example carries no UNVERIFIED warning — the same
+    # answer a customer's own determination gets, which is the point of the example.
+    assert d["is_verified"] is True
+    assert d["warnings"] == []
+    # Step #8 reaches a level rather than asking for an assessment, because the example
+    # supplies the two adjacent-area measurements the tables need.
+    assert d["containment"]["level"] == "low"
+    assert d["containment"]["assessment_required"] is False
 
 
 def test_the_example_has_something_for_every_screen_to_show(

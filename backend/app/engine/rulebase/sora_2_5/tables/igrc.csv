@@ -1,12 +1,12 @@
 # table: igrc
-# document: JARUS SORA 2.5 Main Body, Release (JAR_doc_25)
+# document: EASA Easy Access Rules for Unmanned Aircraft Systems (Regulation (EU) 2019/947 and Regulation (EU) 2019/945), revision of June 2026
 # version: 2.5
-# section: Step #2 — intrinsic ground risk class determination (iGRC table)
-# page: 
-# url: http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
+# section: AMC1 Article 11, S.4.2 Step #2 — Table 1, intrinsic ground risk class (GRC) determination
+# page: 63
+# url: https://www.easa.europa.eu/en/downloads/110913/en
 # verified: true
-# adopted_by: EASA ED Decision 2025/018/R of 29 September 2025, which issues the SORA 2.5 package as AMC and GM to Regulation (EU) 2019/947 (Issue 1, Amendment 3); consolidated in the Easy Access Rules for Unmanned Aircraft Systems, revision of June 2026
-# basis: Every cell, every density band and the >50 000 ppl/km2 cut-off cross-checked against the SORA 2.5 Main Body release and against the Norwegian CAA's own SORA 2.5 calculator (https://training.caa.no/SORA-2.5-calculator/), an authority implementation of the same table, plus JARUS Annex F, which states the final table has no iGRC 11. All three agree with these rows cell for cell. The PDF page number is not cited because this container's network policy blocks jarus-rpas.org, so the document was read through search rather than opened directly
+# adopted_by: ED Decision 2025/018/R of 30 September 2025 — AMC and GM to Regulation (EU) 2019/947, Issue 1, Amendment 4. This is the SORA 2.5 package as adopted in the EU, so the AMC itself is the citation rather than the JARUS guideline
+# basis: Transcribed from Table 1 on page 63 of the June 2026 Easy Access Rules. Read from the EASA PDF directly, not from a summary: downloaded over a verified TLS connection, text extracted with pdftotext, page numbers are the book's own. Every cell, every population density band and the '> 50 000 / Not part of SORA' cut-off match the earlier cross-check against the Norwegian CAA's SORA 2.5 calculator exactly, so this replaces that corroboration with the source itself
 # note: Rows are population density bands, ordered; columns are the dimension/speed pairs
 #       defined in igrc_columns.csv. band_index fixes the row order so the band can be
 #       selected as the first one whose max_density is not yet exceeded.

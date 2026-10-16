@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.domain.common import Citation, Robustness
+from app.domain.common import Citation, ContainmentLevel, Robustness
 
 OsoStatus = Literal["unmet", "claimed", "documented", "verified"]
 
@@ -32,14 +32,18 @@ class OsoRequirement(BaseModel):
 
 
 class ContainmentRequirement(BaseModel):
-    """Containment is computed from the transcribed containment table.
+    """Step #8's answer, computed from Tables 8 to 13 of AMC1 Article 11.
 
-    Until that table is verified against the official text the level stays ``None`` and
-    ``assessment_required`` is true, so the UI says "assessment required" rather than
-    showing a number we cannot source.
+    S.4.8.1(c): "There are three possible levels of robustness for containment: low,
+    medium and high." SORA 2.0's two-tier basic/enhanced is gone, and where a national
+    AltMoC still uses those words it is an exemption rather than the method.
+
+    ``level`` is ``None`` with ``assessment_required`` true in exactly two cases, and
+    ``note`` says which: the tables answered "Out of scope", or an input Step #8 needs
+    has not been supplied.
     """
 
-    level: Literal["basic", "enhanced"] | None = None
+    level: ContainmentLevel | None = None
     assessment_required: bool = True
     note: str = ""
     citation: Citation | None = None
