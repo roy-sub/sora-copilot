@@ -444,6 +444,18 @@ why. Each is reversible; none invents a regulatory value.
 | **A seeded worked example** | A static demo page or screenshots | An empty dashboard explains nothing, and a fixture would show the product working without demonstrating it. §ARCHITECTURE has the reasoning. |
 | **A browser smoke suite** | Trusting the unit tests | The derivation tree had never rendered and every test passed. Geometry assertions are the only thing that catches that class of fault. |
 
+### Second pass (16 Oct 2026) — rulebase research and the media
+
+| Decision | Instead of | Why |
+|---|---|---|
+| **Verify three tables, not eleven.** `igrc`, `igrc_columns`, `sail` | Flipping every table to `verified: true` | Those three are corroborated cell for cell against the Main Body release, the Norwegian CAA's own SORA 2.5 calculator and Annex F. The other eight are not, and this container cannot reach `jarus-rpas.org` or `easa.europa.eu` to open the release PDFs. Hard rule 3 holds: the gap is recorded, not papered over. |
+| **A `basis:` line is mandatory to claim verification** | A one-word edit | Verification should cost a sentence saying what was checked against what. The loader refuses a table that claims it without one, and refuses an unverified table without a `needs:` saying what is missing. |
+| **Record the EU adoption on every regulatory table** | Citing JARUS alone | EASA ED Decision 2025/018/R issues SORA 2.5 as AMC and GM to (EU) 2019/947. A dossier is read by an EU authority, and "this is the AMC" is a stronger citation than "JARUS says so". It was missing entirely. |
+| **Count the unverified tables in the banner** | "The regulatory tables have not been checked" | Two thirds of the chain is checked now. A blanket warning that is false in that direction teaches an operator to skip it. |
+| **Build the media from the product** | Generating sixteen assets | The connector available in the session is read-only and says so. A screenshot of the derivation tree is also truer than an illustration of one, and cannot depict a feature the product does not have. |
+| **Segment cards, not portraits** | Photographs of "customers" | A photograph of a person who does not exist is a fabricated endorsement, and the copy describes a segment rather than quoting anybody. The cards show the inputs each segment brings and a trace excerpt — never a computed class. |
+| **Commit the assets** | `public/media/*` in `.gitignore` | A clone should build a complete site, and `test_media_assets.py` can only check files that exist. 1.7 MB. |
+
 ---
 
 ## 10. Phase state
