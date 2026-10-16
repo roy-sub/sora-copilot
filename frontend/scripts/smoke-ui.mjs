@@ -72,8 +72,12 @@ if (!TOKEN) {
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await ctx.newPage();
+// Tagged with the route they fired on — an untagged list tells you something broke
+// but not where, which is the least useful possible form of this signal.
 const pageErrors = [];
-page.on("pageerror", (e) => pageErrors.push(String(e).slice(0, 160)));
+page.on("pageerror", (e) =>
+  pageErrors.push(`${new URL(page.url()).pathname}: ${String(e).slice(0, 140)}`),
+);
 await page.route("**/api/v1/**", (route) =>
   route.continue({
     headers: { ...route.request().headers(), authorization: `Bearer ${TOKEN}` },

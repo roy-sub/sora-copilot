@@ -32,10 +32,19 @@ export const viewport: Viewport = { themeColor: "#000000", width: "device-width"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme="dark" className={`${archivo.variable} ${outfit.variable}`} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body>
+        {/*
+          First child of <body>, deliberately — not in a <head> element.
+
+          This has to run before anything paints, which it does: nothing above it can
+          produce a pixel. It must NOT move into an explicit <head>, which is where it
+          started. React 19 owns the head — it hoists and dedupes metadata, styles and
+          font resources — so the parsed head is not the head the server described, and a
+          script mutating documentElement during that reconciliation lost the race on
+          roughly one hard load in six, reporting a recoverable hydration mismatch.
+          docs/ARCHITECTURE.md has the measurements.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <PrefsProvider>
           <AuthProvider>
             <QueryProvider>

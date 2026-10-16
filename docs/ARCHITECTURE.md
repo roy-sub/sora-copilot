@@ -209,35 +209,49 @@ before the fix and 27/27 after. The same shape of assertion covers horizontal ov
 on every route and the media placeholders on the landing page — the class of fault where
 the DOM is right and the render is not.
 
-## A known, harmless hydration recovery
+## The hydration mismatch, and why the first diagnosis was wrong
 
-Against the static export, React reports a recoverable hydration mismatch on roughly one
-hard page load in six. It is worth writing down because it looks alarming in a console
-and because chasing it is easy to repeat.
+Against the static export, React used to report a recoverable hydration mismatch
+(error #418) on roughly one hard page load in six, on a different route each time. It is
+written down because the first explanation was wrong in an instructive way.
 
-What it is not: it is not the theme. An A/B over 48 loads of the same page isolates the
-cause as the **previous page's route prefetch**, not the pre-paint theme script —
+The first A/B blamed the **previous page's route prefetch**: the recoveries only ever
+appeared after a prior visit, never on a cold load. That reading survived because the
+experiment varied two things at once. Disabling `prefetch` on every `<Link>` in the app,
+rebuilding and re-running the suite three times reproduced the error exactly as before —
+so prefetch was a correlate of the real trigger, not the cause.
+
+Holding prefetch off and varying the two inputs independently, twelve loads each:
 
 | prior visit | stored theme | recoveries |
 |---|---|---|
-| no | none | 0 / 16 |
-| yes | none | 2 / 16 |
-| yes | light | 4 / 16 |
+| no | none | 0 / 12 |
+| yes | none | 0 / 12 |
+| no | light | 2 / 12 |
+| yes | light | 4 / 12 |
 
-— so it happens with no theme stored at all, and never on a cold load. Next prefetches
-the RSC payload of a linked route; a later hard load of that route hydrates against it.
+A stored theme is **necessary**; a prior visit only raises the rate. Which points at the
+pre-paint theme script after all — not at what it computes, but at where it lived. The
+root layout declared an explicit `<head>` and put the inline script inside it. React 19
+owns `<head>`: it hoists and dedupes the metadata, styles, and font resources it finds
+there, so the parsed head is not the head the server described, and a script that mutates
+`documentElement` while that reconciliation is in flight occasionally loses the race.
 
-What it costs: nothing visible. Comparing an erroring render with a clean one of the same
-page gives identical text, identical element counts, and the correct theme. React
-re-renders the subtree on the client and the page is correct.
+The fix is one line moved. The script is now the **first child of `<body>`** and there is
+no explicit `<head>` element at all, which is what the App Router expects. It still runs
+before any paint — it precedes every node that could paint — so there is no flash of the
+wrong stock. 24 loads with a stored light theme across four routes: zero recoveries, zero
+wrong themes, and no sampled frame showing the wrong theme. `npm run smoke` is clean on
+three consecutive runs.
 
-It was worth catching anyway, because it *was* causing real damage until the theme fix
-above: the recovery resets `<html>`'s attributes to the ones the server emitted, which
-silently returned a light-theme visitor to dark. `PrefsProvider` now re-applies the
-stored theme after mount, so the recovery is cosmetic rather than destructive.
+`PrefsProvider` still re-applies the stored theme after mount. That was added when the
+recovery was thought to be unavoidable — a recovery resets `<html>`'s attributes to the
+ones the server emitted, which silently returned a light-theme visitor to dark. It is
+cheap, it is the behaviour you want if any other mismatch ever appears, and it stays.
 
-Removing it would mean turning off `prefetch` on the links that cause it, which trades a
-real navigation speed-up for a console line. Not worth it.
+The general lesson is the one the smoke suite exists for: an error that costs nothing
+visible is still a bug with a cause, and "harmless" is a conclusion to reach after
+finding the cause, not instead of it.
 
 ## The worked example is not a fixture
 
